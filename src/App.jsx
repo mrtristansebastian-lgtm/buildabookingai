@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { BusinessCalendar } from './components/BusinessCalendar';
 import { BookingFlow } from './components/BookingFlow';
+import { OnboardingShowroom, prepareOnboardingSettings } from './components/OnboardingShowroom';
 import { ProButton } from './components/ProButton';
 import { FONT_OPTIONS, getFontFamily } from './data/fonts';
 import { PRESET_THEMES } from './data/themes';
@@ -68,6 +69,7 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
             const [clientSearch, setClientSearch] = useState('');
             const [selectedClientId, setSelectedClientId] = useState(null);
             const [clientNoteDraft, setClientNoteDraft] = useState('');
+            const [showOnboarding, setShowOnboarding] = useState(false);
             const containerRef = useRef(null);
             const themePaletteRailRef = useRef(null);
             const [toast, setToast] = useState(null);
@@ -90,7 +92,8 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
                 schedule: {},
                 features: { birthday: true, waitlist: true, socialProof: true, loadingScreen: true, firstAvailable: true, favicon: '', location: '', faqs: [] },
                 backendSkin: { enabled: false, mode: 'immersive', showBranding: true },
-                logo: '', bannerImage: '', address: '', socials: { instagram: '', website: '' }
+                onboarding: {},
+                logo: '', bannerImage: '', address: '', socials: { instagram: '', tiktok: '', facebook: '', website: '' }
             });
 
             const [bookings, setBookings] = useState([]);
@@ -116,6 +119,11 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
             const isWorkspaceOwner = Boolean(user && workspaceOwnerId === user.uid);
             const canManageWorkspace = workspaceRole === 'owner' || workspaceRole === 'admin';
             const canManageTeam = canManageWorkspace;
+            const canSetupWorkspace = !isFirebaseConfigured || canManageWorkspace;
+            const onboardingStorageKey = useMemo(
+                () => `build-a-booking-showroom-v1-${workspaceOwnerId || 'demo'}`,
+                [workspaceOwnerId]
+            );
             const workspaceChoices = useMemo(() => {
                 if (!user) return [];
                 return [
@@ -363,6 +371,25 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
             useEffect(() => {
                 setClientNoteDraft(selectedClient?.notes || '');
             }, [selectedClient?.id]);
+
+            useEffect(() => {
+                if (publicSlug || loading || view !== 'dashboard' || !canSetupWorkspace) return;
+                const workspaceAlreadyHandled = Boolean(settings.onboarding?.completedAt || settings.onboarding?.skippedAt);
+                const locallyHandled = localStorage.getItem(onboardingStorageKey) === 'done';
+                if (workspaceAlreadyHandled || locallyHandled || showOnboarding) return;
+
+                const timer = setTimeout(() => setShowOnboarding(true), 650);
+                return () => clearTimeout(timer);
+            }, [
+                publicSlug,
+                loading,
+                view,
+                canSetupWorkspace,
+                settings.onboarding?.completedAt,
+                settings.onboarding?.skippedAt,
+                onboardingStorageKey,
+                showOnboarding
+            ]);
 
             const navItems = [
                 { id: 'overview', icon: Layout, label: 'Dashboard' },
@@ -644,21 +671,59 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
                 return () => { unsubSettings(); unsubStaff(); unsubComms(); unsubClients(); unsubBookings(); };
             }, [user, workspaceOwnerId, isWorkspaceOwner, publicSlug]);
 
-            const saveSettings = async () => {
+            const publishSettings = async (nextSettings = settings, successMessage = "Booking page published!") => {
                 if (!user || !workspaceOwnerId || !isFirebaseConfigured) {
-                    showToast("Add Firebase config to publish live.");
-                    return;
+                    showToast("Workspace updated in demo mode.");
+                    return true;
                 }
                 if (!canManageWorkspace) {
                     showToast("Only owners and admins can publish workspace settings.");
-                    return;
+                    return false;
                 }
                 showToast("Publishing updates...");
                 try {
-                    await FirebaseSDK.setDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'settings'), settings);
-                    await FirebaseSDK.setDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'public', 'data', 'workspaces', settings.slug), { ...settings, ownerId: workspaceOwnerId, updatedAt: Date.now() });
-                    showToast("Booking page published!");
-                } catch (err) { console.error(err); showToast("Failed to publish."); }
+                    await FirebaseSDK.setDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'settings'), nextSettings);
+                    await FirebaseSDK.setDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'public', 'data', 'workspaces', nextSettings.slug), { ...nextSettings, ownerId: workspaceOwnerId, updatedAt: Date.now() });
+                    showToast(successMessage);
+                    return true;
+                } catch (err) {
+                    console.error(err);
+                    showToast("Failed to publish.");
+                    return false;
+                }
+            };
+
+            const saveSettings = async () => {
+                await publishSettings(settings);
+            };
+
+            const markOnboardingHandled = () => {
+                localStorage.setItem(onboardingStorageKey, 'done');
+            };
+
+            const handleOnboardingSkip = () => {
+                markOnboardingHandled();
+                setShowOnboarding(false);
+                showToast("Tour skipped. You can reopen it from Dashboard.");
+            };
+
+            const handleOnboardingNavigate = (tab) => {
+                markOnboardingHandled();
+                setShowOnboarding(false);
+                setView('dashboard');
+                setActiveTab(tab);
+            };
+
+            const handleOnboardingComplete = async (draft, options = {}) => {
+                const nextSettings = prepareOnboardingSettings(settings, draft, { completedAt: Date.now() });
+                setSettings(nextSettings);
+                markOnboardingHandled();
+                setShowOnboarding(false);
+                setView('dashboard');
+                setActiveTab(options.destination || 'overview');
+                if (canSetupWorkspace) {
+                    await publishSettings(nextSettings, "Workspace setup saved and published.");
+                }
             };
 
             const writeStaffAccessGrant = async (staff) => {
@@ -1305,6 +1370,15 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
                         <CheckCircle2 size={16} className="text-[#39FF14]" /> {toast}
                     </div>
                 )}
+                <OnboardingShowroom
+                    open={showOnboarding}
+                    settings={settings}
+                    bookingOrigin={window.location.origin}
+                    canApply={canSetupWorkspace}
+                    onSkip={handleOnboardingSkip}
+                    onComplete={handleOnboardingComplete}
+                    onNavigate={handleOnboardingNavigate}
+                />
 
                 <div className={`dashboard-sidebar hidden md:flex transition-all duration-700 ease-in-out bg-white border-r border-neutral-100 flex-col relative z-50 shadow-sm ${sidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-80 p-8'}`}>
                     {!sidebarCollapsed && (
@@ -1406,6 +1480,9 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
                                     <p className="text-neutral-500 text-base md:text-lg mt-3 max-w-2xl">A clean portfolio view of bookings, clients, schedule health, team coverage, and your live booking page.</p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3">
+                                    <button onClick={() => setShowOnboarding(true)} className="h-11 px-5 rounded-lg bg-white border border-neutral-200 text-black text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-50 transition-colors">
+                                        <Sparkles size={15}/> Intro Tour
+                                    </button>
                                     <button onClick={() => setActiveTab('editor')} className="h-11 px-5 rounded-lg bg-black text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 transition-colors">
                                         <Palette size={15}/> Edit Page
                                     </button>
@@ -1763,6 +1840,14 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
                                                 <div className="flex items-center gap-4 bg-neutral-50 p-3 rounded-lg border border-transparent focus-within:border-neutral-200 transition-all">
                                                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-black"><Instagram size={16} /></div>
                                                     <input type="text" value={settings.socials?.instagram || ''} onChange={e => handleSettingChange('socials', {...settings.socials, instagram: e.target.value})} placeholder="@yourhandle" className="flex-1 bg-transparent text-sm font-bold outline-none placeholder-neutral-300" />
+                                                </div>
+                                                <div className="flex items-center gap-4 bg-neutral-50 p-3 rounded-lg border border-transparent focus-within:border-neutral-200 transition-all">
+                                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-black"><Zap size={16} /></div>
+                                                    <input type="text" value={settings.socials?.tiktok || ''} onChange={e => handleSettingChange('socials', {...settings.socials, tiktok: e.target.value})} placeholder="@yourtiktok" className="flex-1 bg-transparent text-sm font-bold outline-none placeholder-neutral-300" />
+                                                </div>
+                                                <div className="flex items-center gap-4 bg-neutral-50 p-3 rounded-lg border border-transparent focus-within:border-neutral-200 transition-all">
+                                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-black"><Users size={16} /></div>
+                                                    <input type="text" value={settings.socials?.facebook || ''} onChange={e => handleSettingChange('socials', {...settings.socials, facebook: e.target.value})} placeholder="facebook page or handle" className="flex-1 bg-transparent text-sm font-bold outline-none placeholder-neutral-300" />
                                                 </div>
                                                 <div className="flex items-center gap-4 bg-neutral-50 p-3 rounded-lg border border-transparent focus-within:border-neutral-200 transition-all">
                                                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-black"><Globe size={16} /></div>

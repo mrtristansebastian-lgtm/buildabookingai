@@ -168,6 +168,16 @@ import { getLocalDateStr } from '../utils/dates';
                                     <Instagram size={12} /> IG
                                 </a>
                             )}
+                            {settings.socials?.tiktok && (
+                                <a href={`https://www.tiktok.com/@${settings.socials.tiktok.replace('@','')}`} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all hover:opacity-80" style={{ backgroundColor: settings.headingColor + '10', color: settings.headingColor }}>
+                                    <Globe size={12} /> TikTok
+                                </a>
+                            )}
+                            {settings.socials?.facebook && (
+                                <a href={`https://facebook.com/${settings.socials.facebook.replace('@','')}`} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all hover:opacity-80" style={{ backgroundColor: settings.headingColor + '10', color: settings.headingColor }}>
+                                    <Globe size={12} /> FB
+                                </a>
+                            )}
                             {settings.socials?.website && (
                                 <a href={settings.socials.website} target="_blank" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all hover:opacity-80" style={{ backgroundColor: settings.headingColor + '10', color: settings.headingColor }}>
                                     <Globe size={12} /> Web

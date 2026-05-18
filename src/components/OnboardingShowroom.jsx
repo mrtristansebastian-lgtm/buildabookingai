@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -205,6 +205,29 @@ const setupCopy = {
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
+const getPopoverStyle = (spotlight) => {
+  const isMobile = window.innerWidth < 640;
+  const width = isMobile ? window.innerWidth - 32 : 360;
+  const height = isMobile ? 360 : 300;
+  const enoughRight = spotlight.left + spotlight.width + width + 28 < window.innerWidth;
+  const enoughLeft = spotlight.left - width - 28 > 0;
+  const left = isMobile
+    ? 16
+    : enoughRight
+      ? spotlight.left + spotlight.width + 24
+      : enoughLeft
+        ? spotlight.left - width - 24
+        : spotlight.left > window.innerWidth / 2
+          ? 24
+          : window.innerWidth - width - 24;
+  const below = spotlight.top + spotlight.height + 18;
+  const top = isMobile
+    ? clamp(below, 16, window.innerHeight - height - 16)
+    : clamp(spotlight.top, 20, window.innerHeight - height - 20);
+
+  return { left, top, width, maxHeight: isMobile ? 'calc(100vh - 32px)' : undefined };
+};
+
 export function OnboardingShowroom({
   open,
   settings,
@@ -215,7 +238,7 @@ export function OnboardingShowroom({
   onNavigate
 }) {
   const [sceneIndex, setSceneIndex] = useState(0);
-  const [spotlight, setSpotlight] = useState(null);
+  const [tourFocus, setTourFocus] = useState(null);
   const [draft, setDraft] = useState({
     businessName: '',
     industry: '',
@@ -248,22 +271,24 @@ export function OnboardingShowroom({
     onNavigate?.(scene.tab);
   }, [open, scene.id, scene.tab, scene.type, onNavigate]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open || scene.type !== 'platform') {
-      setSpotlight(null);
+      setTourFocus(null);
       return undefined;
     }
 
-    setSpotlight(null);
+    setTourFocus(null);
     let cancelled = false;
     let timer = null;
+    let retryTimer = null;
     const padding = window.innerWidth < 640 ? 10 : 16;
 
-    const updateSpotlight = () => {
+    const updateFocus = () => {
       if (cancelled) return;
       const target = document.querySelector(`[data-tour="${scene.target}"]`);
       if (!target) {
-        setSpotlight(null);
+        setTourFocus(null);
+        retryTimer = window.setTimeout(updateFocus, 120);
         return;
       }
 
@@ -274,27 +299,34 @@ export function OnboardingShowroom({
         window.requestAnimationFrame(() => {
           if (cancelled) return;
           const rect = target.getBoundingClientRect();
-          setSpotlight({
+          const spotlightStyle = {
             target: scene.target,
             top: Math.max(12, rect.top - padding),
             left: Math.max(12, rect.left - padding),
             width: Math.min(window.innerWidth - 24, rect.width + padding * 2),
             height: Math.min(window.innerHeight - 24, rect.height + padding * 2)
+          };
+          setTourFocus({
+            sceneId: scene.id,
+            target: scene.target,
+            spotlightStyle,
+            popoverStyle: getPopoverStyle(spotlightStyle)
           });
         });
       });
     };
 
-    updateSpotlight();
-    timer = window.setTimeout(updateSpotlight, 420);
-    window.addEventListener('resize', updateSpotlight);
-    window.addEventListener('scroll', updateSpotlight, true);
+    updateFocus();
+    timer = window.setTimeout(updateFocus, 420);
+    window.addEventListener('resize', updateFocus);
+    window.addEventListener('scroll', updateFocus, true);
 
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
-      window.removeEventListener('resize', updateSpotlight);
-      window.removeEventListener('scroll', updateSpotlight, true);
+      window.clearTimeout(retryTimer);
+      window.removeEventListener('resize', updateFocus);
+      window.removeEventListener('scroll', updateFocus, true);
     };
   }, [open, scene.id, scene.target, scene.type]);
 
@@ -302,30 +334,6 @@ export function OnboardingShowroom({
   const back = () => setSceneIndex(index => Math.max(index - 1, 0));
   const updateDraft = (key, value) => setDraft(prev => ({ ...prev, [key]: value }));
   const complete = (destination = 'editor') => onComplete(draft, { destination });
-
-  const popoverStyle = useMemo(() => {
-    if (!spotlight || spotlight.target !== scene.target) return null;
-    const isMobile = window.innerWidth < 640;
-    const width = isMobile ? window.innerWidth - 32 : 360;
-    const height = isMobile ? 360 : 300;
-    const enoughRight = spotlight.left + spotlight.width + width + 28 < window.innerWidth;
-    const enoughLeft = spotlight.left - width - 28 > 0;
-    const left = isMobile
-      ? 16
-      : enoughRight
-        ? spotlight.left + spotlight.width + 24
-        : enoughLeft
-          ? spotlight.left - width - 24
-          : spotlight.left > window.innerWidth / 2
-            ? 24
-            : window.innerWidth - width - 24;
-    const below = spotlight.top + spotlight.height + 18;
-    const top = isMobile
-      ? clamp(below, 16, window.innerHeight - height - 16)
-      : clamp(spotlight.top, 20, window.innerHeight - height - 20);
-
-    return { left, top, width, maxHeight: isMobile ? 'calc(100vh - 32px)' : undefined };
-  }, [scene.target, spotlight]);
 
   if (!open) return null;
 
@@ -372,8 +380,7 @@ export function OnboardingShowroom({
         <PlatformScene
           scene={scene}
           sceneIndex={sceneIndex}
-          spotlight={spotlight}
-          popoverStyle={popoverStyle}
+          focus={tourFocus}
           progress={progress}
           onBack={back}
           onNext={next}
@@ -595,7 +602,10 @@ function LinkScene({ draft, generatedLink, onBack, onNext }) {
   );
 }
 
-function PlatformScene({ scene, sceneIndex, spotlight, popoverStyle, onBack, onNext, onNavigate }) {
+function PlatformScene({ scene, sceneIndex, focus, onBack, onNext, onNavigate }) {
+  const isFocusReady = focus?.sceneId === scene.id && focus?.target === scene.target;
+  const spotlight = isFocusReady ? focus.spotlightStyle : null;
+  const popoverStyle = isFocusReady ? focus.popoverStyle : null;
   const showPopover = Boolean(
     popoverStyle &&
     Number.isFinite(popoverStyle.left) &&

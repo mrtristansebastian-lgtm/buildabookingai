@@ -254,6 +254,7 @@ export function OnboardingShowroom({
       return undefined;
     }
 
+    setSpotlight(null);
     let cancelled = false;
     let timer = null;
     const padding = window.innerWidth < 640 ? 10 : 16;
@@ -266,16 +267,20 @@ export function OnboardingShowroom({
         return;
       }
 
-      target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
 
       window.requestAnimationFrame(() => {
         if (cancelled) return;
-        const rect = target.getBoundingClientRect();
-        setSpotlight({
-          top: Math.max(12, rect.top - padding),
-          left: Math.max(12, rect.left - padding),
-          width: Math.min(window.innerWidth - 24, rect.width + padding * 2),
-          height: Math.min(window.innerHeight - 24, rect.height + padding * 2)
+        window.requestAnimationFrame(() => {
+          if (cancelled) return;
+          const rect = target.getBoundingClientRect();
+          setSpotlight({
+            target: scene.target,
+            top: Math.max(12, rect.top - padding),
+            left: Math.max(12, rect.left - padding),
+            width: Math.min(window.innerWidth - 24, rect.width + padding * 2),
+            height: Math.min(window.innerHeight - 24, rect.height + padding * 2)
+          });
         });
       });
     };
@@ -299,7 +304,7 @@ export function OnboardingShowroom({
   const complete = (destination = 'editor') => onComplete(draft, { destination });
 
   const popoverStyle = useMemo(() => {
-    if (!spotlight) return {};
+    if (!spotlight || spotlight.target !== scene.target) return null;
     const isMobile = window.innerWidth < 640;
     const width = isMobile ? window.innerWidth - 32 : 360;
     const height = isMobile ? 360 : 300;
@@ -320,7 +325,7 @@ export function OnboardingShowroom({
       : clamp(spotlight.top, 20, window.innerHeight - height - 20);
 
     return { left, top, width, maxHeight: isMobile ? 'calc(100vh - 32px)' : undefined };
-  }, [spotlight]);
+  }, [scene.target, spotlight]);
 
   if (!open) return null;
 
@@ -591,13 +596,28 @@ function LinkScene({ draft, generatedLink, onBack, onNext }) {
 }
 
 function PlatformScene({ scene, sceneIndex, spotlight, popoverStyle, onBack, onNext, onNavigate }) {
+  const showPopover = Boolean(
+    popoverStyle &&
+    Number.isFinite(popoverStyle.left) &&
+    Number.isFinite(popoverStyle.top) &&
+    Number.isFinite(popoverStyle.width)
+  );
+  const ringStyle = spotlight
+    ? {
+        top: spotlight.top,
+        left: spotlight.left,
+        width: spotlight.width,
+        height: spotlight.height
+      }
+    : null;
+
   return (
     <>
       <SpotlightPanels spotlight={spotlight} />
-      {spotlight && (
+      {spotlight?.target === scene.target && (
         <div
           className="tour-spotlight-ring fixed z-[10001] rounded-[1.35rem] border-2 pointer-events-none"
-          style={spotlight}
+          style={ringStyle}
         >
           <div className="absolute -right-3 -top-3 h-7 w-7 rounded-full bg-[#39FF14] text-black flex items-center justify-center shadow-xl shadow-[#39FF14]/50">
             <MousePointerClick size={14} />
@@ -605,37 +625,39 @@ function PlatformScene({ scene, sceneIndex, spotlight, popoverStyle, onBack, onN
         </div>
       )}
 
-      <div
-        key={scene.id}
-        className="tour-popover fixed z-[10002] overflow-y-auto rounded-[1.5rem] bg-white text-black p-4 md:p-6 shadow-[0_30px_100px_-30px_rgba(0,0,0,0.75)] border border-black/10"
-        style={popoverStyle}
-      >
-        <div className="flex items-start justify-between gap-4 mb-5 md:mb-8">
-          <div className="tour-popover-copy">
-            <p className="tour-copy-line text-[9px] font-bold uppercase tracking-[0.35em] text-neutral-400 mb-2">{scene.kicker}</p>
-            <h2 className="tour-copy-line text-2xl md:text-3xl font-bold tracking-tight leading-none" style={{ animationDelay: '70ms' }}>{scene.title}</h2>
-          </div>
-          <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center shrink-0">
-            <ArrowUpRight size={17} />
-          </div>
-        </div>
-        <p className="tour-copy-line text-sm md:text-base text-neutral-500 leading-relaxed mb-6" style={{ animationDelay: '140ms' }}>{scene.text}</p>
-        <div className="tour-copy-line flex items-center justify-between gap-3" style={{ animationDelay: '210ms' }}>
-          <button onClick={onBack} className="h-11 px-4 rounded-full bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:text-black">
-            <ChevronLeft size={14} /> Back
-          </button>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-300">{sceneIndex - 5} / 8</div>
-          <button onClick={onNext} className="h-11 px-5 rounded-full bg-black text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-800">
-            Next <ArrowRight size={14} />
-          </button>
-        </div>
-        <button
-          onClick={() => onNavigate?.(scene.tab)}
-          className="mt-3 w-full h-10 rounded-full border border-neutral-200 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black hover:bg-neutral-50 flex items-center justify-center gap-2"
+      {showPopover && (
+        <div
+          key={scene.id}
+          className="tour-popover fixed z-[10002] overflow-y-auto rounded-[1.5rem] bg-white text-black p-4 md:p-6 shadow-[0_30px_100px_-30px_rgba(0,0,0,0.75)] border border-black/10"
+          style={popoverStyle}
         >
-          <MousePointerClick size={14} /> Show This Area
-        </button>
-      </div>
+          <div className="flex items-start justify-between gap-4 mb-5 md:mb-8">
+            <div className="tour-popover-copy">
+              <p className="tour-copy-line text-[9px] font-bold uppercase tracking-[0.35em] text-neutral-400 mb-2">{scene.kicker}</p>
+              <h2 className="tour-copy-line text-2xl md:text-3xl font-bold tracking-tight leading-none" style={{ animationDelay: '70ms' }}>{scene.title}</h2>
+            </div>
+            <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center shrink-0">
+              <ArrowUpRight size={17} />
+            </div>
+          </div>
+          <p className="tour-copy-line text-sm md:text-base text-neutral-500 leading-relaxed mb-6" style={{ animationDelay: '140ms' }}>{scene.text}</p>
+          <div className="tour-copy-line flex items-center justify-between gap-3" style={{ animationDelay: '210ms' }}>
+            <button onClick={onBack} className="h-11 px-4 rounded-full bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:text-black">
+              <ChevronLeft size={14} /> Back
+            </button>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-300">{sceneIndex - 5} / 8</div>
+            <button onClick={onNext} className="h-11 px-5 rounded-full bg-black text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-800">
+              Next <ArrowRight size={14} />
+            </button>
+          </div>
+          <button
+            onClick={() => onNavigate?.(scene.tab)}
+            className="mt-3 w-full h-10 rounded-full border border-neutral-200 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black hover:bg-neutral-50 flex items-center justify-center gap-2"
+          >
+            <MousePointerClick size={14} /> Show This Area
+          </button>
+        </div>
+      )}
     </>
   );
 }

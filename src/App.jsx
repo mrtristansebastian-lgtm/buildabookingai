@@ -454,7 +454,15 @@ const getPublicBookingSlug = () => {
                             else if (publicSlug) await FirebaseSDK.signInAnonymously(auth);
                             else setLoading(false);
                         } else setLoading(false);
-                    } catch (err) { console.error(err); setLoading(false); }
+                    } catch (err) {
+                        const message = err?.code === 'auth/configuration-not-found'
+                            ? 'Firebase Auth is not enabled yet. Enable Email/Password and Anonymous sign-in in Firebase Authentication.'
+                            : 'Firebase sign-in could not start. Check your Firebase Auth setup and try again.';
+                        setAuthError(message);
+                        if (publicSlug) setPublicError(message);
+                        setLoading(false);
+                        setPublicLoading(false);
+                    }
                 };
                 initAuth();
                 if (isFirebaseConfigured) return FirebaseSDK.onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });

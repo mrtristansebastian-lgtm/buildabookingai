@@ -40,6 +40,22 @@ const defaultFaqItems = [
   { q: 'Can I join a waitlist if the day is full?', a: 'Yes. If waitlist is enabled, you can leave your details and the business can contact you when a slot opens.' }
 ];
 
+const editorPreviewFrames = {
+  desktop: {
+    full: { width: 1100, height: 720, maxScale: 0.84, minScale: 0.28, paddingX: 150, paddingY: 160 },
+    compact: { width: 900, height: 380, maxScale: 0.92, minScale: 0.26, paddingX: 22, paddingY: 118 }
+  },
+  mobile: {
+    full: { width: 390, height: 880, maxScale: 0.82, minScale: 0.28, paddingX: 96, paddingY: 146 },
+    compact: { width: 360, height: 520, maxScale: 0.82, minScale: 0.3, paddingX: 20, paddingY: 106 }
+  }
+};
+
+const getEditorPreviewFrame = (device, compact) => {
+  const frameSet = editorPreviewFrames[device] || editorPreviewFrames.desktop;
+  return frameSet[compact ? 'compact' : 'full'];
+};
+
 const emailMessageKeys = ['confirmed', 'review', 'waitlist', 'runningLate'];
 
 const createDefaultWhatsAppConfig = () => ({
@@ -1039,9 +1055,17 @@ const shouldUseRedirectGoogleAuth = () => {
                 themePaletteRailRef.current.scrollBy({ left: direction * 312, behavior: 'smooth' });
             };
 
-            const isMobileEditorViewport = () => (
-                window.innerWidth < 768 || (window.innerWidth <= 1024 && window.innerHeight <= 560)
-            );
+            const isMobileEditorViewport = (container = containerRef.current) => {
+                const rect = container?.getBoundingClientRect();
+                const constrainedStage = rect ? rect.height < 650 : false;
+                const mobileLandscape = window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(orientation: landscape)').matches;
+                return (
+                    window.innerWidth < 768 ||
+                    window.innerHeight <= 560 ||
+                    constrainedStage ||
+                    mobileLandscape
+                );
+            };
 
             const handleAddToHomeScreen = async () => {
                 setInstallPromptDismissed(true);
@@ -1085,22 +1109,31 @@ const shouldUseRedirectGoogleAuth = () => {
                 const updateScale = () => {
                     if (!containerRef.current) return;
                     const c = containerRef.current;
-                    const compact = activeTab === 'editor' && isMobileEditorViewport();
+                    const rect = c.getBoundingClientRect();
+                    const compact = activeTab === 'editor' && isMobileEditorViewport(c);
                     setIsCompactEditorViewport(compact);
-                    const dWidth = device === 'desktop' ? (compact ? 980 : 1200) : (compact ? 430 : 420);
-                    const dHeight = device === 'desktop' ? (compact ? 470 : 820) : (compact ? 520 : 1050);
-                    const paddingX = compact ? 18 : (device === 'desktop' ? 220 : 110);
-                    const paddingY = compact ? (mobileNavCollapsed ? 74 : 125) : (device === 'desktop' ? 220 : 150);
-                    const maxScale = device === 'desktop' ? (compact ? 0.95 : 0.78) : (compact ? 0.88 : 0.72);
-                    const minScale = compact ? (device === 'desktop' ? 0.39 : 0.42) : 0.2;
-                    const nextScale = Math.min((c.offsetWidth - paddingX) / dWidth, (c.offsetHeight - paddingY) / dHeight, maxScale);
-                    setScale(Math.max(minScale, nextScale));
+                    const frame = getEditorPreviewFrame(device, compact);
+                    const collapsedNavGain = compact && mobileNavCollapsed ? 24 : 0;
+                    const collapsedPanelGain = editorCollapsed ? (compact ? 16 : 28) : 0;
+                    const paddingX = Math.max(12, frame.paddingX - collapsedPanelGain);
+                    const paddingY = Math.max(58, frame.paddingY - collapsedNavGain);
+                    const nextScale = Math.min(
+                        (rect.width - paddingX) / frame.width,
+                        (rect.height - paddingY) / frame.height,
+                        frame.maxScale
+                    );
+                    setScale(Math.max(frame.minScale, nextScale));
                 };
 
                 updateScale();
                 const t1 = setTimeout(updateScale, 50);
                 const t2 = setTimeout(updateScale, 400);
                 const t3 = setTimeout(updateScale, 800);
+                const t4 = setTimeout(updateScale, 1200);
+                const resizeObserver = typeof ResizeObserver !== 'undefined' && containerRef.current
+                    ? new ResizeObserver(updateScale)
+                    : null;
+                if (resizeObserver && containerRef.current) resizeObserver.observe(containerRef.current);
                 
                 window.addEventListener('resize', updateScale);
                 
@@ -1108,6 +1141,8 @@ const shouldUseRedirectGoogleAuth = () => {
                     clearTimeout(t1); 
                     clearTimeout(t2); 
                     clearTimeout(t3); 
+                    clearTimeout(t4);
+                    resizeObserver?.disconnect();
                     window.removeEventListener('resize', updateScale); 
                 };
             }, [device, activeTab, view, sidebarCollapsed, editorCollapsed, mobileNavCollapsed]);
@@ -1986,6 +2021,11 @@ const shouldUseRedirectGoogleAuth = () => {
                     </form>
                 </div>
             );
+
+            const editorPreviewFrame = getEditorPreviewFrame(device, isCompactEditorViewport);
+            const editorPreviewFrameClass = device === 'desktop'
+                ? (isCompactEditorViewport ? 'rounded-lg border-[12px]' : 'rounded-lg border-[22px]')
+                : (isCompactEditorViewport ? 'rounded-[3rem] border-[12px]' : 'rounded-[5rem] md:rounded-[5.5rem] border-[16px] md:border-[18px]');
 
             if (loading || publicLoading) return <div className="h-screen bg-[#050505] flex items-center justify-center"><img src="/logoblackonwhite.png" alt="Build A Booking" className="w-24 h-24 rounded-lg object-contain bg-white shadow-2xl animate-subtle-pulse" /></div>;
 
@@ -3967,27 +4007,35 @@ const shouldUseRedirectGoogleAuth = () => {
                             </button>
                         </div>
 
-                        <div style={{ transform: `scale(${scale})`, transformOrigin: isCompactEditorViewport ? 'top center' : 'center center' }} className={`transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) relative flex flex-col shrink-0 bg-white shadow-[0_100px_200px_-50px_rgba(0,0,0,0.15)] ${device === 'desktop' ? (isCompactEditorViewport ? 'w-[980px] h-[470px] rounded-lg border-[14px] border-black overflow-hidden' : 'w-[1200px] h-[820px] rounded-lg border-[24px] border-black overflow-hidden') : (isCompactEditorViewport ? 'w-[430px] h-[520px] rounded-[3.25rem] border-[14px] border-black overflow-hidden' : 'w-[420px] h-[950px] md:h-[1050px] rounded-[5rem] md:rounded-[6rem] border-[16px] md:border-[20px] border-black overflow-hidden')}`}>
+                        <div
+                            style={{
+                                width: `${editorPreviewFrame.width}px`,
+                                height: `${editorPreviewFrame.height}px`,
+                                transform: `scale(${scale})`,
+                                transformOrigin: isCompactEditorViewport ? 'top center' : 'center center'
+                            }}
+                            className={`editor-preview-frame transition-all duration-700 ease-out relative flex flex-col shrink-0 bg-white shadow-[0_100px_200px_-50px_rgba(0,0,0,0.15)] border-black overflow-hidden ${editorPreviewFrameClass}`}
+                        >
                             
                             {device === 'desktop' && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-6 bg-black rounded-b-3xl z-[100] flex items-center justify-center">
+                                <div className={`absolute top-0 left-1/2 -translate-x-1/2 bg-black rounded-b-3xl z-[100] flex items-center justify-center ${isCompactEditorViewport ? 'w-40 h-5' : 'w-48 h-6'}`}>
                                     <div className="w-2.5 h-2.5 rounded-full bg-neutral-900 border border-white/5 shadow-inner" />
                                 </div>
                             )}
 
                             {device === 'mobile' && (
                             <>
-                                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-black rounded-full z-[100] flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-[#111] ml-auto mr-4" /></div>
-                                <div className="absolute top-10 left-12 right-12 z-[100] flex justify-between items-center text-black font-bold text-[13px] tracking-tight">
+                                <div className={`absolute left-1/2 -translate-x-1/2 bg-black rounded-full z-[100] flex items-center justify-center ${isCompactEditorViewport ? 'top-3 w-28 h-7' : 'top-4 w-32 h-8'}`}><div className="w-2 h-2 rounded-full bg-[#111] ml-auto mr-4" /></div>
+                                <div className={`absolute left-10 right-10 z-[100] flex justify-between items-center text-black font-bold tracking-tight ${isCompactEditorViewport ? 'top-8 text-[11px]' : 'top-10 text-[13px]'}`}>
                                     <span>9:41</span><div className="flex gap-2 items-center"><Signal size={14} /><Wifi size={14} /><Battery size={18} strokeWidth={2} /></div>
                                 </div>
-                                <div className="absolute top-32 -left-[12px] w-1 h-16 bg-black rounded-r-lg z-[100]" />
-                                <div className="absolute top-52 -left-[12px] w-1 h-12 bg-black rounded-r-lg z-[100]" />
-                                <div className="absolute top-44 -right-[12px] w-1 h-24 bg-black rounded-l-lg z-[100]" />
+                                <div className={`absolute -left-[10px] w-1 bg-black rounded-r-lg z-[100] ${isCompactEditorViewport ? 'top-28 h-14' : 'top-32 h-16'}`} />
+                                <div className={`absolute -left-[10px] w-1 bg-black rounded-r-lg z-[100] ${isCompactEditorViewport ? 'top-44 h-10' : 'top-52 h-12'}`} />
+                                <div className={`absolute -right-[10px] w-1 bg-black rounded-l-lg z-[100] ${isCompactEditorViewport ? 'top-36 h-20' : 'top-44 h-24'}`} />
                             </>
                             )}
 
-                            <div className={`flex-shrink-0 border-b flex items-center justify-between ${device === 'desktop' ? 'px-16 h-24 bg-neutral-50/50' : 'px-8 h-28 pt-10 bg-white'}`} style={{ borderColor: 'rgba(0,0,0,0.04)' }}>
+                            <div className={`flex-shrink-0 border-b flex items-center justify-between ${device === 'desktop' ? (isCompactEditorViewport ? 'px-10 h-20 bg-neutral-50/50' : 'px-16 h-24 bg-neutral-50/50') : (isCompactEditorViewport ? 'px-7 h-24 pt-8 bg-white' : 'px-8 h-28 pt-10 bg-white')}`} style={{ borderColor: 'rgba(0,0,0,0.04)' }}>
                               <div className="flex gap-3 w-16">
                                 {device === 'desktop' && <><div className="w-3.5 h-3.5 rounded-full bg-red-400/80" /><div className="w-3.5 h-3.5 rounded-full bg-amber-400/80" /><div className="w-3.5 h-3.5 rounded-full bg-green-400/80" /></>}
                               </div>

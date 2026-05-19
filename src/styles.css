@@ -631,6 +631,12 @@ body {
             min-height: 0;
         }
 
+        .editor-preview-frame {
+            max-width: none;
+            max-height: none;
+            will-change: width, height, transform;
+        }
+
         @media (max-width: 767px) and (orientation: portrait) {
             .mobile-editor-rotate-prompt {
                 display: flex;
@@ -911,13 +917,13 @@ body {
             }
 
             .mobile-editor-shell.mobile-editor-panel-is-collapsed .mobile-editor-preview {
-                justify-content: center !important;
+                justify-content: flex-start !important;
                 padding-left: 1rem !important;
                 padding-right: 1rem !important;
             }
 
             .mobile-editor-shell.mobile-editor-panel-is-collapsed.mobile-editor-nav-is-collapsed .mobile-editor-preview {
-                padding-top: 3.45rem !important;
+                padding-top: 4.35rem !important;
                 padding-bottom: 1rem !important;
             }
 

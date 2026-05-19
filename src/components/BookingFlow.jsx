@@ -3,6 +3,19 @@ import { ArrowRight, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Chevro
 import { getFontFamily } from '../data/fonts';
 import { getLocalDateStr } from '../utils/dates';
 
+const alignments = ['left', 'center', 'right'];
+const clampNumber = (value, min, max, fallback) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.min(max, Math.max(min, parsed));
+};
+
+const getAlign = (value) => alignments.includes(value) ? value : 'left';
+const getBlockMargins = (align) => ({
+    marginLeft: align === 'left' ? 0 : 'auto',
+    marginRight: align === 'right' ? 0 : 'auto'
+});
+
 // --- PUBLIC BOOKING ENGINE (WITH NEW EXTENSIONS & SPECIFIC FONTS) ---
         export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onInspect }) => {
             const [step, setStep] = useState(1);
@@ -88,6 +101,21 @@ import { getLocalDateStr } from '../utils/dates';
             const logoAlignmentStyle = {
                 justifyContent: logoDisplay.alignment === 'center' ? 'center' : logoDisplay.alignment === 'right' ? 'flex-end' : 'flex-start'
             };
+            const brandText = {
+                align: getAlign(settings.brandNameAlign),
+                size: clampNumber(settings.brandNameSize, 36, 120, 76),
+                font: settings.brandNameFontFamily || settings.headingFontFamily || settings.fontFamily
+            };
+            const taglineText = {
+                align: getAlign(settings.taglineAlign),
+                size: clampNumber(settings.taglineSize, 8, 22, 9),
+                font: settings.taglineFontFamily || settings.bodyFontFamily || settings.fontFamily
+            };
+            const welcomeText = {
+                align: getAlign(settings.welcomeAlign),
+                size: clampNumber(settings.welcomeSize, 13, 32, 20),
+                font: settings.welcomeFontFamily || settings.bodyFontFamily || settings.fontFamily
+            };
 
             const handleAction = () => {
                 if (isPreview) { onInspect('copy'); return; }
@@ -139,10 +167,19 @@ import { getLocalDateStr } from '../utils/dates';
                     <div className="animate-in fade-in slide-in-from-bottom-20 duration-1000 min-h-full flex flex-col p-6 md:p-12 relative z-10">
                     
                     {/* BRAND HEADER */}
-                    <header className="mb-10 flex-shrink-0 text-left">
-                        <div className={`flex items-center gap-4 mb-8 ${inspectClass}`} onClick={() => isPreview && onInspect('visuals')}>
+                    <header className="mb-10 flex-shrink-0">
+                        <div
+                            className={`flex items-center gap-4 mb-8 ${inspectClass}`}
+                            style={{ justifyContent: taglineText.align === 'center' ? 'center' : taglineText.align === 'right' ? 'flex-end' : 'flex-start' }}
+                            onClick={() => isPreview && onInspect('visuals')}
+                        >
                             <div className="w-12 h-[2px]" style={{ backgroundColor: settings.primaryColor }} />
-                            <span className="text-[9px] font-bold uppercase tracking-[0.6em] opacity-40" style={{ color: settings.bodyColor }}>{settings.tagline}</span>
+                            <span
+                                className="font-bold uppercase tracking-[0.6em] opacity-40"
+                                style={{ color: settings.bodyColor, fontFamily: getFontFamily(taglineText.font), fontSize: `${taglineText.size}px`, textAlign: taglineText.align }}
+                            >
+                                {settings.tagline}
+                            </span>
                         </div>
 
                         {settings.bannerImage && (
@@ -166,14 +203,38 @@ import { getLocalDateStr } from '../utils/dates';
                             </div>
                         )}
 
-                        <h1 className={`text-5xl md:text-8xl font-bold tracking-tighter mb-4 leading-[0.85] ${inspectClass}`} style={{ color: settings.headingColor, fontFamily: getFontFamily(settings.headingFontFamily || settings.fontFamily) }} onClick={() => isPreview && onInspect('identity')}>
+                        <h1
+                            className={`font-bold tracking-tighter mb-4 leading-[0.85] max-w-full ${inspectClass}`}
+                            style={{
+                                color: settings.headingColor,
+                                fontFamily: getFontFamily(brandText.font),
+                                fontSize: `${brandText.size}px`,
+                                textAlign: brandText.align,
+                                overflowWrap: 'anywhere',
+                                ...getBlockMargins(brandText.align)
+                            }}
+                            onClick={() => isPreview && onInspect('identity')}
+                        >
                             {settings.brandName}
                         </h1>
-                        <p className={`opacity-60 text-lg md:text-xl font-light leading-relaxed max-sm:text-sm ${inspectClass} mb-4`} style={{ color: settings.bodyColor }} onClick={() => isPreview && onInspect('identity')}>
+                        <p
+                            className={`opacity-60 font-light leading-relaxed max-w-3xl ${inspectClass} mb-4`}
+                            style={{
+                                color: settings.bodyColor,
+                                fontFamily: getFontFamily(welcomeText.font),
+                                fontSize: `${welcomeText.size}px`,
+                                textAlign: welcomeText.align,
+                                ...getBlockMargins(welcomeText.align)
+                            }}
+                            onClick={() => isPreview && onInspect('identity')}
+                        >
                             {settings.welcomeMessage}
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-3 mt-4">
+                        <div
+                            className="flex flex-wrap items-center gap-3 mt-4"
+                            style={{ justifyContent: welcomeText.align === 'center' ? 'center' : welcomeText.align === 'right' ? 'flex-end' : 'flex-start' }}
+                        >
                             {settings.address && (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest" style={{ backgroundColor: settings.headingColor + '10', color: settings.headingColor }}>
                                     <MapPin size={12} /> {settings.address}

@@ -29,6 +29,14 @@ const logoAlignmentOptions = [
   { id: 'right', label: 'Right', icon: AlignRight }
 ];
 
+const textAlignmentOptions = logoAlignmentOptions;
+
+const clampNumber = (value, min, max, fallback) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+};
+
 const getLogoDisplay = (settings = {}) => {
   const logoDisplay = settings.logoDisplay || {};
   const size = Number(logoDisplay.size);
@@ -39,66 +47,239 @@ const getLogoDisplay = (settings = {}) => {
   };
 };
 
+const identityTextControls = [
+  {
+    id: 'brandName',
+    label: 'Business Name',
+    hint: 'Main booking page heading.',
+    fieldKey: 'brandName',
+    alignKey: 'brandNameAlign',
+    sizeKey: 'brandNameSize',
+    fontKey: 'brandNameFontFamily',
+    fallbackFontKey: 'headingFontFamily',
+    fallbackSize: 76,
+    min: 36,
+    max: 120,
+    step: 2,
+    multiline: false,
+    preview: 'Studio Noir'
+  },
+  {
+    id: 'tagline',
+    label: 'Eyebrow / Tagline',
+    hint: 'Small line above the title.',
+    fieldKey: 'tagline',
+    alignKey: 'taglineAlign',
+    sizeKey: 'taglineSize',
+    fontKey: 'taglineFontFamily',
+    fallbackFontKey: 'bodyFontFamily',
+    fallbackSize: 9,
+    min: 8,
+    max: 22,
+    step: 1,
+    multiline: false,
+    preview: 'Atelier 7B / Private'
+  },
+  {
+    id: 'welcome',
+    label: 'Welcome Text',
+    hint: 'Intro copy under the heading.',
+    fieldKey: 'welcomeMessage',
+    alignKey: 'welcomeAlign',
+    sizeKey: 'welcomeSize',
+    fontKey: 'welcomeFontFamily',
+    fallbackFontKey: 'bodyFontFamily',
+    fallbackSize: 20,
+    min: 13,
+    max: 32,
+    step: 1,
+    multiline: true,
+    preview: 'Reserve your private session.'
+  }
+];
+
+const getIdentityTextSettings = (settings = {}, config) => {
+  const align = textAlignmentOptions.some(option => option.id === settings[config.alignKey]) ? settings[config.alignKey] : 'left';
+  const size = clampNumber(settings[config.sizeKey], config.min, config.max, config.fallbackSize);
+  const font = settings[config.fontKey] || settings[config.fallbackFontKey] || settings.fontFamily || 'inter';
+  return { align, size, font };
+};
+
+function AlignmentButtonGroup({ value, onChange, label = 'Alignment' }) {
+  return (
+    <div>
+      <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 mb-2">{label}</p>
+      <div className="grid grid-cols-3 gap-1.5 rounded-lg bg-neutral-100 p-1">
+        {textAlignmentOptions.map(option => {
+          const IconCmp = option.icon;
+          const isActive = value === option.id;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onChange(option.id)}
+              className={`h-10 rounded-md flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-white hover:text-black'}`}
+              aria-label={`${label} ${option.label}`}
+            >
+              <IconCmp size={14} />
+              <span className="hidden xl:inline">{option.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FontDropdown({ value, onChange, fallbackLabel = 'Theme Default' }) {
+  return (
+    <div className="relative">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 mb-2">Font</p>
+      <select
+        value={value || ''}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full h-11 rounded-lg bg-neutral-50 border border-neutral-100 px-3 pr-9 text-[10px] font-bold uppercase tracking-widest text-black outline-none appearance-none cursor-pointer focus:bg-white focus:border-neutral-200 transition-all"
+        style={{ fontFamily: getFontFamily(value || '') }}
+      >
+        <option value="">{fallbackLabel}</option>
+        {FONT_OPTIONS.map(font => (
+          <option key={font.id} value={font.id} style={{ fontFamily: font.family }}>
+            {font.name} ({font.category})
+          </option>
+        ))}
+      </select>
+      <ChevronDown size={14} className="absolute right-3 bottom-3.5 pointer-events-none text-neutral-400" />
+    </div>
+  );
+}
+
 function LogoDisplayControls({ settings, onChange, className = '' }) {
   const logoDisplay = getLogoDisplay(settings);
   return (
     <div className={`space-y-5 ${className}`}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+      <div className="flex flex-col gap-4">
         <div>
-          <p className="text-sm font-bold text-black">Booking page logo</p>
-          <p className="text-xs text-neutral-400 leading-relaxed">Choose if, where, and how large the logo appears above the page heading.</p>
+          <p className="text-sm font-bold text-black">Booking Page Logo</p>
+          <p className="text-xs text-neutral-400 leading-relaxed max-w-sm">Control logo visibility, position, and size above the page heading.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => onChange('visible', !logoDisplay.visible)}
-          className={`h-10 px-4 rounded-lg border text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${logoDisplay.visible ? 'bg-black text-white border-black' : 'bg-neutral-50 text-neutral-400 border-neutral-100'}`}
-        >
-          {logoDisplay.visible ? <Eye size={14} /> : <EyeOff size={14} />}
-          {logoDisplay.visible ? 'Shown' : 'Hidden'}
-        </button>
+        <div className="grid grid-cols-2 rounded-lg bg-neutral-100 p-1 w-full">
+          {[
+            { value: true, label: 'Shown', icon: Eye },
+            { value: false, label: 'Hidden', icon: EyeOff }
+          ].map(option => {
+            const IconCmp = option.icon;
+            const isActive = logoDisplay.visible === option.value;
+            return (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => onChange('visible', option.value)}
+                className={`h-10 rounded-md flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-white hover:text-black'}`}
+              >
+                <IconCmp size={14} />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 mb-2">Position</p>
-          <div className="grid grid-cols-3 gap-2">
-            {logoAlignmentOptions.map(option => {
-              const IconCmp = option.icon;
-              const isActive = logoDisplay.alignment === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => onChange('alignment', option.id)}
-                  className={`h-11 rounded-lg border flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white border-black shadow-lg' : 'bg-neutral-50 text-neutral-400 border-transparent hover:text-black hover:border-neutral-200'}`}
-                >
-                  <IconCmp size={14} />
-                  <span className="hidden lg:inline">{option.label}</span>
-                </button>
-              );
-            })}
+      <div className="rounded-lg border border-neutral-100 bg-white p-4 shadow-sm">
+        <div className="h-20 rounded-lg bg-neutral-50 border border-neutral-100 px-4 flex items-center mb-5" style={{ justifyContent: logoDisplay.alignment === 'center' ? 'center' : logoDisplay.alignment === 'right' ? 'flex-end' : 'flex-start' }}>
+          <div className="rounded-lg bg-black text-white flex items-center justify-center font-bold text-xs shadow-xl" style={{ width: Math.max(34, logoDisplay.size * 0.32), height: Math.max(34, logoDisplay.size * 0.32) }}>
+            LOGO
           </div>
         </div>
+
+        <div className="grid grid-cols-1 gap-5">
+          <AlignmentButtonGroup value={logoDisplay.alignment} onChange={(value) => onChange('alignment', value)} label="Position" />
+
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Size</p>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-neutral-100 px-2 py-1 rounded-md">{logoDisplay.size}px</span>
+            </div>
+            <input
+              type="range"
+              min="48"
+              max="176"
+              step="4"
+              value={logoDisplay.size}
+              onChange={(event) => onChange('size', Number(event.target.value))}
+              className="w-full accent-black"
+            />
+            <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-neutral-300 mt-1">
+              <span>Small</span>
+              <span>Large</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IdentityTextControl({ settings, config, onChange }) {
+  const appearance = getIdentityTextSettings(settings, config);
+  const value = settings[config.fieldKey] || '';
+  const inputStyle = {
+    textAlign: appearance.align,
+    fontFamily: getFontFamily(appearance.font),
+    fontSize: `${config.id === 'brandName' ? Math.min(28, Math.max(18, appearance.size * 0.32)) : Math.min(18, Math.max(12, appearance.size))}px`
+  };
+
+  return (
+    <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-4 md:p-5 space-y-5 shadow-inner">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-black">{config.label}</p>
+          <p className="text-xs text-neutral-400 leading-relaxed">{config.hint}</p>
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-white border border-neutral-100 px-2 py-1 rounded-md shrink-0">{appearance.size}px</span>
+      </div>
+
+      {config.multiline ? (
+        <textarea
+          value={value}
+          onChange={(event) => onChange(config.fieldKey, event.target.value)}
+          className="w-full min-h-[118px] rounded-lg bg-white border border-neutral-100 px-5 py-4 text-black outline-none focus:border-neutral-200 resize-none transition-all"
+          style={inputStyle}
+          placeholder={config.preview}
+        />
+      ) : (
+        <input
+          type="text"
+          value={value}
+          onChange={(event) => onChange(config.fieldKey, event.target.value)}
+          className={`w-full rounded-lg bg-white border border-neutral-100 px-5 py-4 text-black outline-none focus:border-neutral-200 transition-all ${config.id === 'tagline' ? 'uppercase tracking-[0.35em] font-bold' : 'font-bold tracking-tight'}`}
+          style={inputStyle}
+          placeholder={config.preview}
+        />
+      )}
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <AlignmentButtonGroup value={appearance.align} onChange={(value) => onChange(config.alignKey, value)} />
 
         <div>
           <div className="flex items-center justify-between gap-3 mb-2">
             <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Size</p>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-neutral-100 px-2 py-1 rounded-md">{logoDisplay.size}px</span>
           </div>
           <input
             type="range"
-            min="48"
-            max="176"
-            step="4"
-            value={logoDisplay.size}
-            onChange={(event) => onChange('size', Number(event.target.value))}
+            min={config.min}
+            max={config.max}
+            step={config.step}
+            value={appearance.size}
+            onChange={(event) => onChange(config.sizeKey, Number(event.target.value))}
             className="w-full accent-black"
           />
           <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-neutral-300 mt-1">
-            <span>Small</span>
-            <span>Large</span>
+            <span>{config.min}px</span>
+            <span>{config.max}px</span>
           </div>
         </div>
+
+        <FontDropdown value={settings[config.fontKey] || ''} onChange={(value) => onChange(config.fontKey, value)} />
       </div>
     </div>
   );
@@ -167,6 +348,9 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
                 buttonTextColor: '#000000', 
                 fontFamily: 'inter', 
                 headingFontFamily: '', bodyFontFamily: '', buttonFontFamily: '', slotFontFamily: '', dateFontFamily: '',
+                brandNameAlign: 'left', brandNameSize: 76, brandNameFontFamily: '',
+                taglineAlign: 'left', taglineSize: 9, taglineFontFamily: '',
+                welcomeAlign: 'left', welcomeSize: 20, welcomeFontFamily: '',
                 buttonStyle: 'pill', availabilityStyle: 'minimal',
                 dateLabel: 'Which day are you looking to book ?', timeLabel: 'Lets see what time works', buttonText: 'Book Now', confirmButtonText: 'Confirm Booking', 
                 detailsHeading: 'Your Details', detailsSubHeading: 'Secure Your Slot', successHeading: 'Booking Confirmed!', 
@@ -2693,10 +2877,21 @@ const createOwnerStaffProfile = (signedInUser, color = '#39FF14') => ({
                                     </div>
                                     </div>
                                     <div className="space-y-5">
-                                    <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Business Details</label>
-                                    <input type="text" value={settings.brandName} onChange={(e) => handleSettingChange('brandName', e.target.value)} className="w-full bg-neutral-50 border-none rounded-lg px-5 md:px-8 py-4 md:py-6 text-lg md:text-xl font-bold focus:bg-white transition-all outline-none border border-transparent focus:border-neutral-100 text-black shadow-inner" placeholder="Studio Title" />
-                                    <input type="text" value={settings.tagline} onChange={(e) => handleSettingChange('tagline', e.target.value)} className="w-full bg-neutral-50 border-none rounded-lg px-5 md:px-8 py-4 md:py-6 text-[11px] md:text-xs font-bold uppercase tracking-[0.25em] md:tracking-[0.5em] focus:bg-white transition-all outline-none border border-transparent focus:border-neutral-100 text-black shadow-inner" placeholder="Tagline" />
-                                    <textarea value={settings.welcomeMessage} onChange={(e) => handleSettingChange('welcomeMessage', e.target.value)} className="w-full bg-neutral-50 border-none rounded-lg px-5 md:px-8 py-4 md:py-6 text-sm font-medium focus:bg-white transition-all outline-none min-h-[120px] md:min-h-[140px] border border-transparent focus:border-neutral-100 text-black shadow-inner resize-none" placeholder="Welcome Sequence" />
+                                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                                        <div>
+                                            <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Business Text</label>
+                                            <p className="text-xs text-neutral-400 font-medium mt-2">Fine tune the booking page title, tagline, and intro copy.</p>
+                                        </div>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-50 border border-neutral-100 px-3 py-2 rounded-lg">Per Text Styling</span>
+                                    </div>
+                                    {identityTextControls.map(config => (
+                                        <IdentityTextControl
+                                            key={config.id}
+                                            settings={settings}
+                                            config={config}
+                                            onChange={handleSettingChange}
+                                        />
+                                    ))}
                                     </div>
                                     <div className="space-y-5 pt-10 border-t border-neutral-50">
                                     <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Booking Link</label>

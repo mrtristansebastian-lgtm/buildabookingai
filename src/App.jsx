@@ -2172,7 +2172,9 @@ const createGoogleProvider = () => {
                     return (
                         <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-6">
                             <div className="max-w-md text-center">
-                                <BuildABookingBrand className="w-64 max-w-full text-white mx-auto mb-8" />
+                                <div className="inline-flex rounded-lg bg-white px-4 py-3 mx-auto mb-8">
+                                    <BuildABookingBrand className="w-56 max-w-full" />
+                                </div>
                                 <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-white/40 mb-4">Booking Page</p>
                                 <h1 className="text-4xl font-bold tracking-tight mb-4">Page unavailable</h1>
                                 <p className="text-white/55 leading-relaxed">{publicError || 'This booking page is not available yet.'}</p>
@@ -2195,7 +2197,7 @@ const createGoogleProvider = () => {
                     <nav className="fixed w-full z-50 bg-white/82 backdrop-blur-xl border-b border-neutral-200/50 transition-all native-home-nav">
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
                         <div className="flex items-center cursor-pointer" onClick={() => setView('landing')}>
-                          <BuildABookingBrand className="w-[204px] md:w-[250px] h-auto text-black" />
+                          <BuildABookingBrand className="w-[156px] md:w-[188px] h-auto" />
                         </div>
                         <div className="flex items-center gap-3 md:gap-6">
                           <button onClick={() => openAuthPanel('signin')} className="hidden md:block text-sm font-semibold text-neutral-500 hover:text-black transition-colors">Sign In</button>
@@ -2357,7 +2359,7 @@ const createGoogleProvider = () => {
                     {!sidebarCollapsed && (
                     <>
                         <div className="flex items-center mb-8 px-2 cursor-pointer group" onClick={() => setView('landing')}>
-                            <BuildABookingBrand className="w-[244px] h-auto text-black transition-transform duration-300 group-hover:scale-[1.02]" />
+                            <BuildABookingBrand className="w-[190px] h-auto transition-transform duration-300 group-hover:scale-[1.02]" />
                         </div>
                         {user && (
                             <div className="mb-6 rounded-lg border border-neutral-100 bg-neutral-50 p-3">

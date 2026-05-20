@@ -13,6 +13,26 @@ export const firebaseConfigStr = runtimeFirebaseConfig || import.meta.env.VITE_F
 export const appId = runtimeAppId || import.meta.env.VITE_APP_ID || 'build-a-booking-v2';
 export const initialAuthToken = runtimeInitialAuthToken || import.meta.env.VITE_INITIAL_AUTH_TOKEN || '';
 
+const shouldUseCurrentHostForAuth = (config) => {
+  if (typeof window === 'undefined' || !config?.projectId) return false;
+  const { hostname, protocol } = window.location;
+  if (protocol !== 'https:') return false;
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') return false;
+
+  // Firebase redirect sign-in is most reliable when the auth helper is served
+  // from the same Hosting origin as the app. Keep localhost/dev on the configured
+  // firebaseapp.com helper, but use the live web.app Hosting domain in production.
+  return hostname === `${config.projectId}.web.app` || hostname === `${config.projectId}.firebaseapp.com`;
+};
+
+const getFirebaseConfig = () => {
+  const config = JSON.parse(firebaseConfigStr);
+  if (shouldUseCurrentHostForAuth(config)) {
+    return { ...config, authDomain: window.location.hostname };
+  }
+  return config;
+};
+
 let firebaseApp = null;
 let authInstance = null;
 let dbInstance = null;
@@ -20,7 +40,7 @@ let storageInstance = null;
 
 if (firebaseConfigStr !== '{}') {
   try {
-    firebaseApp = initializeApp(JSON.parse(firebaseConfigStr));
+    firebaseApp = initializeApp(getFirebaseConfig());
     authInstance = getAuth(firebaseApp);
     dbInstance = getFirestore(firebaseApp);
     storageInstance = getStorage(firebaseApp);

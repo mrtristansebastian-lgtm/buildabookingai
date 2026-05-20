@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Build A Booking</title>
-    <link rel="icon" type="image/png" href="logoblackonwhite.png">
+    <link rel="icon" type="image/svg+xml" href="../public/build-a-booking-mark.svg">
 
     <!-- Google Fonts: 27-Font Typography Engine (Now Including Brush/Graffiti) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2178,7 +2178,7 @@ const { useState, useEffect, useMemo, useRef, memo } = React;
                 showToast(`Waitlist message sent to ${booking.clientName}.`);
             };
 
-            if (loading) return <div className="h-screen bg-[#050505] flex items-center justify-center"><img src="logoblackonwhite.png" alt="Build A Booking" className="w-24 h-24 rounded-lg object-contain bg-white shadow-2xl animate-subtle-pulse" /></div>;
+            if (loading) return <div className="h-screen bg-[#050505] flex items-center justify-center"><img src="../public/build-a-booking-mark.svg" alt="Build A Booking" className="w-24 h-24 rounded-lg object-contain bg-white shadow-2xl animate-subtle-pulse" /></div>;
 
             if (view === 'landing') {
                 return (
@@ -2187,7 +2187,7 @@ const { useState, useEffect, useMemo, useRef, memo } = React;
                     <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-xl border-b border-neutral-200/50 transition-all">
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('landing')}>
-                          <img src="logoblackonwhite.png" alt="Build A Booking logo" className="w-9 h-9 rounded-lg object-contain bg-white shadow-sm" />
+                          <img src="../public/build-a-booking-mark.svg" alt="Build A Booking logo" className="w-9 h-9 rounded-lg object-contain bg-white shadow-sm" />
                           <span className="font-display font-semibold text-base md:text-xl tracking-tight">Build A Booking</span>
                         </div>
                         <div className="flex items-center gap-6">
@@ -2330,7 +2330,7 @@ const { useState, useEffect, useMemo, useRef, memo } = React;
                     {!sidebarCollapsed && (
                     <>
                         <div className="flex items-center gap-4 mb-16 md:mb-24 px-2 cursor-pointer group" onClick={() => setView('landing')}>
-                            <img src="logoblackonwhite.png" alt="Build A Booking logo" className="w-11 h-11 rounded-lg object-contain bg-white shadow-xl group-hover:scale-105 transition-all duration-300" />
+                            <img src="../public/build-a-booking-mark.svg" alt="Build A Booking logo" className="w-11 h-11 rounded-lg object-contain bg-white shadow-xl group-hover:scale-105 transition-all duration-300" />
                             <span className="font-display font-semibold text-[18px] tracking-tight leading-none">Build A Booking</span>
                         </div>
                         <nav className="space-y-3 flex-1 overflow-y-auto no-scrollbar pb-10">

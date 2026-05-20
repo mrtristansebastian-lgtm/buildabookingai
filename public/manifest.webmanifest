@@ -9,10 +9,10 @@
   "theme_color": "#000000",
   "icons": [
     {
-      "src": "/logoblackonwhite.png",
-      "sizes": "448x557",
-      "type": "image/png",
-      "purpose": "any"
+      "src": "/build-a-booking-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

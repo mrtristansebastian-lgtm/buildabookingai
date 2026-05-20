@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { BusinessCalendar } from './components/BusinessCalendar';
 import { BookingFlow } from './components/BookingFlow';
+import { BuildABookingBrand } from './components/BuildABookingBrand';
 import { ProButton } from './components/ProButton';
 import { FONT_OPTIONS, getFontFamily } from './data/fonts';
 import { PRESET_THEMES } from './data/themes';
@@ -2160,14 +2161,18 @@ const createGoogleProvider = () => {
                 ? (isCompactEditorViewport ? 'rounded-lg border-[12px]' : 'rounded-lg border-[22px]')
                 : (isCompactEditorViewport ? 'rounded-[3rem] border-[12px]' : 'rounded-[5rem] md:rounded-[5.5rem] border-[16px] md:border-[18px]');
 
-            if (loading || publicLoading) return <div className="h-screen bg-[#050505] flex items-center justify-center"><img src="/logoblackonwhite.png" alt="Build A Booking" className="w-24 h-24 rounded-lg object-contain bg-white shadow-2xl animate-subtle-pulse" /></div>;
+            if (loading || publicLoading) return (
+                <div className="h-screen bg-white flex items-center justify-center">
+                    <BuildABookingBrand className="w-64 max-w-[72vw] text-black animate-subtle-pulse" />
+                </div>
+            );
 
             if (publicSlug) {
                 if (publicError || !publicWorkspace) {
                     return (
                         <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-6">
                             <div className="max-w-md text-center">
-                                <img src="/logoblackonwhite.png" alt="Build A Booking" className="w-16 h-16 rounded-lg object-contain bg-white shadow-2xl mx-auto mb-8" />
+                                <BuildABookingBrand className="w-64 max-w-full text-white mx-auto mb-8" />
                                 <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-white/40 mb-4">Booking Page</p>
                                 <h1 className="text-4xl font-bold tracking-tight mb-4">Page unavailable</h1>
                                 <p className="text-white/55 leading-relaxed">{publicError || 'This booking page is not available yet.'}</p>
@@ -2189,9 +2194,8 @@ const createGoogleProvider = () => {
                     {/* Navigation */}
                     <nav className="fixed w-full z-50 bg-white/82 backdrop-blur-xl border-b border-neutral-200/50 transition-all native-home-nav">
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
-                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('landing')}>
-                          <img src="logoblackonwhite.png" alt="Build A Booking logo" className="w-9 h-9 rounded-lg object-contain bg-white shadow-sm" />
-                          <span className="font-display font-semibold text-base md:text-xl tracking-tight">Build A Booking</span>
+                        <div className="flex items-center cursor-pointer" onClick={() => setView('landing')}>
+                          <BuildABookingBrand className="w-[204px] md:w-[250px] h-auto text-black" />
                         </div>
                         <div className="flex items-center gap-3 md:gap-6">
                           <button onClick={() => openAuthPanel('signin')} className="hidden md:block text-sm font-semibold text-neutral-500 hover:text-black transition-colors">Sign In</button>
@@ -2352,9 +2356,8 @@ const createGoogleProvider = () => {
                 <div className={`dashboard-sidebar hidden md:flex transition-all duration-700 ease-in-out bg-white border-r border-neutral-100 flex-col relative z-50 shadow-sm ${sidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-80 p-8'}`}>
                     {!sidebarCollapsed && (
                     <>
-                        <div className="flex items-center gap-4 mb-8 px-2 cursor-pointer group" onClick={() => setView('landing')}>
-                            <img src="logoblackonwhite.png" alt="Build A Booking logo" className="w-11 h-11 rounded-lg object-contain bg-white shadow-xl group-hover:scale-105 transition-all duration-300" />
-                            <span className="font-display font-semibold text-[18px] tracking-tight leading-none">Build A Booking</span>
+                        <div className="flex items-center mb-8 px-2 cursor-pointer group" onClick={() => setView('landing')}>
+                            <BuildABookingBrand className="w-[244px] h-auto text-black transition-transform duration-300 group-hover:scale-[1.02]" />
                         </div>
                         {user && (
                             <div className="mb-6 rounded-lg border border-neutral-100 bg-neutral-50 p-3">

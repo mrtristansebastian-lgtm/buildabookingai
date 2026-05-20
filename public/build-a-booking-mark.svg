@@ -1,0 +1,30 @@
+<svg viewBox="0 0 76 76" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Build A Booking">
+  <defs>
+    <linearGradient id="accent" x1="6" y1="66" x2="68" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8ccff"/>
+      <stop offset="0.22" stop-color="#ffd4f2"/>
+      <stop offset="0.48" stop-color="#c6f7ff"/>
+      <stop offset="0.72" stop-color="#dcff80"/>
+      <stop offset="1" stop-color="#c8fff0"/>
+    </linearGradient>
+    <filter id="glow" x="-24" y="-24" width="124" height="124" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.42 0 0 0 0 0.96 0 0 0 0 1 0 0 0 0.72 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+  <rect width="76" height="76" rx="18" fill="white"/>
+  <path d="M18 14h24.5c9.2 0 16 6.1 16 14.2 0 5.9-3.6 10.7-9 12.7 7 1.9 11.8 7 11.8 14.1 0 8.9-7 15-17.4 15H18V14Z" stroke="url(#accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.55" filter="url(#glow)"/>
+  <g stroke="#050505" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 14.5v47" stroke-width="4.8"/>
+    <path d="M19 15h22.8c8.5 0 14.8 5.5 14.8 13.1 0 7.2-5.8 12.4-14.4 12.4H19" stroke-width="4.8"/>
+    <path d="M28.4 40.5h16.8c9 0 15.4 5.4 15.4 12.9 0 7.4-6.2 12.6-15.4 12.6H19" stroke-width="4.8"/>
+    <path d="M9.5 28.5h15" stroke-width="4.2"/>
+    <path d="M9.5 51.5h15" stroke-width="4.2"/>
+  </g>
+  <g transform="translate(11 40)">
+    <rect x="0.5" y="0.5" width="30" height="25" rx="6.5" fill="white" stroke="#050505" stroke-width="3"/>
+    <path d="M7.5 0.5v-5M23.5 0.5v-5" stroke="#050505" stroke-width="3" stroke-linecap="round"/>
+    <path d="M8.5 13.2l5 5 10-10.5" stroke="url(#accent)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

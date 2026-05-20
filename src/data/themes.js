@@ -1,5 +1,7 @@
+import { colorContrastRatio, ensureReadableTextColor, hexToHsl, mixHexColors, normalizeHexColor, readableTextFor, themeBackground } from '../utils/theme.js';
+
 // --- PRESET THEMES ENGINE ---
-        export const PRESET_THEMES = [
+        const RAW_PRESET_THEMES = [
             // --- DARK & STEALTH ---
             { id: 'neon-obsidian', name: 'Neon Obsidian', primaryColor: '#39FF14', backgroundColor: '#050505', headingColor: '#ffffff', bodyColor: '#888888', slotBgColor: '#111111', slotTextColor: '#ffffff', dateBgColor: 'transparent', dateTextColor: '#888888', dateActiveBgColor: 'transparent', dateActiveTextColor: '#ffffff', buttonTextColor: '#000000', buttonStyle: 'pill', fontFamily: 'space-grotesk', availabilityStyle: 'minimal' },
             { id: 'vanta-black', name: 'Vanta Black', primaryColor: '#FFFFFF', backgroundColor: '#000000', headingColor: '#FFFFFF', bodyColor: '#999999', slotBgColor: '#1A1A1A', slotTextColor: '#FFFFFF', dateBgColor: 'transparent', dateTextColor: '#999999', dateActiveBgColor: '#1A1A1A', dateActiveTextColor: '#FFFFFF', buttonTextColor: '#000000', buttonStyle: 'sharp', fontFamily: 'public-sans', availabilityStyle: 'solid' },
@@ -190,3 +192,127 @@
             { id: 'champagne-luxe', name: 'Champagne Luxe', primaryColor: '#D4AF37', backgroundColor: '#FFFDF8', headingColor: '#2F2508', bodyColor: '#74694D', slotBgColor: '#FFFFFF', slotTextColor: '#2F2508', dateBgColor: 'transparent', dateTextColor: '#74694D', dateActiveBgColor: '#F8E7A8', dateActiveTextColor: '#2F2508', buttonTextColor: '#2F2508', buttonStyle: 'sharp', fontFamily: 'marcellus', availabilityStyle: 'outline' },
             { id: 'yellow-handmade', name: 'Yellow Handmade', primaryColor: '#FACC15', backgroundColor: '#FFFFFF', headingColor: '#332700', bodyColor: '#72684D', slotBgColor: '#FEFCE8', slotTextColor: '#332700', dateBgColor: 'transparent', dateTextColor: '#72684D', dateActiveBgColor: '#FEF3C7', dateActiveTextColor: '#332700', buttonTextColor: '#332700', buttonStyle: 'pill', fontFamily: 'caveat-brush', availabilityStyle: 'minimal' },
         ];
+
+const COLOR_FAMILIES = [
+    { id: 'red', start: 345, end: 15 },
+    { id: 'orange', start: 15, end: 38 },
+    { id: 'yellow', start: 38, end: 65 },
+    { id: 'earth', start: 65, end: 100 },
+    { id: 'green', start: 100, end: 170 },
+    { id: 'blue', start: 190, end: 255 },
+    { id: 'purple', start: 255, end: 295 },
+    { id: 'pink', start: 295, end: 345 }
+];
+
+const hueBetweenLocal = (h, start, end) => start <= end ? h >= start && h < end : h >= start || h < end;
+
+const unique = (items) => [...new Set(items.filter(Boolean))];
+
+const softTint = (background, accent, darkAmount = 0.18, lightAmount = 0.88) => {
+    const bg = normalizeHexColor(background, '#FFFFFF');
+    const primary = normalizeHexColor(accent, '#000000');
+    return themeBackground({ backgroundColor: bg }).l < 45
+        ? mixHexColors(bg, primary, darkAmount)
+        : mixHexColors(primary, '#FFFFFF', lightAmount);
+};
+
+const bestTextFor = (background) => (
+    colorContrastRatio('#000000', background) >= colorContrastRatio('#FFFFFF', background) ? '#000000' : '#FFFFFF'
+);
+
+const resolvePalette = (theme) => {
+    const primary = normalizeHexColor(theme.primaryColor, '#000000');
+    const hsl = hexToHsl(primary);
+    const bg = themeBackground(theme);
+    if (bg.l < 18) return 'dark';
+    if (hsl.s < 12 || ['#000000', '#FFFFFF', '#111827'].includes(primary)) return 'neutral';
+    return COLOR_FAMILIES.find(family => hueBetweenLocal(hsl.h, family.start, family.end))?.id || 'neutral';
+};
+
+const deriveStyleTags = (theme) => {
+    const text = `${theme.id} ${theme.name} ${theme.fontFamily} ${theme.buttonStyle} ${theme.availabilityStyle}`.toLowerCase();
+    const tags = [];
+    if (/pro|modern|clean|chrome|studio|sans|minimal|white|cobalt|alpine|marine|denim|mint|graphite|platinum|ceramic|aero|urbanist|figtree|inter|manrope|lexend/.test(text)) tags.push('modern');
+    if (/night|noir|black|vanta|obsidian|carbon|midnight/.test(text)) tags.push('night');
+    if (/editorial|serif|prata|bodoni|newsreader|lora|merriweather|spectral|cormorant|marcellus|cinzel|libre/.test(text)) tags.push('editorial');
+    if (/luxe|luxury|velvet|champagne|royal|plum|ivory|gold|bridal|atelier|signature/.test(text)) tags.push('luxury');
+    if (/minimal|clean|white|ceramic|platinum|graphite|sans|pro/.test(text)) tags.push('minimal');
+    if (/pop|barbie|bubblegum|hot|brutal|display|vermilion|fuchsia|cyber/.test(text)) tags.push('bold');
+    if (/mono|tech|cyber|source-code|roboto-mono|jetbrains|ibm-plex-mono|space-mono|lab/.test(text)) tags.push('tech');
+    if (/forest|botanical|sage|garden|matcha|olive|oat|mint|ivy|jungle|earth|canvas/.test(text)) tags.push('organic');
+    if (/handmade|marker|kalam|caveat|permanent|sedgwick|brush/.test(text)) tags.push('handmade');
+    if (/commerce|market|boutique|retail/.test(text)) tags.push('commerce');
+    return unique(tags.length ? tags : ['modern']);
+};
+
+const deriveIndustryTags = (theme, palette, styleTags) => {
+    const text = `${theme.id} ${theme.name} ${theme.fontFamily}`.toLowerCase();
+    const tags = [];
+    if (['pink', 'purple'].includes(palette) || /salon|beauty|bridal|blush|rose|lipstick|boutique|lavender/.test(text)) tags.push('beauty');
+    if (['green', 'earth'].includes(palette) || /wellness|garden|mint|sage|matcha|oat|forest|botanical/.test(text)) tags.push('wellness');
+    if (['green', 'blue'].includes(palette) || /medical|clinic|care|mint|clean|alpine/.test(text)) tags.push('healthcare');
+    if (['blue', 'neutral'].includes(palette) || /graphite|cobalt|alpine|pro|consult/.test(text)) tags.push('consulting');
+    if (['purple', 'pink'].includes(palette) || styleTags.includes('bold') || /gallery|creative|orchid|magenta|violet/.test(text)) tags.push('creative');
+    if (['yellow', 'red', 'orange'].includes(palette) || /event|champagne|gold|carpet|velvet|coral/.test(text)) tags.push('events');
+    if (['orange', 'yellow'].includes(palette) || /food|cafe|market|honey|saffron|tangerine|peach|terracotta/.test(text)) tags.push('food');
+    if (['orange', 'neutral', 'blue'].includes(palette) || styleTags.includes('tech') || /trade|mono|brutal|copper|denim/.test(text)) tags.push('trades');
+    if (['blue', 'green', 'yellow'].includes(palette) || /academy|education|workshop|friendly/.test(text)) tags.push('education');
+    if (styleTags.includes('commerce') || ['pink', 'purple', 'orange'].includes(palette) || /boutique|commerce|market|retail/.test(text)) tags.push('retail');
+    if (['yellow', 'orange', 'neutral'].includes(palette) || /hospitality|hotel|restaurant|noir|ivory|gold/.test(text)) tags.push('hospitality');
+    if (['green', 'blue', 'neutral'].includes(palette) || /property|real|estate|forest|cobalt|graphite/.test(text)) tags.push('property');
+    if (['blue', 'neutral'].includes(palette) || /finance|platinum|graphite|cobalt|ink/.test(text)) tags.push('finance');
+    if (styleTags.includes('tech') || ['blue', 'purple'].includes(palette) || /tech|cyber|lab|mono/.test(text)) tags.push('technology');
+    if (['green', 'red', 'blue'].includes(palette) || /fitness|sport|neon|performance|citron/.test(text)) tags.push('fitness');
+    return unique(tags.length ? tags : ['consulting']);
+};
+
+const polishPresetTheme = (theme) => {
+    const backgroundColor = normalizeHexColor(theme.backgroundColor, '#FFFFFF');
+    const primaryColor = normalizeHexColor(theme.primaryColor, '#000000');
+    const headingColor = ensureReadableTextColor(theme.headingColor, backgroundColor, readableTextFor(backgroundColor), 4.5);
+    const bodyColor = ensureReadableTextColor(theme.bodyColor, backgroundColor, headingColor, 3.2);
+    const dark = themeBackground({ backgroundColor }).l < 45;
+    const palette = resolvePalette({ ...theme, backgroundColor, primaryColor });
+    const styleTags = deriveStyleTags(theme);
+    const industryTags = deriveIndustryTags(theme, palette, styleTags);
+    const slotSurface = theme.slotBgColor && theme.slotBgColor !== 'transparent'
+        ? normalizeHexColor(theme.slotBgColor, softTint(backgroundColor, primaryColor))
+        : softTint(backgroundColor, primaryColor, 0.14, 0.92);
+    const activeDateSurface = theme.dateActiveBgColor && theme.dateActiveBgColor !== 'transparent'
+        ? normalizeHexColor(theme.dateActiveBgColor, softTint(backgroundColor, primaryColor))
+        : (theme.availabilityStyle === 'minimal' ? 'transparent' : softTint(backgroundColor, primaryColor, 0.2, 0.86));
+    const slotTextColor = ensureReadableTextColor(theme.slotTextColor || headingColor, slotSurface, headingColor, 4.5);
+    const dateTextColor = ensureReadableTextColor(theme.dateTextColor || bodyColor, backgroundColor, bodyColor, 3);
+    const dateActiveTextColor = activeDateSurface === 'transparent'
+        ? ensureReadableTextColor(theme.dateActiveTextColor || primaryColor, backgroundColor, headingColor, 3)
+        : ensureReadableTextColor(theme.dateActiveTextColor || headingColor, activeDateSurface, headingColor, 4.5);
+    const buttonTextColor = ensureReadableTextColor(theme.buttonTextColor, primaryColor, bestTextFor(primaryColor), 4.5);
+    const faqSurface = dark ? mixHexColors(backgroundColor, primaryColor, 0.08) : mixHexColors(backgroundColor, primaryColor, 0.035);
+    const socialStyle = theme.socialIconStyle || (theme.availabilityStyle === 'solid' ? 'solid' : 'outline');
+
+    return {
+        ...theme,
+        primaryColor,
+        backgroundColor,
+        headingColor,
+        bodyColor,
+        slotBgColor: slotSurface,
+        slotTextColor,
+        dateTextColor,
+        dateActiveBgColor: activeDateSurface,
+        dateActiveTextColor,
+        buttonTextColor,
+        faqStyle: theme.faqStyle || theme.availabilityStyle || 'minimal',
+        faqBgColor: theme.faqBgColor || faqSurface,
+        faqBorderColor: theme.faqBorderColor || mixHexColors(backgroundColor, primaryColor, dark ? 0.32 : 0.18),
+        socialIconStyle: socialStyle,
+        socialIconColor: theme.socialIconColor || primaryColor,
+        socialIconBgColor: theme.socialIconBgColor || (socialStyle === 'solid' ? primaryColor : 'transparent'),
+        socialIconTextColor: ensureReadableTextColor(theme.socialIconTextColor || buttonTextColor, socialStyle === 'solid' ? primaryColor : backgroundColor, bestTextFor(socialStyle === 'solid' ? primaryColor : backgroundColor), 4.5),
+        palette,
+        styleTags,
+        industryTags
+    };
+};
+
+export const PRESET_THEMES = RAW_PRESET_THEMES.map(polishPresetTheme);

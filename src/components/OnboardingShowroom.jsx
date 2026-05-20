@@ -313,6 +313,18 @@ const getPopoverStyle = (spotlight) => {
   return { left, top, width, maxHeight: isMobile || isMobileTour ? 'calc(100vh - 32px)' : undefined };
 };
 
+const getDesktopTourPopoverStyle = () => {
+  const width = window.innerWidth >= 1280 ? 390 : 360;
+  const left = clamp(window.innerWidth - width - 32, 340, window.innerWidth - width - 24);
+  const top = clamp(104, 72, Math.max(72, window.innerHeight - 340));
+  return { left, top, width, maxHeight: 'calc(100vh - 132px)' };
+};
+
+const getDesktopTourCuePoint = (popoverStyle) => ({
+  x: popoverStyle.left + 26,
+  y: popoverStyle.top + 58
+});
+
 export function OnboardingShowroom({
   open,
   settings,
@@ -373,7 +385,7 @@ export function OnboardingShowroom({
   }, [open, scene.id, scene.type]);
 
   useLayoutEffect(() => {
-    if (!open || scene.type !== 'platform' || !isMobileTour) return undefined;
+    if (!open || scene.type !== 'platform') return undefined;
 
     let cancelled = false;
     const scrollTop = () => {
@@ -389,7 +401,7 @@ export function OnboardingShowroom({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [isMobileTour, open, scene.id, scene.type]);
+  }, [open, scene.id, scene.type]);
 
   useLayoutEffect(() => {
     if (!open || scene.type !== 'platform') {
@@ -404,6 +416,7 @@ export function OnboardingShowroom({
     const updateCue = () => {
       if (cancelled) return;
       const navTarget = getTourNavTarget(scene.tab);
+      const isMobileCue = isMobileTourViewport();
       const contentTarget = document.querySelector(`[data-tour="${scene.target}"]`);
       if (!navTarget) {
         timer = window.setTimeout(updateCue, 100);
@@ -414,10 +427,16 @@ export function OnboardingShowroom({
         if (cancelled) return;
         const navRect = buildRect(navTarget.getBoundingClientRect(), 8);
         const contentRect = contentTarget ? buildRect(contentTarget.getBoundingClientRect(), 12) : null;
+        const desktopPopoverStyle = isMobileCue ? null : getDesktopTourPopoverStyle();
         const fallbackTo = {
           x: clamp(navRect.left + navRect.width + 420, 240, window.innerWidth - 220),
           y: clamp(navRect.top + navRect.height / 2, 96, window.innerHeight - 96)
         };
+        const cueDestination = desktopPopoverStyle
+          ? getDesktopTourCuePoint(desktopPopoverStyle)
+          : contentRect
+            ? getRectCenter(contentRect)
+            : fallbackTo;
         window.clearTimeout(cleanupTimer);
         setNavCue({
           sceneId: scene.id,
@@ -426,10 +445,10 @@ export function OnboardingShowroom({
           navRect,
           contentRect,
           from: getRectCenter(navRect),
-          to: contentRect ? getRectCenter(contentRect) : fallbackTo,
-          phase: contentRect ? 'ready' : 'seeking'
+          to: cueDestination,
+          phase: desktopPopoverStyle || contentRect ? 'ready' : 'seeking'
         });
-        if (!contentRect) {
+        if (isMobileCue && !contentRect) {
           timer = window.setTimeout(updateCue, 90);
           return;
         }
@@ -458,58 +477,28 @@ export function OnboardingShowroom({
       return undefined;
     }
 
-    setTourFocus(null);
     let cancelled = false;
-    let timer = null;
-    let retryTimer = null;
-    const padding = isMobileTourViewport() ? 10 : 16;
 
-    const updateFocus = (shouldCenterTarget = false) => {
+    const updateFocus = () => {
       if (cancelled) return;
-      const target = document.querySelector(`[data-tour="${scene.target}"]`);
-      if (!target) {
-        setTourFocus(null);
-        retryTimer = window.setTimeout(() => updateFocus(shouldCenterTarget), 120);
-        return;
-      }
-
-      if (shouldCenterTarget) scrollTargetForTour(target, isMobileTour);
-
       window.requestAnimationFrame(() => {
         if (cancelled) return;
-        window.requestAnimationFrame(() => {
-          if (cancelled) return;
-          const rect = target.getBoundingClientRect();
-          const spotlightStyle = {
-            target: scene.target,
-            top: Math.max(12, rect.top - padding),
-            left: Math.max(12, rect.left - padding),
-            width: Math.min(window.innerWidth - 24, rect.width + padding * 2),
-            height: Math.min(window.innerHeight - 24, rect.height + padding * 2)
-          };
-          setTourFocus({
-            sceneId: scene.id,
-            target: scene.target,
-            spotlightStyle,
-            popoverStyle: getPopoverStyle(spotlightStyle)
-          });
+        setTourFocus({
+          sceneId: scene.id,
+          target: scene.target,
+          spotlightStyle: null,
+          popoverStyle: getDesktopTourPopoverStyle(),
+          naturalDesktop: true
         });
       });
     };
 
-    const refreshFocus = () => updateFocus(false);
-
-    updateFocus(true);
-    timer = window.setTimeout(() => updateFocus(true), 420);
-    window.addEventListener('resize', refreshFocus);
-    window.addEventListener('scroll', refreshFocus, true);
+    updateFocus();
+    window.addEventListener('resize', updateFocus);
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
-      window.clearTimeout(retryTimer);
-      window.removeEventListener('resize', refreshFocus);
-      window.removeEventListener('scroll', refreshFocus, true);
+      window.removeEventListener('resize', updateFocus);
     };
   }, [isMobileTour, open, scene.id, scene.target, scene.type]);
 
@@ -832,6 +821,7 @@ function LinkScene({ draft, generatedLink, onBack, onNext }) {
 
 function PlatformScene({ scene, sceneIndex, focus, navCue, isMobileTour, onBack, onNext, onNavigate }) {
   const isFocusReady = focus?.sceneId === scene.id && focus?.target === scene.target;
+  const isNaturalDesktopTour = Boolean(focus?.naturalDesktop);
   const spotlight = isFocusReady ? focus.spotlightStyle : null;
   const popoverStyle = isFocusReady ? focus.popoverStyle : null;
   const showPopover = Boolean(
@@ -875,9 +865,9 @@ function PlatformScene({ scene, sceneIndex, focus, navCue, isMobileTour, onBack,
 
   return (
     <>
-      <SpotlightPanels spotlight={spotlight} />
       <NavigationClickCue cue={navCue} />
-      {spotlight?.target === scene.target && (
+      {!isNaturalDesktopTour && spotlight && <SpotlightPanels spotlight={spotlight} />}
+      {!isNaturalDesktopTour && spotlight?.target === scene.target && (
         <div
           className="tour-spotlight-ring fixed z-[10001] rounded-[1.35rem] border-2 pointer-events-none"
           style={ringStyle}
@@ -891,7 +881,7 @@ function PlatformScene({ scene, sceneIndex, focus, navCue, isMobileTour, onBack,
       {showPopover && (
         <div
           key={scene.id}
-          className="tour-popover fixed z-[10002] pointer-events-auto overflow-y-auto rounded-[1.5rem] bg-white text-black p-4 md:p-6 shadow-[0_30px_100px_-30px_rgba(0,0,0,0.75)] border border-black/10"
+          className="tour-popover fixed z-[10002] pointer-events-auto overflow-y-auto rounded-[1.5rem] bg-white text-black p-4 md:p-6 shadow-[0_28px_90px_-42px_rgba(0,0,0,0.62)] border border-black/10"
           style={popoverStyle}
         >
           <div className="flex items-start justify-between gap-4 mb-5 md:mb-8">
@@ -904,6 +894,9 @@ function PlatformScene({ scene, sceneIndex, focus, navCue, isMobileTour, onBack,
             </div>
           </div>
           <p className="tour-copy-line text-sm md:text-base text-neutral-500 leading-relaxed mb-6" style={{ animationDelay: '140ms' }}>{scene.text}</p>
+          <p className="tour-copy-line rounded-2xl bg-neutral-100 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500 mb-5" style={{ animationDelay: '180ms' }}>
+            Scroll this page freely. The tour will stay out of your way.
+          </p>
           <div className="tour-copy-line flex items-center justify-between gap-3" style={{ animationDelay: '210ms' }}>
             <button onClick={onBack} className="h-11 px-4 rounded-full bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:text-black">
               <ChevronLeft size={14} /> Back
@@ -913,12 +906,14 @@ function PlatformScene({ scene, sceneIndex, focus, navCue, isMobileTour, onBack,
               Next <ArrowRight size={14} />
             </button>
           </div>
-          <button
-            onClick={showCurrentArea}
-            className="mt-3 w-full h-10 rounded-full border border-neutral-200 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black hover:bg-neutral-50 flex items-center justify-center gap-2"
-          >
-            <MousePointerClick size={14} /> Show This Area
-          </button>
+          {!isNaturalDesktopTour && (
+            <button
+              onClick={showCurrentArea}
+              className="mt-3 w-full h-10 rounded-full border border-neutral-200 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black hover:bg-neutral-50 flex items-center justify-center gap-2"
+            >
+              <MousePointerClick size={14} /> Show This Area
+            </button>
+          )}
         </div>
       )}
     </>

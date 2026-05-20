@@ -13,7 +13,7 @@ import { appId, auth, db, initialAuthToken, isFirebaseConfigured, storage } from
 import { createDefaultEmailConfig, sendClientEmail } from './services/email';
 import { getLocalDateStr } from './utils/dates';
 import { buildBookingSlug, prepareOnboardingSettings } from './utils/onboarding';
-import { rgbaFromHex, readableTextFor, normalizeHexColor, mixHexColors, themeBackground, THEME_PALETTE_FILTERS, ensureReadableTextColor } from './utils/theme';
+import { rgbaFromHex, readableTextFor, normalizeHexColor, mixHexColors, themeBackground, THEME_FILTER_GROUPS, ensureReadableTextColor } from './utils/theme';
 
 const OnboardingShowroom = lazy(() => (
   import('./components/OnboardingShowroom').then((module) => ({ default: module.OnboardingShowroom }))
@@ -685,7 +685,8 @@ const createGoogleProvider = () => {
             const [activeTab, setActiveTab] = useState(initialWorkspaceRoute.activeTab);
             const [dashboardPeriod, setDashboardPeriod] = useState('today');
             const [editorTab, setEditorTab] = useState(initialWorkspaceRoute.editorTab);
-            const [themePalette, setThemePalette] = useState('all');
+            const [themeFilterGroup, setThemeFilterGroup] = useState('palette');
+            const [themeFilters, setThemeFilters] = useState({ palette: 'all', industry: 'all-industries', style: 'all-styles' });
             const [device, setDevice] = useState('desktop'); 
             const [previewKey, setPreviewKey] = useState(0); 
             const [scale, setScale] = useState(1);
@@ -1165,16 +1166,27 @@ const createGoogleProvider = () => {
             const normalizedComms = normalizeCommunications(communications);
             const whatsappConfig = normalizedComms.whatsapp;
 
-            const themePaletteOptions = useMemo(() => (
-                THEME_PALETTE_FILTERS
+            const activeThemeFilterGroup = useMemo(() => (
+                THEME_FILTER_GROUPS.find(group => group.id === themeFilterGroup) || THEME_FILTER_GROUPS[0]
+            ), [themeFilterGroup]);
+            const activeThemeFilterId = themeFilters[activeThemeFilterGroup.id] || activeThemeFilterGroup.filters[0].id;
+            const themeFilterOptions = useMemo(() => (
+                activeThemeFilterGroup.filters
                     .map(filter => ({ ...filter, count: PRESET_THEMES.filter(theme => filter.match(theme)).length }))
-                    .filter(filter => filter.id === 'all' || filter.count > 0)
-            ), []);
+                    .filter(filter => filter.count > 0)
+            ), [activeThemeFilterGroup]);
 
-            const visibleThemes = useMemo(() => {
-                const activeFilter = THEME_PALETTE_FILTERS.find(filter => filter.id === themePalette) || THEME_PALETTE_FILTERS[0];
-                return PRESET_THEMES.filter(theme => activeFilter.match(theme));
-            }, [themePalette]);
+            const activeThemeFilter = useMemo(() => (
+                activeThemeFilterGroup.filters.find(filter => filter.id === activeThemeFilterId) || activeThemeFilterGroup.filters[0]
+            ), [activeThemeFilterGroup, activeThemeFilterId]);
+
+            const visibleThemes = useMemo(() => (
+                PRESET_THEMES.filter(theme => activeThemeFilter.match(theme))
+            ), [activeThemeFilter]);
+
+            const setActiveThemeFilter = (filterId) => {
+                setThemeFilters(prev => ({ ...prev, [activeThemeFilterGroup.id]: filterId }));
+            };
 
             const backendSkin = settings.backendSkin || {};
             const backendSkinEnabled = Boolean(backendSkin.enabled);
@@ -4069,26 +4081,44 @@ const createGoogleProvider = () => {
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-neutral-100 px-3 py-1.5 rounded-full">{visibleThemes.length} / {PRESET_THEMES.length}</span>
                                         </div>
                                         <div className="mb-7">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Browse By Palette</p>
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                                                <div className="inline-flex h-12 rounded-full bg-neutral-100 p-1 border border-neutral-100 w-full sm:w-auto">
+                                                    {THEME_FILTER_GROUPS.map(group => {
+                                                        const isActive = themeFilterGroup === group.id;
+                                                        return (
+                                                            <button
+                                                                key={group.id}
+                                                                type="button"
+                                                                onClick={() => setThemeFilterGroup(group.id)}
+                                                                className={`flex-1 sm:flex-none px-5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:text-black'}`}
+                                                            >
+                                                                {group.name}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
                                                 <div className="flex items-center gap-2">
-                                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">{themePaletteOptions.find(p => p.id === themePalette)?.hint}</p>
+                                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">{activeThemeFilter?.hint}</p>
                                                     <div className="flex items-center gap-1.5">
-                                                        <button type="button" onClick={() => scrollThemePaletteRail(-1)} title="Previous palettes" className="w-8 h-8 rounded-full bg-white border border-neutral-100 text-neutral-400 hover:text-black hover:border-neutral-300 shadow-sm flex items-center justify-center transition-all">
+                                                        <button type="button" onClick={() => scrollThemePaletteRail(-1)} title="Previous filters" className="w-8 h-8 rounded-full bg-white border border-neutral-100 text-neutral-400 hover:text-black hover:border-neutral-300 shadow-sm flex items-center justify-center transition-all">
                                                             <ChevronLeft size={15} />
                                                         </button>
-                                                        <button type="button" onClick={() => scrollThemePaletteRail(1)} title="Next palettes" className="w-8 h-8 rounded-full bg-black text-white shadow-lg flex items-center justify-center hover:scale-105 transition-all">
+                                                        <button type="button" onClick={() => scrollThemePaletteRail(1)} title="Next filters" className="w-8 h-8 rounded-full bg-black text-white shadow-lg flex items-center justify-center hover:scale-105 transition-all">
                                                             <ChevronRight size={15} />
                                                         </button>
                                                     </div>
                                                 </div>
                                             </div>
+                                            <div className="flex items-center justify-between mb-3">
+                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">{activeThemeFilterGroup.eyebrow}</p>
+                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">{visibleThemes.length} curated matches</p>
+                                            </div>
                                             <div ref={themePaletteRailRef} className="overflow-x-auto no-scrollbar pb-2 scroll-smooth snap-x snap-mandatory">
                                                 <div className="flex gap-3 min-w-max">
-                                                    {themePaletteOptions.map(palette => {
-                                                        const isActive = themePalette === palette.id;
+                                                    {themeFilterOptions.map(palette => {
+                                                        const isActive = activeThemeFilterId === palette.id;
                                                         return (
-                                                            <button key={palette.id} onClick={() => setThemePalette(palette.id)} className={`group w-36 p-3 rounded-lg border text-left transition-all snap-start ${isActive ? 'bg-black text-white border-black shadow-xl' : 'bg-white text-black border-neutral-100 hover:border-neutral-300 hover:-translate-y-0.5'}`}>
+                                                            <button key={palette.id} onClick={() => setActiveThemeFilter(palette.id)} className={`group w-40 p-3 rounded-lg border text-left transition-all snap-start ${isActive ? 'bg-black text-white border-black shadow-xl' : 'bg-white text-black border-neutral-100 hover:border-neutral-300 hover:-translate-y-0.5'}`}>
                                                                 <div className="flex items-center mb-4">
                                                                     {palette.swatches.map((color, i) => (
                                                                         <span key={color} className={`w-7 h-7 rounded-full border ${isActive ? 'border-white/30' : 'border-black/10'} ${i > 0 ? '-ml-2' : ''}`} style={{ backgroundColor: color }} />
@@ -4109,7 +4139,8 @@ const createGoogleProvider = () => {
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[560px] overflow-y-auto pr-2 pb-4 no-scrollbar">
                                             {visibleThemes.map(t => (
-                                                <button key={t.id} onClick={() => applyTheme(t.id)} className="group relative p-6 rounded-lg border transition-all overflow-hidden text-left flex flex-col justify-between" style={{ backgroundColor: t.backgroundColor, borderColor: (t.headingColor || '#000') + '15', boxShadow: settings.primaryColor === t.primaryColor && settings.backgroundColor === t.backgroundColor ? `0 0 0 2px ${t.primaryColor}` : '0 4px 15px rgba(0,0,0,0.05)' }}>
+                                                <button key={t.id} onClick={() => applyTheme(t.id)} className="group relative min-h-[230px] p-6 rounded-lg border transition-all overflow-hidden text-left flex flex-col justify-between hover:-translate-y-0.5" style={{ backgroundColor: t.backgroundColor, borderColor: (t.headingColor || '#000') + '15', boxShadow: settings.primaryColor === t.primaryColor && settings.backgroundColor === t.backgroundColor ? `0 0 0 2px ${t.primaryColor}, 0 22px 45px rgba(0,0,0,0.12)` : '0 4px 15px rgba(0,0,0,0.05)' }}>
+                                                    <div className="absolute inset-x-0 top-0 h-1 opacity-90" style={{ backgroundColor: t.primaryColor }} />
                                                     <div className="flex items-center justify-between w-full mb-6">
                                                         <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[70%]" style={{ color: t.bodyColor }}>{t.name}</span>
                                                         <div className="flex gap-1.5 shrink-0">
@@ -4120,6 +4151,10 @@ const createGoogleProvider = () => {
                                                     
                                                     <div className="space-y-4 w-full">
                                                         <h4 className="text-3xl font-bold tracking-tighter" style={{ color: t.headingColor, fontFamily: getFontFamily(t.fontFamily) }}>Aa Bb</h4>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="h-7 px-3 rounded-full text-[8px] font-bold uppercase tracking-widest flex items-center" style={{ backgroundColor: t.dateActiveBgColor === 'transparent' ? 'transparent' : t.dateActiveBgColor, color: t.dateActiveTextColor, border: `1px solid ${t.primaryColor}33` }}>Tue 19</span>
+                                                            <span className="h-7 px-3 rounded-full text-[8px] font-bold uppercase tracking-widest flex items-center" style={{ color: t.bodyColor, border: `1px solid ${t.bodyColor}20` }}>FAQ</span>
+                                                        </div>
                                                         
                                                         <div className="flex gap-2 w-full pt-2">
                                                             <div className="h-8 flex-1 flex items-center justify-center text-[8px] font-bold shadow-sm" style={{ 
@@ -4133,6 +4168,11 @@ const createGoogleProvider = () => {
                                                                 color: t.buttonTextColor || '#000', 
                                                                 borderRadius: t.buttonStyle === 'pill' ? '99px' : '4px' 
                                                             }}>Action</div>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1.5 pt-1">
+                                                            {[t.palette, t.styleTags?.[1] || t.styleTags?.[0], t.industryTags?.[0]].filter(Boolean).map(tag => (
+                                                                <span key={tag} className="px-2 py-1 rounded-full text-[7px] font-bold uppercase tracking-widest" style={{ color: t.bodyColor, backgroundColor: t.faqBgColor }}>{tag}</span>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 </button>

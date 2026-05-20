@@ -874,7 +874,6 @@ const createGoogleProvider = () => {
             const [activeTab, setActiveTab] = useState(initialWorkspaceRoute.activeTab);
             const [dashboardPeriod, setDashboardPeriod] = useState('today');
             const [editorTab, setEditorTab] = useState(initialWorkspaceRoute.editorTab);
-            const [themeFilterGroup, setThemeFilterGroup] = useState('industry');
             const [themeFilters, setThemeFilters] = useState({ palette: 'all', industry: 'all-industries', style: 'all-styles' });
             const [themeDisplayLimit, setThemeDisplayLimit] = useState(60);
             const [themeBatchLoading, setThemeBatchLoading] = useState(false);
@@ -1422,30 +1421,67 @@ const createGoogleProvider = () => {
                 detectedPalette: detectedThemePalette
             }), [themeFilters.industry, themeFilters.palette, themeFilters.style, detectedThemePalette]);
 
-            const activeThemeFilterGroup = useMemo(() => (
-                THEME_FILTER_GROUPS.find(group => group.id === themeFilterGroup) || THEME_FILTER_GROUPS[0]
-            ), [themeFilterGroup]);
-            const activeThemeFilterId = themeFilters[activeThemeFilterGroup.id] || activeThemeFilterGroup.filters[0].id;
+            const industryThemeFilterGroup = useMemo(() => (
+                THEME_FILTER_GROUPS.find(group => group.id === 'industry') || THEME_FILTER_GROUPS[0]
+            ), []);
+            const paletteThemeFilterGroup = useMemo(() => (
+                THEME_FILTER_GROUPS.find(group => group.id === 'palette') || THEME_FILTER_GROUPS[0]
+            ), []);
+            const styleThemeFilterGroup = useMemo(() => (
+                THEME_FILTER_GROUPS.find(group => group.id === 'style') || THEME_FILTER_GROUPS[0]
+            ), []);
+            const activeThemeFilterId = `${themeGenerationInputs.industry}-${themeGenerationInputs.palette}-${themeGenerationInputs.style}`;
 
             const visibleThemes = useMemo(() => (
                 generateThemeCollection(themeGenerationInputs)
             ), [themeGenerationInputs]);
 
-            const themeFilterOptions = useMemo(() => (
-                activeThemeFilterGroup.filters
+            const industryFilterOptions = useMemo(() => (
+                industryThemeFilterGroup.filters
                     .map(filter => ({
                         ...filter,
                         count: generateThemeCollection({
                             ...themeGenerationInputs,
-                            [activeThemeFilterGroup.id]: filter.id
+                            industry: filter.id
                         }).length
                     }))
                     .filter(filter => filter.count > 0)
-            ), [activeThemeFilterGroup, themeGenerationInputs]);
-
-            const activeThemeFilter = useMemo(() => (
-                activeThemeFilterGroup.filters.find(filter => filter.id === activeThemeFilterId) || activeThemeFilterGroup.filters[0]
-            ), [activeThemeFilterGroup, activeThemeFilterId]);
+            ), [industryThemeFilterGroup, themeGenerationInputs]);
+            const paletteFilterOptions = useMemo(() => (
+                paletteThemeFilterGroup.filters
+                    .map(filter => ({
+                        ...filter,
+                        count: generateThemeCollection({
+                            ...themeGenerationInputs,
+                            palette: filter.id
+                        }).length
+                    }))
+                    .filter(filter => filter.count > 0)
+            ), [paletteThemeFilterGroup, themeGenerationInputs]);
+            const styleFilterOptions = useMemo(() => (
+                styleThemeFilterGroup.filters
+                    .map(filter => ({
+                        ...filter,
+                        count: generateThemeCollection({
+                            ...themeGenerationInputs,
+                            style: filter.id
+                        }).length
+                    }))
+                    .filter(filter => filter.count > 0)
+            ), [styleThemeFilterGroup, themeGenerationInputs]);
+            const selectedIndustryFilter = industryThemeFilterGroup.filters.find(filter => filter.id === themeGenerationInputs.industry) || industryThemeFilterGroup.filters[0];
+            const selectedPaletteFilter = paletteThemeFilterGroup.filters.find(filter => filter.id === themeGenerationInputs.palette) || paletteThemeFilterGroup.filters[0];
+            const selectedStyleFilter = styleThemeFilterGroup.filters.find(filter => filter.id === themeGenerationInputs.style) || styleThemeFilterGroup.filters[0];
+            const selectedIndustryName = selectedIndustryFilter.id === 'all-industries' ? 'Universal' : selectedIndustryFilter.name;
+            const selectedIndustryDescriptor = selectedIndustryFilter.id === 'all-industries' ? 'universal' : selectedIndustryFilter.name.toLowerCase();
+            const selectedPalettePhrase = selectedPaletteFilter.id === 'all' ? 'a full color range' : `${selectedPaletteFilter.name.toLowerCase()} colors`;
+            const selectedStylePhrase = selectedStyleFilter.id === 'all-styles' ? 'smart design defaults' : `${selectedStyleFilter.name.toLowerCase()} styling`;
+            const themeBriefSupportText = selectedIndustryFilter.id === 'all-industries'
+                ? 'Pick a business type, then refine the color and style.'
+                : `Explore ${selectedPalettePhrase} with ${selectedStylePhrase}.`;
+            const generatedThemeSummary = selectedPaletteFilter.id === 'all'
+                ? `${visibleThemes.length} ${selectedIndustryDescriptor} themes across every palette`
+                : `${visibleThemes.length} ${selectedIndustryDescriptor} themes in ${selectedPaletteFilter.name}`;
 
             const visibleThemeCards = useMemo(() => (
                 visibleThemes.slice(0, themeDisplayLimit)
@@ -1460,7 +1496,7 @@ const createGoogleProvider = () => {
                 window.clearTimeout(themeBatchTimerRef.current);
                 setThemeBatchLoading(false);
                 setThemeDisplayLimit(isMobileEditorRuntime ? 12 : 60);
-            }, [activeThemeFilterId, themeFilterGroup, isMobileEditorRuntime, themeGenerationInputs]);
+            }, [activeThemeFilterId, isMobileEditorRuntime, themeGenerationInputs]);
 
             const loadMoreThemes = () => {
                 if (!hasMoreThemes || themeBatchLoading) return;
@@ -1472,8 +1508,8 @@ const createGoogleProvider = () => {
                 }, isMobileEditorRuntime ? 140 : 70);
             };
 
-            const setActiveThemeFilter = (filterId) => {
-                setThemeFilters(prev => ({ ...prev, [activeThemeFilterGroup.id]: filterId }));
+            const setThemeFilterValue = (groupId, filterId) => {
+                setThemeFilters(prev => ({ ...prev, [groupId]: filterId }));
             };
 
             useEffect(() => {
@@ -1510,7 +1546,6 @@ const createGoogleProvider = () => {
 
                 setDetectedThemePalette(detected);
                 setThemeFilters(prev => ({ ...prev, palette: detected }));
-                setThemeFilterGroup('palette');
                 showToast(`${themePaletteLabel(detected)} palette detected from your brand media.`);
             };
 
@@ -4501,70 +4536,124 @@ const createGoogleProvider = () => {
                                             <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Industry Theme Engine</label>
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-neutral-100 px-3 py-1.5 rounded-full">{visibleThemes.length} generated</span>
                                         </div>
-                                        <div className="mb-7">
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                                                <div className="inline-flex h-12 rounded-full bg-neutral-100 p-1 border border-neutral-100 w-full sm:w-auto">
-                                                    {THEME_FILTER_GROUPS.map(group => {
-                                                        const isActive = themeFilterGroup === group.id;
-                                                        return (
-                                                            <button
-                                                                key={group.id}
-                                                                type="button"
-                                                                onClick={() => setThemeFilterGroup(group.id)}
-                                                                className={`flex-1 sm:flex-none px-5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:text-black'}`}
-                                                            >
-                                                                {group.name}
-                                                            </button>
-                                                        );
-                                                    })}
+                                        <div className="mb-7 rounded-[28px] border border-neutral-100 bg-white p-4 sm:p-5 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
+                                            <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5 mb-5">
+                                                <div className="min-w-0">
+                                                    <p className="text-[9px] font-bold uppercase tracking-[0.45em] text-neutral-300 mb-3">Theme Brief</p>
+                                                    <h3 className="text-2xl sm:text-3xl font-black tracking-[-0.04em] leading-none text-black">
+                                                        {selectedIndustryFilter.id === 'all-industries' ? (
+                                                            <>
+                                                                Choose your <span className="native-accent-text">industry first</span>.
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="native-accent-text">{selectedIndustryName}</span> themes shaped for your business.
+                                                            </>
+                                                        )}
+                                                        <span className="block mt-2 text-lg sm:text-xl leading-snug tracking-[-0.03em] text-neutral-500">{themeBriefSupportText}</span>
+                                                    </h3>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleAutoDetectThemePalette}
-                                                        disabled={paletteDetecting}
-                                                        className="h-8 px-3 rounded-full border border-neutral-100 bg-white text-black text-[9px] font-bold uppercase tracking-widest shadow-sm hover:border-black transition-all disabled:cursor-wait disabled:text-neutral-400 flex items-center gap-2"
-                                                    >
-                                                        <Pipette size={13} />
-                                                        {paletteDetecting ? 'Reading' : detectedThemePalette ? `${themePaletteLabel(detectedThemePalette)} Detected` : 'Auto Palette'}
-                                                    </button>
-                                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">{activeThemeFilter?.hint}</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAutoDetectThemePalette}
+                                                    disabled={paletteDetecting}
+                                                    className="h-11 px-4 rounded-full border border-neutral-100 bg-neutral-50 text-black text-[9px] font-bold uppercase tracking-widest shadow-sm hover:border-black hover:bg-white transition-all disabled:cursor-wait disabled:text-neutral-400 flex items-center justify-center gap-2 shrink-0"
+                                                >
+                                                    <Pipette size={14} />
+                                                    {paletteDetecting ? 'Reading Brand' : detectedThemePalette ? `${themePaletteLabel(detectedThemePalette)} Detected` : 'Read Logo Colors'}
+                                                </button>
+                                            </div>
+
+                                            <div className="mb-5">
+                                                <div className="flex items-center justify-between gap-3 mb-3">
+                                                    <div>
+                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">1. Choose Industry</p>
+                                                        <p className="text-xs font-semibold text-neutral-400 mt-1">This sets the personality, pace, fonts, and layout feel.</p>
+                                                    </div>
                                                     <div className="flex items-center gap-1.5">
-                                                        <button type="button" onClick={() => scrollThemePaletteRail(-1)} title="Previous filters" className="w-8 h-8 rounded-full bg-white border border-neutral-100 text-neutral-400 hover:text-black hover:border-neutral-300 shadow-sm flex items-center justify-center transition-all">
+                                                        <button type="button" onClick={() => scrollThemePaletteRail(-1)} title="Previous industries" className="w-8 h-8 rounded-full bg-white border border-neutral-100 text-neutral-400 hover:text-black hover:border-neutral-300 shadow-sm flex items-center justify-center transition-all">
                                                             <ChevronLeft size={15} />
                                                         </button>
-                                                        <button type="button" onClick={() => scrollThemePaletteRail(1)} title="Next filters" className="w-8 h-8 rounded-full bg-black text-white shadow-lg flex items-center justify-center hover:scale-105 transition-all">
+                                                        <button type="button" onClick={() => scrollThemePaletteRail(1)} title="Next industries" className="w-8 h-8 rounded-full bg-black text-white shadow-lg flex items-center justify-center hover:scale-105 transition-all">
                                                             <ChevronRight size={15} />
                                                         </button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center justify-between mb-3">
-                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">{activeThemeFilterGroup.eyebrow}</p>
-                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">{visibleThemes.length} curated matches</p>
-                                            </div>
-                                            <div ref={themePaletteRailRef} className="overflow-x-auto no-scrollbar pb-2 scroll-smooth snap-x snap-mandatory">
-                                                <div className="flex gap-3 min-w-max">
-                                                    {themeFilterOptions.map(palette => {
-                                                        const isActive = activeThemeFilterId === palette.id;
-                                                        return (
-                                                            <button key={palette.id} onClick={() => setActiveThemeFilter(palette.id)} className={`group w-40 p-3 rounded-lg border text-left transition-all snap-start ${isActive ? 'bg-black text-white border-black shadow-xl' : 'bg-white text-black border-neutral-100 hover:border-neutral-300 hover:-translate-y-0.5'}`}>
-                                                                <div className="flex items-center mb-4">
-                                                                    {palette.swatches.map((color, i) => (
-                                                                        <span key={color} className={`w-7 h-7 rounded-full border ${isActive ? 'border-white/30' : 'border-black/10'} ${i > 0 ? '-ml-2' : ''}`} style={{ backgroundColor: color }} />
-                                                                    ))}
-                                                                </div>
-                                                                <div className="flex items-end justify-between gap-2">
-                                                                    <div className="min-w-0">
-                                                                        <p className="text-[11px] font-bold uppercase tracking-widest truncate">{palette.name}</p>
-                                                                        <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 truncate ${isActive ? 'text-white/45' : 'text-neutral-300'}`}>{palette.hint}</p>
+                                                <div ref={themePaletteRailRef} className="overflow-x-auto no-scrollbar pb-2 scroll-smooth snap-x snap-mandatory">
+                                                    <div className="flex gap-3 min-w-max">
+                                                        {industryFilterOptions.map(industry => {
+                                                            const isActive = themeGenerationInputs.industry === industry.id;
+                                                            return (
+                                                                <button key={industry.id} type="button" onClick={() => setThemeFilterValue('industry', industry.id)} className={`group w-44 p-3 rounded-2xl border text-left transition-all snap-start ${isActive ? 'bg-black text-white border-black shadow-xl' : 'bg-neutral-50 text-black border-neutral-100 hover:bg-white hover:border-neutral-300 hover:-translate-y-0.5'}`}>
+                                                                    <div className="flex items-center mb-4">
+                                                                        {industry.swatches.map((color, i) => (
+                                                                            <span key={color} className={`w-7 h-7 rounded-full border ${isActive ? 'border-white/30' : 'border-black/10'} ${i > 0 ? '-ml-2' : ''}`} style={{ backgroundColor: color }} />
+                                                                        ))}
                                                                     </div>
-                                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${isActive ? 'bg-white text-black' : 'bg-neutral-100 text-neutral-500'}`}>{palette.count}</span>
-                                                                </div>
-                                                            </button>
-                                                        );
-                                                    })}
+                                                                    <div className="flex items-end justify-between gap-2">
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-[11px] font-bold uppercase tracking-widest truncate">{industry.name}</p>
+                                                                            <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 truncate ${isActive ? 'text-white/45' : 'text-neutral-300'}`}>{industry.hint}</p>
+                                                                        </div>
+                                                                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${isActive ? 'bg-white text-black' : 'bg-white text-neutral-500'}`}>{industry.count}</span>
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                                                <div className="rounded-2xl border border-neutral-100 bg-neutral-50/70 p-4">
+                                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                                        <div>
+                                                            <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">2. Color Direction</p>
+                                                            <p className="text-xs font-semibold text-neutral-400 mt-1">{selectedPaletteFilter.hint}</p>
+                                                        </div>
+                                                        <span className="text-[9px] font-bold uppercase tracking-widest text-black bg-white px-3 py-1.5 rounded-full">{selectedPaletteFilter.name}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {paletteFilterOptions.map(palette => {
+                                                            const isActive = themeGenerationInputs.palette === palette.id;
+                                                            return (
+                                                                <button key={palette.id} type="button" onClick={() => setThemeFilterValue('palette', palette.id)} className={`h-10 px-3 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${isActive ? 'bg-black text-white border-black shadow-lg' : 'bg-white text-neutral-500 border-neutral-100 hover:text-black hover:border-neutral-300'}`}>
+                                                                    <span className="flex items-center">
+                                                                        {palette.swatches.slice(0, 3).map((color, i) => (
+                                                                            <span key={color} className={`w-3.5 h-3.5 rounded-full border ${isActive ? 'border-white/30' : 'border-black/10'} ${i > 0 ? '-ml-1' : ''}`} style={{ backgroundColor: color }} />
+                                                                        ))}
+                                                                    </span>
+                                                                    {palette.id === 'all' ? 'Spectrum' : palette.name}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                <div className="rounded-2xl border border-neutral-100 bg-neutral-50/70 p-4">
+                                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                                        <div>
+                                                            <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">3. Design Style</p>
+                                                            <p className="text-xs font-semibold text-neutral-400 mt-1">{selectedStyleFilter.hint}</p>
+                                                        </div>
+                                                        <span className="text-[9px] font-bold uppercase tracking-widest text-black bg-white px-3 py-1.5 rounded-full">{selectedStyleFilter.id === 'all-styles' ? 'Recommended' : selectedStyleFilter.name}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {styleFilterOptions.map(style => {
+                                                            const isActive = themeGenerationInputs.style === style.id;
+                                                            return (
+                                                                <button key={style.id} type="button" onClick={() => setThemeFilterValue('style', style.id)} className={`h-10 px-3 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${isActive ? 'bg-black text-white border-black shadow-lg' : 'bg-white text-neutral-500 border-neutral-100 hover:text-black hover:border-neutral-300'}`}>
+                                                                    {style.id === 'all-styles' ? 'Recommended' : style.name}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-neutral-100 pt-4">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-black">{generatedThemeSummary}</p>
+                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Built from your theme brief</p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[560px] overflow-y-auto pr-2 pb-4 no-scrollbar">

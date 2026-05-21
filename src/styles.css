@@ -1663,6 +1663,69 @@ body {
             }
         }
 
+        @media (max-width: 767px) {
+            .dashboard-overview-actions {
+                width: 100%;
+                gap: 0.42rem !important;
+            }
+
+            .dashboard-overview-action {
+                min-height: 2.25rem !important;
+                height: 2.25rem !important;
+                padding-left: 0.35rem !important;
+                padding-right: 0.35rem !important;
+                border-radius: 0.65rem !important;
+                font-size: 0.5rem !important;
+                letter-spacing: 0.11em !important;
+                box-shadow: 0 12px 28px -24px rgba(15, 23, 42, 0.45);
+            }
+
+            .dashboard-overview-action svg {
+                width: 0.82rem !important;
+                height: 0.82rem !important;
+            }
+
+            .mobile-editor-starter-note {
+                border-radius: 1rem !important;
+                padding: 0.72rem !important;
+                box-shadow: 0 14px 38px -34px rgba(15, 23, 42, 0.45) !important;
+            }
+
+            .mobile-editor-starter-note .w-10.h-10 {
+                width: 2.15rem !important;
+                height: 2.15rem !important;
+                border-radius: 0.72rem !important;
+            }
+
+            .theme-template-panel {
+                border-radius: 1rem !important;
+                padding: 0.78rem !important;
+                box-shadow: 0 14px 38px -34px rgba(15, 23, 42, 0.45) !important;
+            }
+
+            .theme-template-panel input[type="text"] {
+                height: 2.35rem !important;
+                min-height: 2.35rem !important;
+            }
+
+            .theme-template-panel button {
+                height: 2.35rem !important;
+                min-height: 2.35rem !important;
+            }
+
+            .mobile-editor-panel .editor-publish-footer {
+                padding: 0.55rem 0.75rem !important;
+                box-shadow: 0 -18px 42px -34px rgba(15, 23, 42, 0.5);
+            }
+
+            .mobile-editor-panel .editor-publish-footer button,
+            .mobile-editor-panel .editor-publish-footer .editor-publish-button {
+                min-height: 2.25rem !important;
+                height: 2.25rem !important;
+                border-radius: 999px !important;
+            }
+        }
+
         /* Loading Pulse Animation */
         @keyframes subtle-pulse {
             0%, 100% { opacity: 1; transform: scale(1); }

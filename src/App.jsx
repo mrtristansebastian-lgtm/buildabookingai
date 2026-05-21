@@ -3523,18 +3523,18 @@ const signInWithNativeGoogle = async (authInstance) => {
                                     <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-black">Dashboard</h1>
                                     <p className="text-neutral-500 text-base md:text-lg mt-3 max-w-2xl">A clean operating view for bookings, capacity, requests, and client movement.</p>
                                 </div>
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <button onClick={() => { setOnboardingStartScene('intro'); setShowOnboarding(true); }} className="h-11 px-5 rounded-lg bg-white border border-neutral-200 text-black text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-50 transition-colors">
-                                        <Sparkles size={15}/> Intro Tour
+                                <div className="dashboard-overview-actions grid grid-cols-4 sm:flex sm:flex-row gap-1.5 sm:gap-3">
+                                    <button onClick={() => { setOnboardingStartScene('intro'); setShowOnboarding(true); }} className="dashboard-overview-action h-10 sm:h-11 px-2 sm:px-5 rounded-lg bg-white border border-neutral-200 text-black text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.14em] sm:tracking-widest flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-neutral-50 transition-colors">
+                                        <Sparkles size={14}/><span className="sm:hidden">Tour</span><span className="hidden sm:inline">Intro Tour</span>
                                     </button>
-                                    <button onClick={() => { setOnboardingStartScene('name'); setShowOnboarding(true); }} className="h-11 px-5 rounded-lg bg-white border border-neutral-200 text-black text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-50 transition-colors">
-                                        <ArrowRight size={15}/> Continue Setup
+                                    <button onClick={() => { setOnboardingStartScene('name'); setShowOnboarding(true); }} className="dashboard-overview-action h-10 sm:h-11 px-2 sm:px-5 rounded-lg bg-white border border-neutral-200 text-black text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.14em] sm:tracking-widest flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-neutral-50 transition-colors">
+                                        <ArrowRight size={14}/><span className="sm:hidden">Setup</span><span className="hidden sm:inline">Continue Setup</span>
                                     </button>
-                                    <button onClick={() => setActiveTab('editor')} className="h-11 px-5 rounded-lg bg-black text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 transition-colors">
-                                        <Palette size={15}/> Edit Page
+                                    <button onClick={() => setActiveTab('editor')} className="dashboard-overview-action h-10 sm:h-11 px-2 sm:px-5 rounded-lg bg-black text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.14em] sm:tracking-widest flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-neutral-800 transition-colors">
+                                        <Palette size={14}/><span className="sm:hidden">Edit</span><span className="hidden sm:inline">Edit Page</span>
                                     </button>
-                                    <button data-tour="publish-button" onClick={saveSettings} className="h-11 px-5 rounded-lg bg-[#39FF14] text-black text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:brightness-95 transition-all">
-                                        <Check size={15}/> Publish
+                                    <button data-tour="publish-button" onClick={saveSettings} className="dashboard-overview-action h-10 sm:h-11 px-2 sm:px-5 rounded-lg bg-[#39FF14] text-black text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.14em] sm:tracking-widest flex items-center justify-center gap-1.5 sm:gap-2 hover:brightness-95 transition-all">
+                                        <Check size={14}/> Publish
                                     </button>
                                 </div>
                             </header>
@@ -4888,20 +4888,21 @@ const signInWithNativeGoogle = async (authInstance) => {
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-neutral-100 px-3 py-1.5 rounded-full">{isMobileWebEditorRuntime ? 'Focused Mode' : 'Live Curated'}</span>
                                         </div>
                                         {isMobileWebEditorRuntime && (
-                                            <div className="mb-5 rounded-[24px] border border-neutral-100 bg-white p-4 shadow-[0_22px_64px_rgba(15,23,42,0.06)]">
-                                                <div className="rounded-[20px] bg-black text-white p-5 overflow-hidden relative">
-                                                    <div className="absolute inset-x-0 top-0 h-1 opacity-90" style={{ backgroundImage: 'var(--native-accent-gradient)', backgroundSize: '420% 420%', backgroundPosition: 'var(--native-accent-x) 50%' }} />
-                                                    <div className="flex items-start gap-4">
-                                                        <div className="w-11 h-11 rounded-2xl bg-white text-black flex items-center justify-center shrink-0">
-                                                            <Monitor size={18} />
+                                            <div className="mobile-editor-starter-note mb-4 rounded-[20px] border border-neutral-100 bg-white p-3 shadow-[0_18px_48px_rgba(15,23,42,0.055)] overflow-hidden relative">
+                                                <div className="absolute inset-x-0 top-0 h-0.5 opacity-80" style={{ backgroundImage: 'var(--native-accent-gradient)', backgroundSize: '420% 420%', backgroundPosition: 'var(--native-accent-x) 50%' }} />
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center shrink-0">
+                                                        <Monitor size={17} />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                            <p className="text-[8px] font-bold uppercase tracking-[0.28em] text-neutral-400">Mobile Web Editor</p>
+                                                            <span className="rounded-full bg-neutral-100 px-2 py-1 text-[8px] font-bold uppercase tracking-widest text-neutral-500">Starter</span>
                                                         </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/40 mb-2">Mobile Web Editor</p>
-                                                            <h3 className="text-2xl font-black tracking-[-0.04em] leading-tight">Fast starter mode.</h3>
-                                                            <p className="text-sm text-white/62 leading-relaxed mt-2">
-                                                                Pick a clean starter theme here, then tune colors, fonts, buttons, and spacing in Visuals. Get the full powerful editing engine experience on the PC website or mobile app for the best view.
-                                                            </p>
-                                                        </div>
+                                                        <h3 className="text-lg font-black tracking-[-0.04em] leading-tight text-black">Fast starter mode.</h3>
+                                                        <p className="text-xs text-neutral-500 font-medium leading-relaxed mt-1">
+                                                            Choose a starter here, then tune colors, fonts, buttons, and spacing in Visuals. Full engine is best on PC or the mobile app.
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -5025,28 +5026,29 @@ const signInWithNativeGoogle = async (authInstance) => {
                                             </div>
                                         </div>
                                         )}
-                                        <div className="mb-5 rounded-[24px] border border-neutral-100 bg-white p-4 sm:p-5 shadow-[0_24px_70px_rgba(15,23,42,0.05)]">
-                                            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                                        <div className="theme-template-panel mb-5 rounded-[22px] border border-neutral-100 bg-white p-3.5 sm:p-5 shadow-[0_20px_60px_rgba(15,23,42,0.045)]">
+                                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
                                                 <div className="min-w-0">
-                                                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-neutral-300 mb-2">Theme Workflow</p>
-                                                    <h4 className="text-xl font-black tracking-[-0.04em] text-black leading-tight">Save this look as a reusable template.</h4>
-                                                    <p className="text-sm text-neutral-400 font-medium mt-1">Keep polished looks for launches, seasons, or different client-facing pages.</p>
+                                                    <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.35em] text-neutral-300 mb-1.5">Saved Looks</p>
+                                                    <h4 className="text-lg sm:text-xl font-black tracking-[-0.04em] text-black leading-tight">Save the current theme.</h4>
+                                                    <p className="text-xs sm:text-sm text-neutral-400 font-medium mt-1">Name it once, then reuse it for launches, seasons, or new offers.</p>
                                                 </div>
-                                                <div className="w-full xl:max-w-md flex flex-col sm:flex-row gap-2">
+                                                <div className="w-full lg:max-w-md flex gap-2">
                                                     <input
                                                         type="text"
                                                         value={themeTemplateName}
                                                         onChange={(event) => setThemeTemplateName(event.target.value)}
                                                         placeholder={suggestedThemeTemplateName}
-                                                        className="h-12 flex-1 rounded-lg border border-neutral-100 bg-neutral-50 px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black transition-all"
+                                                        className="h-11 flex-1 min-w-0 rounded-lg border border-neutral-100 bg-neutral-50 px-3 sm:px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black transition-all"
                                                     />
                                                     <button
                                                         type="button"
                                                         onClick={saveCurrentThemeTemplate}
-                                                        className="h-12 px-5 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-black/10"
+                                                        className="h-11 px-3 sm:px-5 rounded-lg bg-black text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] sm:tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-black/10 shrink-0"
                                                     >
                                                         <Check size={14} />
-                                                        Save Template
+                                                        <span className="sm:hidden">Save</span>
+                                                        <span className="hidden sm:inline">Save Template</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -5421,17 +5423,21 @@ const signInWithNativeGoogle = async (authInstance) => {
                                 )}
                             </div>
 
-                            <div className="editor-publish-footer p-4 sm:p-5 md:p-8 border-t border-neutral-50 flex-shrink-0 bg-white">
-                                <div className="grid grid-cols-1 sm:grid-cols-[0.72fr_1fr] gap-3">
+                            <div className="editor-publish-footer p-2.5 sm:p-5 md:p-8 border-t border-neutral-50 flex-shrink-0 bg-white">
+                                <div className="grid grid-cols-2 sm:grid-cols-[0.72fr_1fr] gap-2 sm:gap-3">
                                     <button
                                         type="button"
                                         onClick={() => saveSettingsDraft(settings, "Editor draft saved.")}
-                                        className="h-12 md:h-16 rounded-[999px] border border-neutral-200 bg-white text-black text-[9px] md:text-[10px] font-bold uppercase tracking-[0.22em] hover:border-black hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                        className="h-10 sm:h-12 md:h-16 rounded-[999px] border border-neutral-200 bg-white text-black text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-[0.16em] sm:tracking-[0.22em] hover:border-black hover:shadow-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2"
                                     >
                                         <CheckCircle2 size={14} />
-                                        Save Draft
+                                        <span className="sm:hidden">Draft</span>
+                                        <span className="hidden sm:inline">Save Draft</span>
                                     </button>
-                                    <ProButton onClick={saveSettings} variant="primary" className="editor-publish-button w-full py-4 sm:py-5 md:py-7 text-[9px] md:text-[11px] uppercase shadow-2xl shadow-black/20">Publish To Web</ProButton>
+                                    <ProButton onClick={saveSettings} variant="primary" className="editor-publish-button w-full py-3 sm:py-5 md:py-7 text-[8px] sm:text-[9px] md:text-[11px] uppercase shadow-2xl shadow-black/20">
+                                        <span className="sm:hidden">Publish</span>
+                                        <span className="hidden sm:inline">Publish To Web</span>
+                                    </ProButton>
                                 </div>
                             </div>
                             </>

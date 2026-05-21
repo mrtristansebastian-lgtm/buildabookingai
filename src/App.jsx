@@ -5,6 +5,7 @@ import {
   AlignCenter, AlignLeft, AlignRight, ArrowRight, Battery, Bell, BookOpen, Briefcase, Calendar, CalendarCheck, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, Eye, EyeOff, Globe, History, Instagram, Layers, Layout, Mail, MessageCircle, MessageSquare, Monitor, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Share2, ShieldCheck, Signal, Sparkles, Star, Tag, Trash2, User, UserPlus, Users, Wifi, X, Zap
 } from 'lucide-react';
 import { BuildABookingBrand, BuildABookingMark } from './components/BuildABookingBrand';
+import { EmailNotificationSettings } from './components/EmailNotificationSettings';
 import { ProButton } from './components/ProButton';
 import { FONT_OPTIONS, getFontFamily } from './data/fonts';
 import { PRESET_THEMES, generateThemeCollection } from './data/themes';
@@ -1281,7 +1282,7 @@ const signInWithNativeGoogle = async (authInstance) => {
                 detailsHeading: 'Your Details', detailsSubHeading: 'Secure Your Slot', successHeading: 'Booking Confirmed!', 
                 availableTimes: ['09:00', '10:30', '12:00', '14:30', '16:00', '17:30'],
                 schedule: {},
-                features: { birthday: true, waitlist: true, socialProof: true, loadingScreen: true, firstAvailable: true, collectClientPhone: true, collectClientEmail: true, collectClientNotes: false, faqEnabled: false, socialLinks: false, location: '', faqs: [] },
+                features: { birthday: true, waitlist: true, socialProof: true, loadingScreen: true, firstAvailable: true, collectClientPhone: true, collectClientEmail: true, collectClientNotes: false, emailUpdates: true, faqEnabled: false, socialLinks: false, location: '', faqs: [] },
                 backendSkin: { enabled: false, mode: 'immersive', showBranding: true },
                 onboarding: {},
                 themeTemplates: [],
@@ -1719,7 +1720,7 @@ const signInWithNativeGoogle = async (authInstance) => {
                 { id: 'overview', icon: Layout, label: 'Dashboard' },
                 { id: 'bookings', icon: BookOpen, label: 'My Bookings', badge: visibleBookings.some(b => b.status === 'pending' || b.status === 'waitlist') },
                 { id: 'business', icon: Calendar, label: 'Schedule' },
-                { id: 'communications', icon: MessageSquare, label: 'Communication Studio' },
+                { id: 'communications', icon: MessageSquare, label: 'Support Inbox' },
                 { id: 'editor', icon: Paintbrush, label: 'Editor' },
                 { id: 'clients', icon: Star, label: 'My Clients', mobileLabel: 'Clients', badge: clientMetrics.firstTimers > 0 },
                 { id: 'staff', icon: Users, label: 'Team' },
@@ -1729,6 +1730,7 @@ const signInWithNativeGoogle = async (authInstance) => {
             const collectsClientPhone = settings.features?.collectClientPhone !== false;
             const collectsClientEmail = settings.features?.collectClientEmail !== false;
             const collectsClientNotes = Boolean(settings.features?.collectClientNotes);
+            const emailUpdatesEnabled = settings.features?.emailUpdates !== false;
             const isMobileEditorRuntime = isMobileRuntime || isCompactEditorViewport;
             const isMobileWebEditorRuntime = !isNativeAppRuntime && isMobileEditorRuntime;
 
@@ -2850,6 +2852,9 @@ const signInWithNativeGoogle = async (authInstance) => {
             const handleFeatureChange = (key, value) => {
                 setSettings(prev => {
                     const nextFeatures = { ...prev.features, [key]: value };
+                    if (key === 'collectClientEmail' && value === false) {
+                        nextFeatures.emailUpdates = false;
+                    }
                     return { ...prev, features: nextFeatures };
                 });
             };
@@ -3109,8 +3114,9 @@ const signInWithNativeGoogle = async (authInstance) => {
                     clientEmail: formData.email || '',
                     clientBirthday: formData.birthday || '',
                     clientNote: formData.note || '',
+                    clientEmailOptIn: Boolean(formData.emailOptIn && formData.email),
                     notificationChannels: {
-                        email: Boolean(formData.email),
+                        email: Boolean(formData.email && formData.emailOptIn),
                         portal: Boolean(formData.email)
                     },
                     date,
@@ -3149,8 +3155,9 @@ const signInWithNativeGoogle = async (authInstance) => {
                     clientEmail: formData.email || '',
                     clientBirthday: formData.birthday || '',
                     clientNote: formData.note || '',
+                    clientEmailOptIn: Boolean(formData.emailOptIn && formData.email),
                     notificationChannels: {
-                        email: Boolean(formData.email),
+                        email: Boolean(formData.email && formData.emailOptIn),
                         portal: Boolean(formData.email)
                     },
                     date,
@@ -3175,6 +3182,7 @@ const signInWithNativeGoogle = async (authInstance) => {
                                     clientName: bookingRecord.clientName,
                                     clientPhone: bookingRecord.clientPhone,
                                     clientEmail: bookingRecord.clientEmail,
+                                    clientEmailOptIn: bookingRecord.clientEmailOptIn,
                                     clientBirthday: bookingRecord.clientBirthday,
                                     clientNote: bookingRecord.clientNote,
                                     date: bookingRecord.date,
@@ -3601,11 +3609,11 @@ const signInWithNativeGoogle = async (authInstance) => {
                           <p className="text-neutral-500 font-medium">Open days, close dates, adjust slots, and keep availability clear for clients.</p>
                         </div>
 
-                        {/* Box 4: Communication Studio (Span 1) */}
+                        {/* Box 4: Support Inbox (Span 1) */}
                         <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group">
                           <MessageSquare className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Communication Studio.</h3>
-                          <p className="text-neutral-500 font-medium">Chat with clients, prepare updates, and keep every booking conversation tied to the right request.</p>
+                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Support Inbox.</h3>
+                          <p className="text-neutral-500 font-medium">Reply to clients, manage reschedule requests, and keep every booking conversation tied to the right request.</p>
                         </div>
 
                         {/* Box 5: My Clients (Span 1) */}
@@ -4386,13 +4394,14 @@ const signInWithNativeGoogle = async (authInstance) => {
                     )}
 
                     {activeTab === 'communications' && (
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#FBFBFB]">
-                            <header className="mb-8 md:mb-10">
-                                <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 text-black">Communication Studio</h2>
-                                <p className="text-neutral-400 font-medium text-lg max-w-3xl">Handle client chat, booking updates, reschedules, and email templates from one calm studio.</p>
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#F6F7F9]">
+                            <header className="mb-6 md:mb-8">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-neutral-400 mb-3">Client Support</p>
+                                <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 text-black">Support Inbox</h2>
+                                <p className="text-neutral-500 font-medium text-lg max-w-3xl">A focused workspace for client chats, booking questions, and reschedule requests. Email opt-in and message settings now live in Editor Features with the rest of the booking-page controls.</p>
                             </header>
 
-                            <div className="max-w-6xl mb-8">
+                            <div className="max-w-7xl">
                                 <Suspense fallback={<LazySectionFallback label="Loading client inbox" />}>
                                     <WorkspaceInbox
                                         appId={appId}
@@ -4405,35 +4414,6 @@ const signInWithNativeGoogle = async (authInstance) => {
                                         showToast={showToast}
                                     />
                                 </Suspense>
-                            </div>
-
-                            <div data-tour="email-messages" className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-6xl">
-                                {[
-                                    { key: 'confirmed', title: 'Request Confirmed', desc: 'Sent when you approve a booking request.' },
-                                    { key: 'review', title: 'Thank You Follow-up', desc: 'Sent manually from a booking record after the appointment.' },
-                                    { key: 'waitlist', title: 'Waitlist Alert', desc: 'Sent when manually triggering a waitlist spot.' },
-                                    { key: 'runningLate', title: 'Running Late Email', desc: 'Sent when you need to let clients know you are behind schedule.' }
-                                ].map(item => (
-                                    <div key={item.key} className="bg-white p-5 sm:p-6 md:p-10 rounded-lg border border-neutral-100 shadow-sm relative group transition-all hover:shadow-xl">
-                                        <div className="flex items-center justify-between mb-8">
-                                            <div>
-                                                <h3 className="text-xl font-bold tracking-tight">{item.title}</h3>
-                                                <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest mt-1">{item.desc}</p>
-                                            </div>
-                                            <button onClick={() => saveComms({...communications, [item.key]: {...communications[item.key], active: !communications[item.key].active}})} className={`w-14 h-8 rounded-full flex items-center px-1 transition-colors ${communications[item.key]?.active ? 'bg-[#39FF14]' : 'bg-neutral-200'}`}>
-                                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${communications[item.key]?.active ? 'translate-x-6' : ''}`} />
-                                            </button>
-                                        </div>
-                                        <textarea 
-                                            value={communications[item.key]?.text || ''} 
-                                            onChange={(e) => setCommunications({...communications, [item.key]: {...communications[item.key], text: e.target.value}})}
-                                            className="w-full bg-neutral-50 border-none rounded-lg p-6 text-sm font-medium focus:bg-white transition-all outline-none min-h-[120px] resize-none"
-                                        />
-                                        <div className="mt-6 flex flex-wrap justify-end gap-3">
-                                            <button onClick={() => {saveComms(communications); showToast("Message saved");}} className="px-6 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-neutral-800">Save Message</button>
-                                        </div>
-                                    </div>
-                                ))}
                             </div>
                         </div>
                     )}
@@ -5534,6 +5514,38 @@ const signInWithNativeGoogle = async (authInstance) => {
                                                 </button>
                                             </div>
                                         ))}
+                                    </div>
+
+                                    <div className="rounded-lg border border-neutral-100 bg-neutral-50 overflow-hidden">
+                                        <div className="p-4 md:p-6 flex items-center justify-between gap-4">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-11 h-11 rounded-lg bg-white border border-neutral-100 flex items-center justify-center text-black shrink-0">
+                                                    <Mail size={17} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-black">Email Updates Opt-In</p>
+                                                    <p className="text-xs text-neutral-400 font-medium mt-1 max-w-lg">Adds a consent checkbox before the booking button. Email messages only send when the email field is on and the client accepts updates.</p>
+                                                </div>
+                                            </div>
+                                            <button disabled={!collectsClientEmail} onClick={() => collectsClientEmail && handleFeatureChange('emailUpdates', !emailUpdatesEnabled)} className={`w-14 h-8 rounded-full flex items-center px-1 transition-colors shrink-0 ${emailUpdatesEnabled && collectsClientEmail ? 'bg-[#39FF14]' : 'bg-neutral-200'} ${!collectsClientEmail ? 'opacity-50 cursor-not-allowed' : ''}`} aria-pressed={Boolean(emailUpdatesEnabled && collectsClientEmail)}>
+                                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${emailUpdatesEnabled && collectsClientEmail ? 'translate-x-6' : ''}`} />
+                                            </button>
+                                        </div>
+                                        {!collectsClientEmail && (
+                                            <div className="border-t border-neutral-100 bg-white p-4 md:p-6">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Email updates are off because email address collection is off.</p>
+                                            </div>
+                                        )}
+                                        {emailUpdatesEnabled && collectsClientEmail && (
+                                            <div className="border-t border-neutral-100 bg-white p-4 md:p-6">
+                                                <EmailNotificationSettings
+                                                    communications={communications}
+                                                    setCommunications={setCommunications}
+                                                    saveComms={saveComms}
+                                                    showToast={showToast}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="rounded-lg border border-neutral-100 bg-neutral-50 overflow-hidden">

@@ -94,10 +94,10 @@ const scenes = [
     id: 'email',
     type: 'platform',
     tab: 'communications',
-    target: 'email-messages',
-    kicker: 'Communication studio',
-    title: 'Keep every message ready.',
-    text: 'Client chat, email templates, and booking updates live together so every message stays consistent.'
+    target: 'client-inbox',
+    kicker: 'Support inbox',
+    title: 'Answer clients in one place.',
+    text: 'Every booking can open a focused support thread for questions, updates, and reschedule requests.'
   },
   {
     id: 'team',

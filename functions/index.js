@@ -37,6 +37,7 @@ exports.createPublicBookingRequest = onCall({ region: 'us-central1' }, async (re
   const clientName = requireString(incoming.clientName, 'Client name', 120);
   const clientPhone = cleanString(incoming.clientPhone, 60);
   const clientEmail = cleanString(incoming.clientEmail, 160).toLowerCase();
+  const clientEmailOptIn = Boolean(incoming.clientEmailOptIn && clientEmail);
   const clientBirthday = cleanString(incoming.clientBirthday, 80);
   const clientNote = cleanString(incoming.clientNote, 1000);
   const date = requireString(incoming.date, 'Booking date', 120);
@@ -45,7 +46,7 @@ exports.createPublicBookingRequest = onCall({ region: 'us-central1' }, async (re
   const allowedStatuses = new Set(['pending', 'confirmed', 'waitlist']);
   const status = allowedStatuses.has(incoming.status) ? incoming.status : 'pending';
   const notificationChannels = {
-    email: Boolean(clientEmail),
+    email: clientEmailOptIn,
     portal: Boolean(clientEmail)
   };
 
@@ -92,6 +93,7 @@ exports.createPublicBookingRequest = onCall({ region: 'us-central1' }, async (re
     clientName,
     clientPhone,
     clientEmail,
+    clientEmailOptIn,
     clientBirthday,
     clientNote,
     notificationChannels,

@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Flame, Globe, Instagram, MapPin } from 'lucide-react';
+import { ArrowRight, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Flame, Globe, Instagram, Mail, MapPin } from 'lucide-react';
 import { getFontFamily } from '../data/fonts';
 import { getLocalDateStr } from '../utils/dates';
 
@@ -35,7 +35,7 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             const [step, setStep] = useState(1);
             const [selectedDateIdx, setSelectedDateIdx] = useState(0);
             const [selectedTime, setSelectedTime] = useState(null);
-            const [formData, setFormData] = useState({ name: '', phone: '', email: '', birthday: '', note: '' });
+            const [formData, setFormData] = useState({ name: '', phone: '', email: '', birthday: '', note: '', emailOptIn: false });
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [submitError, setSubmitError] = useState('');
             const [isInitialLoading, setIsInitialLoading] = useState(settings.features?.loadingScreen);
@@ -86,6 +86,7 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             const collectClientPhone = settings.features?.collectClientPhone !== false;
             const collectClientEmail = settings.features?.collectClientEmail !== false;
             const collectClientNotes = Boolean(settings.features?.collectClientNotes);
+            const emailOptInEnabled = Boolean(settings.features?.emailUpdates !== false && collectClientEmail);
             const detailsReady = Boolean(
                 formData.name &&
                 (!collectClientPhone || formData.phone) &&
@@ -98,9 +99,10 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                     ...prev,
                     phone: collectClientPhone ? prev.phone : '',
                     email: collectClientEmail ? prev.email : '',
-                    note: collectClientNotes ? prev.note : ''
+                    note: collectClientNotes ? prev.note : '',
+                    emailOptIn: emailOptInEnabled ? prev.emailOptIn : false
                 }));
-            }, [collectClientEmail, collectClientNotes, collectClientPhone]);
+            }, [collectClientEmail, collectClientNotes, collectClientPhone, emailOptInEnabled]);
 
             const handleFirstAvailable = (e) => {
                 e.stopPropagation();
@@ -204,7 +206,8 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                                 ...formData,
                                 phone: collectClientPhone ? formData.phone : '',
                                 email: collectClientEmail ? formData.email : '',
-                                note: collectClientNotes ? formData.note : ''
+                                note: collectClientNotes ? formData.note : '',
+                                emailOptIn: Boolean(emailOptInEnabled && formData.emailOptIn)
                             },
                             activeDate.full,
                             isWaitlistMode ? 'Waitlist' : selectedTime,
@@ -563,6 +566,46 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                         </section>
 
                         <div className="pt-16 pb-12 mt-auto text-center">
+                            {emailOptInEnabled && (
+                                <label
+                                    className={`mb-5 flex items-start gap-3 rounded-2xl border px-4 py-4 text-left transition-all ${inspectClass}`}
+                                    style={{
+                                        borderColor: `${settings.headingColor || '#000000'}18`,
+                                        backgroundColor: `${settings.headingColor || '#000000'}08`
+                                    }}
+                                    onClick={(event) => {
+                                        if (isPreview) {
+                                            event.preventDefault();
+                                            onInspect('features');
+                                        }
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(formData.emailOptIn)}
+                                        onChange={(event) => setFormData({ ...formData, emailOptIn: event.target.checked })}
+                                        className="sr-only"
+                                    />
+                                    <span
+                                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-all ${formData.emailOptIn ? nativeAccentFillClass : ''}`}
+                                        style={{
+                                            backgroundColor: formData.emailOptIn ? (settings.primaryColor || '#39FF14') : 'transparent',
+                                            borderColor: formData.emailOptIn ? (settings.primaryColor || '#39FF14') : `${settings.headingColor || '#000000'}35`,
+                                            color: settings.buttonTextColor || '#000000'
+                                        }}
+                                    >
+                                        {formData.emailOptIn && <Check size={14} strokeWidth={4} />}
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: settings.headingColor }}>
+                                            <Mail size={13} /> Email updates
+                                        </span>
+                                        <span className="mt-1 block text-xs leading-relaxed opacity-60" style={{ color: settings.bodyColor }}>
+                                            Send booking confirmations, schedule changes, and helpful updates to the email entered above.
+                                        </span>
+                                    </span>
+                                </label>
+                            )}
                             <div
                                 className="mb-5 rounded-2xl border px-4 py-3.5 md:py-4 text-left"
                                 style={{

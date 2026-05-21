@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Bell, Calendar, Check, MessageCircle, Send, UserRound, Users } from 'lucide-react';
+import { Bell, Calendar, Check, MessageCircle, Search, Send, UserRound, Users } from 'lucide-react';
 import * as FirebaseSDK from '../services/firebase';
 
 const timestampValue = (value) => {
@@ -30,6 +30,7 @@ export function WorkspaceInbox({
   const [threads, setThreads] = useState([]);
   const [messages, setMessages] = useState([]);
   const [activeThreadId, setActiveThreadId] = useState('');
+  const [threadQuery, setThreadQuery] = useState('');
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -124,17 +125,28 @@ export function WorkspaceInbox({
   };
 
   const unreadCount = threads.reduce((sum, thread) => sum + Number(thread.ownerUnread || 0), 0);
+  const filteredThreads = useMemo(() => {
+    const queryText = threadQuery.trim().toLowerCase();
+    if (!queryText) return threads;
+    return threads.filter(thread => [
+      thread.clientName,
+      thread.clientEmail,
+      thread.workspaceName,
+      thread.lastMessage,
+      thread.bookingStatus
+    ].some(value => String(value || '').toLowerCase().includes(queryText)));
+  }, [threadQuery, threads]);
 
   return (
-    <section data-tour="client-inbox" className="saas-card overflow-hidden">
+    <section data-tour="client-inbox" className="saas-card overflow-hidden bg-white">
       <div className="p-5 md:p-7 border-b border-neutral-100 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-neutral-50 border border-neutral-100 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-4">
             <MessageCircle size={13} className="text-black" />
-            Client Portal Inbox
+            Support Inbox
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-black">Client chat, without the messy inbox</h2>
-          <p className="text-sm md:text-base text-neutral-500 mt-2 max-w-2xl">New bookings create a shared thread so your team can confirm, reschedule, answer questions, and keep the client updated inside Build A Booking.</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-black">Client conversations, built around bookings.</h2>
+          <p className="text-sm md:text-base text-neutral-500 mt-2 max-w-2xl">New requests create a shared support thread so your team can confirm, reschedule, answer questions, and keep context attached to the right booking.</p>
         </div>
         <div className="grid grid-cols-3 gap-2 min-w-[260px]">
           {[
@@ -151,10 +163,21 @@ export function WorkspaceInbox({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 min-h-[520px]">
+      <div className="grid grid-cols-1 xl:grid-cols-12 min-h-[620px]">
         <aside className="xl:col-span-4 border-b xl:border-b-0 xl:border-r border-neutral-100 bg-neutral-50/45">
-          <div className="max-h-[360px] xl:max-h-[620px] overflow-y-auto">
-            {threads.length ? threads.map(thread => {
+          <div className="p-4 border-b border-neutral-100 bg-white/70">
+            <div className="relative">
+              <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300" />
+              <input
+                value={threadQuery}
+                onChange={(event) => setThreadQuery(event.target.value)}
+                placeholder="Search client, email, message"
+                className="w-full h-12 rounded-lg bg-white border border-neutral-200 pl-11 pr-4 text-sm font-bold outline-none focus:border-black transition-colors"
+              />
+            </div>
+          </div>
+          <div className="max-h-[360px] xl:max-h-[660px] overflow-y-auto">
+            {filteredThreads.length ? filteredThreads.map(thread => {
               const active = activeThread?.id === thread.id;
               return (
                 <button
@@ -182,14 +205,14 @@ export function WorkspaceInbox({
             }) : (
               <div className="p-8 text-center">
                 <div className="w-14 h-14 rounded-lg bg-white border border-neutral-100 flex items-center justify-center mx-auto mb-4 text-neutral-300"><Users size={22}/></div>
-                <h3 className="font-bold text-black mb-2">No client threads yet</h3>
-                <p className="text-sm text-neutral-500">New bookings with an email address will open a client thread here automatically. No separate chat app needed for the core flow.</p>
+                <h3 className="font-bold text-black mb-2">{threads.length ? 'No matching threads' : 'No client threads yet'}</h3>
+                <p className="text-sm text-neutral-500">{threads.length ? 'Try another name, email, or message keyword.' : 'New bookings with an email address will open a client support thread here automatically.'}</p>
               </div>
             )}
           </div>
         </aside>
 
-        <div className="xl:col-span-8 flex flex-col min-h-[520px]">
+        <div className="xl:col-span-8 flex flex-col min-h-[620px]">
           {activeThread ? (
             <>
               <div className="p-5 md:p-6 border-b border-neutral-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

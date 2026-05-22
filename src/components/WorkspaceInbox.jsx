@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Bell, Calendar, Check, Clock, Maximize2, MessageCircle, Minimize2, RefreshCw, Search, Send, Users } from 'lucide-react';
+import { ArrowLeft, Bell, Calendar, Check, Clock, Maximize2, MessageCircle, Minimize2, RefreshCw, Search, Send, Users, X } from 'lucide-react';
 import * as FirebaseSDK from '../services/firebase';
 import { makeClientNotification, notificationEmailKey, NOTIFICATION_TYPES } from '../services/notifications';
 
@@ -24,6 +24,7 @@ export function WorkspaceInbox({
   user,
   workspaceOwnerId,
   bookings,
+  clientDirectory = [],
   staffList = [],
   updateBooking,
   setActiveTab,
@@ -32,6 +33,7 @@ export function WorkspaceInbox({
 }) {
   const [threads, setThreads] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [threadsReady, setThreadsReady] = useState(false);
   const [activeThreadId, setActiveThreadId] = useState('');
   const [threadQuery, setThreadQuery] = useState('');
   const [draft, setDraft] = useState('');
@@ -85,10 +87,36 @@ export function WorkspaceInbox({
     }
   ]), []);
 
-  const threadSource = threads.length ? threads : [exampleThread];
+  const shouldShowExampleThread = threadsReady && threads.length === 0 && bookings.length === 0;
+  const threadSource = threads.length ? threads : (shouldShowExampleThread ? [exampleThread] : []);
+  const clientProfileByEmail = useMemo(() => {
+    const profiles = new Map();
+    clientDirectory.forEach(client => {
+      const emailKey = notificationEmailKey(client.email || '');
+      if (emailKey) profiles.set(emailKey, client);
+    });
+    return profiles;
+  }, [clientDirectory]);
+  const getThreadClientProfile = (thread = {}) => {
+    const emailKey = notificationEmailKey(thread.clientEmail || '');
+    if (emailKey && clientProfileByEmail.has(emailKey)) return clientProfileByEmail.get(emailKey);
+    return clientDirectory.find(client => (
+      String(client.name || '').trim().toLowerCase() === String(thread.clientName || '').trim().toLowerCase()
+    )) || null;
+  };
+  const getThreadAvatar = (thread = {}) => (
+    thread.clientPhotoURL ||
+    thread.clientAvatar ||
+    getThreadClientProfile(thread)?.avatar ||
+    ''
+  );
 
   useEffect(() => {
-    if (!db || !workspaceOwnerId) return undefined;
+    if (!db || !workspaceOwnerId) {
+      setThreadsReady(true);
+      return undefined;
+    }
+    setThreadsReady(false);
     const threadsQuery = FirebaseSDK.query(
       FirebaseSDK.collection(db, 'artifacts', appId, 'clientThreads'),
       FirebaseSDK.where('ownerId', '==', workspaceOwnerId)
@@ -98,8 +126,12 @@ export function WorkspaceInbox({
         .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
         .sort((a, b) => timestampValue(b.updatedAt || b.lastMessageAt) - timestampValue(a.updatedAt || a.lastMessageAt));
       setThreads(next);
-      setActiveThreadId(current => current || next[0]?.id || '');
-    }, (error) => console.error('Workspace inbox sync failed', error));
+      setActiveThreadId(current => (current && next.some(thread => thread.id === current)) ? current : (next[0]?.id || ''));
+      setThreadsReady(true);
+    }, (error) => {
+      console.error('Workspace inbox sync failed', error);
+      setThreadsReady(true);
+    });
     return () => unsub();
   }, [appId, db, workspaceOwnerId]);
 
@@ -369,7 +401,7 @@ export function WorkspaceInbox({
           </div>
           <h2 className="text-lg md:text-3xl font-bold tracking-tight text-black">Chat with your clients & manage their bookings!</h2>
           <p className="hidden sm:block text-sm text-neutral-500 mt-1 max-w-2xl">Reply, confirm, reschedule, and keep every client conversation beside the booking it belongs to.</p>
-          {!threads.length && <p className="mt-3 inline-flex rounded-full bg-neutral-50 border border-neutral-100 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Example preview only - not saved or counted</p>}
+          {shouldShowExampleThread && <p className="mt-3 inline-flex rounded-full bg-neutral-50 border border-neutral-100 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Example preview only - not saved or counted</p>}
         </div>
         <div className="grid grid-cols-3 gap-2 w-full lg:w-[360px] xl:w-[390px] shrink-0">
           {[
@@ -404,6 +436,7 @@ export function WorkspaceInbox({
           <div className="max-h-[62vh] xl:max-h-[660px] overflow-y-auto">
             {filteredThreads.length ? filteredThreads.map(thread => {
               const active = activeThread?.id === thread.id;
+              const threadAvatar = getThreadAvatar(thread);
               return (
                 <button
                   key={thread.id}
@@ -417,8 +450,8 @@ export function WorkspaceInbox({
                   {active && <span className="absolute inset-y-0 left-0 w-1 native-gradient-line" />}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold ${active ? 'native-gradient-icon text-black' : 'bg-white border border-neutral-100 text-black'}`}>
-                        {(thread.clientName || 'C').charAt(0).toUpperCase()}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold overflow-hidden ${threadAvatar ? 'bg-white border border-neutral-100 text-black' : active ? 'native-gradient-icon text-black' : 'bg-white border border-neutral-100 text-black'}`}>
+                        {threadAvatar ? <img src={threadAvatar} alt="" className="w-full h-full object-cover" /> : (thread.clientName || 'C').charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold truncate text-black">{thread.clientName || 'Client'}</p>
@@ -440,8 +473,8 @@ export function WorkspaceInbox({
             }) : (
               <div className="p-8 text-center">
                 <div className="w-14 h-14 rounded-lg bg-white border border-neutral-100 flex items-center justify-center mx-auto mb-4 text-neutral-300"><Users size={22}/></div>
-                <h3 className="font-bold text-black mb-2">{threads.length ? 'No matching threads' : 'No client threads yet'}</h3>
-                <p className="text-sm text-neutral-500">{threads.length ? 'Try another name, email, or message keyword.' : 'New bookings with an email address will open a client support thread here automatically.'}</p>
+                <h3 className="font-bold text-black mb-2">{threadsReady ? (threads.length ? 'No matching threads' : 'No client threads yet') : 'Loading client threads'}</h3>
+                <p className="text-sm text-neutral-500">{threadsReady ? (threads.length ? 'Try another name, email, or message keyword.' : 'New bookings with an email address will open a client support thread here automatically.') : 'Your live inbox is syncing.'}</p>
               </div>
             )}
           </div>
@@ -455,8 +488,8 @@ export function WorkspaceInbox({
                   <button type="button" onClick={() => setMobileChatOpen(false)} className="xl:hidden w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0">
                     <ArrowLeft size={18} />
                   </button>
-                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-full native-gradient-icon flex items-center justify-center shrink-0 overflow-hidden font-bold">
-                    {activeThread.clientPhotoURL ? <img src={activeThread.clientPhotoURL} alt="" className="w-full h-full object-cover" /> : (activeThread.clientName || 'C').charAt(0).toUpperCase()}
+                  <div className={`w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden font-bold ${getThreadAvatar(activeThread) ? 'bg-neutral-100 border border-neutral-100 text-black' : 'native-gradient-icon'}`}>
+                    {getThreadAvatar(activeThread) ? <img src={getThreadAvatar(activeThread)} alt="" className="w-full h-full object-cover" /> : (activeThread.clientName || 'C').charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-base md:text-xl font-bold text-black truncate">{activeThread.clientName || 'Client'}</h3>

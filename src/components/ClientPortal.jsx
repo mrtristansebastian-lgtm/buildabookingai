@@ -62,6 +62,8 @@ export function ClientPortal({ appId, db, user, onSignOut, onOwnerLogin, onInsta
   const [rescheduleDraft, setRescheduleDraft] = useState({ bookingId: '', date: '', time: '' });
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [bookingsReady, setBookingsReady] = useState(false);
+  const [threadsReady, setThreadsReady] = useState(false);
   const [sending, setSending] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [browserPermission, setBrowserPermission] = useState(getBrowserNotificationPermission);
@@ -113,8 +115,9 @@ export function ClientPortal({ appId, db, user, onSignOut, onOwnerLogin, onInsta
     }
   ]), [user?.displayName]);
 
-  const bookingSource = bookings.length ? bookings : [exampleBooking];
-  const threadSource = threads.length ? threads : [exampleThread];
+  const showExamplePortal = bookingsReady && threadsReady && bookings.length === 0 && threads.length === 0;
+  const bookingSource = bookings.length ? bookings : (showExamplePortal ? [exampleBooking] : []);
+  const threadSource = threads.length ? threads : (showExamplePortal ? [exampleThread] : []);
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
@@ -125,10 +128,14 @@ export function ClientPortal({ appId, db, user, onSignOut, onOwnerLogin, onInsta
   useEffect(() => {
     if (!db || !emailKey) {
       setLoading(false);
+      setBookingsReady(true);
+      setThreadsReady(true);
       return undefined;
     }
 
     setLoading(true);
+    setBookingsReady(false);
+    setThreadsReady(false);
     const bookingsRef = FirebaseSDK.collection(db, 'artifacts', appId, 'clientAccess', emailKey, 'bookings');
     const threadsQuery = FirebaseSDK.query(
       FirebaseSDK.collection(db, 'artifacts', appId, 'clientThreads'),
@@ -140,9 +147,11 @@ export function ClientPortal({ appId, db, user, onSignOut, onOwnerLogin, onInsta
         .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
         .sort((a, b) => timestampValue(b.timestamp || b.createdAt) - timestampValue(a.timestamp || a.createdAt));
       setBookings(next);
+      setBookingsReady(true);
       setLoading(false);
     }, (error) => {
       console.error('Client bookings sync failed', error);
+      setBookingsReady(true);
       setLoading(false);
     });
 
@@ -151,8 +160,12 @@ export function ClientPortal({ appId, db, user, onSignOut, onOwnerLogin, onInsta
         .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
         .sort((a, b) => timestampValue(b.updatedAt || b.lastMessageAt) - timestampValue(a.updatedAt || a.lastMessageAt));
       setThreads(next);
-      setActiveThreadId(current => current || next[0]?.id || '');
-    }, (error) => console.error('Client threads sync failed', error));
+      setActiveThreadId(current => (current && next.some(thread => thread.id === current)) ? current : (next[0]?.id || ''));
+      setThreadsReady(true);
+    }, (error) => {
+      console.error('Client threads sync failed', error);
+      setThreadsReady(true);
+    });
 
     return () => {
       unsubBookings();

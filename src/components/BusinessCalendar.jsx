@@ -9,6 +9,7 @@ import { getLocalDateStr } from '../utils/dates';
             onSave,
             showToast,
             bookings = [],
+            clientDirectory = [],
             staffList = [],
             activeStaffId = 'owner',
             workspaceRole = 'owner',
@@ -38,6 +39,25 @@ import { getLocalDateStr } from '../utils/dates';
             const getStaffDisplayName = (staff = {}) => staff.name || staff.displayName || staff.email?.split('@')[0] || 'Team member';
             const getStaffUsername = (staff = {}) => staff.username || staff.handle || (staff.email ? `@${staff.email.split('@')[0]}` : `${staff.role || 'staff'} calendar`);
             const getStaffInitials = (name = 'Team member') => name.split(' ').map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase();
+            const normalizeEmailKey = (value = '') => String(value || '').trim().toLowerCase();
+            const normalizePhoneKey = (value = '') => String(value || '').replace(/\D/g, '');
+            const getBookingClientProfile = (booking = {}) => {
+                const emailKey = normalizeEmailKey(booking.clientEmail || booking.email || '');
+                const phoneKey = normalizePhoneKey(booking.clientPhone || booking.phone || '');
+                const nameKey = String(booking.clientName || '').trim().toLowerCase();
+                return clientDirectory.find(client => (
+                    (emailKey && normalizeEmailKey(client.email || '') === emailKey) ||
+                    (phoneKey && normalizePhoneKey(client.phone || '') === phoneKey) ||
+                    (nameKey && String(client.name || '').trim().toLowerCase() === nameKey)
+                )) || null;
+            };
+            const getBookingClientAvatar = (booking = {}) => (
+                booking.clientPhotoURL ||
+                booking.clientAvatar ||
+                booking.avatar ||
+                getBookingClientProfile(booking)?.avatar ||
+                ''
+            );
             const staffMembersForCoverage = useMemo(() => {
                 const activeStaff = (staffList || []).filter(staff => staff?.id && staff.accessEnabled !== false);
                 const fallbackStaff = [{ id: activeStaffId || 'owner', name: workspaceRole === 'staff' ? 'My Calendar' : 'Owner', role: workspaceRole === 'staff' ? 'staff' : 'owner', color: '#000000' }];
@@ -708,7 +728,7 @@ import { getLocalDateStr } from '../utils/dates';
                         </div>
                     </section>
 
-                    <div className="grid grid-cols-1 min-[1400px]:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
+                    <div className="grid grid-cols-1 min-[1400px]:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start min-[1400px]:items-stretch">
                         <section data-tour="schedule-calendar" className={`saas-card schedule-calendar-card schedule-mode-${calendarViewMode} ${hidePastDays ? 'schedule-forward-days' : ''} ${calendarViewMode === 'day' ? 'min-[1400px]:col-span-2' : ''} overflow-hidden`}>
                             <div className="p-5 md:p-6 border-b border-neutral-100 flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white">
                                 <div>
@@ -918,12 +938,18 @@ import { getLocalDateStr } from '../utils/dates';
                                                                 <div className="space-y-2 max-h-[310px] overflow-y-auto no-scrollbar pr-1">
                                                                     {selectedDayBookingList.length ? selectedDayBookingList.map(booking => {
                                                                         const statusMeta = getBookingStatusMeta(booking);
+                                                                        const clientAvatar = getBookingClientAvatar(booking);
                                                                         return (
                                                                             <div key={booking.id || `${booking.clientName}-${booking.time}`} className="rounded-lg border border-neutral-100 bg-neutral-50/70 px-3 py-3">
                                                                                 <div className="flex items-start justify-between gap-3">
-                                                                                    <div className="min-w-0">
-                                                                                        <p className="text-sm font-black text-black truncate">{booking.clientName || 'Client'}</p>
-                                                                                        <p className="text-xs text-neutral-500 mt-1 truncate">{booking.clientPhone || booking.clientEmail || booking.email || 'Client details saved'}</p>
+                                                                                    <div className="flex items-start gap-3 min-w-0">
+                                                                                        <div className="w-9 h-9 rounded-full bg-white border border-neutral-100 flex items-center justify-center overflow-hidden shrink-0 text-xs font-black text-black">
+                                                                                            {clientAvatar ? <img src={clientAvatar} alt="" className="w-full h-full object-cover" /> : (booking.clientName || 'C').charAt(0).toUpperCase()}
+                                                                                        </div>
+                                                                                        <div className="min-w-0">
+                                                                                            <p className="text-sm font-black text-black truncate">{booking.clientName || 'Client'}</p>
+                                                                                            <p className="text-xs text-neutral-500 mt-1 truncate">{booking.clientPhone || booking.clientEmail || booking.email || 'Client details saved'}</p>
+                                                                                        </div>
                                                                                     </div>
                                                                                     <span className={`shrink-0 rounded-full border px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${statusMeta.className}`}>{statusMeta.label}</span>
                                                                                 </div>

@@ -2,7 +2,7 @@ import { lazy, Suspense, startTransition, useEffect, useMemo, useRef, useState }
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
-  AlignCenter, AlignLeft, AlignRight, ArrowRight, Battery, Bell, BookOpen, Briefcase, Calendar, CalendarCheck, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, Eye, EyeOff, Globe, History, Instagram, Layers, Layout, Mail, MessageCircle, MessageSquare, Monitor, Moon, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Share2, ShieldCheck, Signal, Sparkles, Star, Sun, Tag, Trash2, User, UserPlus, Users, Wifi, X, Zap
+  AlignCenter, AlignLeft, AlignRight, ArrowRight, Battery, Bell, BookOpen, Briefcase, Calendar, CalendarCheck, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, Eye, EyeOff, FileText, Globe, History, Instagram, Layers, Layout, Mail, MessageCircle, MessageSquare, Monitor, Moon, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Share2, ShieldCheck, Signal, Sparkles, Star, Sun, Tag, Trash2, User, UserPlus, Users, Wifi, X, Zap
 } from 'lucide-react';
 import { BuildABookingBrand, BuildABookingMark } from './components/BuildABookingBrand';
 import { EmailNotificationSettings } from './components/EmailNotificationSettings';
@@ -1243,9 +1243,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [bookingSearch, setBookingSearch] = useState('');
             const [clientRecords, setClientRecords] = useState([]);
             const [clientSearch, setClientSearch] = useState('');
+            const [clientDeskFilter, setClientDeskFilter] = useState('all');
             const [selectedClientId, setSelectedClientId] = useState(null);
             const [clientNoteDraft, setClientNoteDraft] = useState('');
             const [clientMobileView, setClientMobileView] = useState('directory');
+            const [selectedStaffFileId, setSelectedStaffFileId] = useState(null);
+            const [teamPanelMode, setTeamPanelMode] = useState('roster');
             const [activeProfileSection, setActiveProfileSection] = useState('');
             const [showOnboarding, setShowOnboarding] = useState(false);
             const [showOwnerManual, setShowOwnerManual] = useState(false);
@@ -2130,12 +2133,34 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 ));
             }, [clientDirectory, clientSearch]);
 
+            const filteredClientDirectory = useMemo(() => {
+                if (clientDeskFilter === 'regulars') {
+                    return filteredClients.filter(client => (
+                        client.autoLabels?.includes('Regular') || client.labels?.includes('VIP') || client.labels?.includes('Regular')
+                    ));
+                }
+                if (clientDeskFilter === 'first-time') {
+                    return filteredClients.filter(client => client.autoLabels?.includes('First Time'));
+                }
+                if (clientDeskFilter === 'enriched') {
+                    return filteredClients.filter(client => client.notes || client.avatar || client.labels?.length);
+                }
+                return filteredClients;
+            }, [clientDeskFilter, filteredClients]);
+
+            const clientDeskFilters = useMemo(() => ([
+                { id: 'all', label: 'All', count: clientDirectory.length },
+                { id: 'regulars', label: 'Regulars', count: clientMetrics.regulars },
+                { id: 'first-time', label: 'First Time', count: clientMetrics.firstTimers },
+                { id: 'enriched', label: 'Enriched', count: clientMetrics.enriched }
+            ]), [clientDirectory.length, clientMetrics.enriched, clientMetrics.firstTimers, clientMetrics.regulars]);
+
             const selectedClient = useMemo(() => (
-                clientDirectory.find(client => client.id === selectedClientId) || clientDirectory[0] || null
+                clientDirectory.find(client => client.id === selectedClientId) || null
             ), [clientDirectory, selectedClientId]);
             const showClientExample = bookingsReady && clientDirectory.length === 0 && !clientSearch.trim();
-            const displayClients = showClientExample ? [exampleClient] : filteredClients;
-            const activeClient = showClientExample ? exampleClient : selectedClient;
+            const displayClients = showClientExample ? [exampleClient] : filteredClientDirectory;
+            const activeClient = selectedClient || (showClientExample && selectedClientId === exampleClient.id ? exampleClient : null);
 
             const clientProfileByKey = useMemo(() => (
                 new Map(clientDirectory.map(client => [client.id, client]))
@@ -2153,13 +2178,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             useEffect(() => {
                 if (!clientDirectory.length) {
-                    setSelectedClientId(null);
+                    if (selectedClientId !== exampleClient.id) setSelectedClientId(null);
                     return;
                 }
-                if (!selectedClientId || !clientDirectory.some(client => client.id === selectedClientId)) {
-                    setSelectedClientId(clientDirectory[0].id);
+                if (selectedClientId && !clientDirectory.some(client => client.id === selectedClientId)) {
+                    setSelectedClientId(null);
+                    setClientMobileView('directory');
                 }
-            }, [clientDirectory, selectedClientId]);
+            }, [clientDirectory, exampleClient.id, selectedClientId]);
 
             useEffect(() => {
                 setClientNoteDraft(selectedClient?.notes || '');
@@ -3317,7 +3343,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                 upsertClientRecord(id, { name, phone, email, birthday, labels });
                 setSelectedClientId(id);
-                if (isMobileRuntime) setClientMobileView('profile');
+                setClientMobileView('profile');
                 form.reset();
                 showToast(existingClient ? "Client profile updated" : "Client added");
             };
@@ -4405,9 +4431,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${keepLoggedIn ? 'translate-x-6' : 'translate-x-1'}`} />
                             </span>
                         </label>
-                        {authPersona !== 'client' && <button type="button" onClick={openGuestDashboard} className="mt-3 w-full h-12 rounded-lg bg-[#39FF14] text-black text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-[#39FF14]/20 hover:brightness-95 transition-all">
-                            <Eye size={16}/> Browse As Guest
-                        </button>}
+                        <button
+                            type="button"
+                            onClick={authPersona === 'client' ? openClientGuestPortal : openGuestDashboard}
+                            className="mt-3 w-full h-12 rounded-lg bg-[#39FF14] text-black text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-[#39FF14]/20 hover:brightness-95 transition-all"
+                        >
+                            <Eye size={16}/> {authPersona === 'client' ? 'Preview Client Portal' : 'Browse As Guest'}
+                        </button>
                         <div className="flex items-center gap-4 my-5">
                             <div className="h-px bg-neutral-100 flex-1" />
                             <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">or email</span>
@@ -5718,55 +5748,46 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     <h2 className="text-4xl md:text-4xl font-bold tracking-tight text-black">My Clients</h2>
                                     <p className="text-neutral-500 text-sm md:text-base mt-2 max-w-2xl">Profiles are built from bookings automatically, with space for notes, labels, photos, and manual walk-ins.</p>
                                 </div>
-                                <button onClick={() => { saveClients(clientRecords); showToast("Client book saved"); }} className="h-10 md:h-11 px-4 md:px-5 rounded-lg bg-black text-white text-[10px] md:text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 transition-colors shadow-xl shadow-black/10 w-full sm:w-auto">
-                                    <Check size={15}/> Save Client Book
-                                </button>
+                                <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSelectedClientId(null); setClientMobileView('add'); }}
+                                        className="h-10 md:h-11 px-4 md:px-5 rounded-lg bg-white border border-neutral-200 text-black text-[10px] md:text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:border-black transition-colors shadow-xl shadow-black/5"
+                                    >
+                                        <Plus size={15}/> Client
+                                    </button>
+                                    <button onClick={() => { saveClients(clientRecords); showToast("Client book saved"); }} className="h-10 md:h-11 px-4 md:px-5 rounded-lg bg-black text-white text-[10px] md:text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 transition-colors shadow-xl shadow-black/10">
+                                        <Check size={15}/> Save
+                                    </button>
+                                </div>
                             </header>
 
-                            <div className="native-stat-grid grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-2.5 md:gap-4 mb-4 md:mb-6">
-                                {[
-                                    { label: 'Client Profiles', value: clientMetrics.total, hint: clientMetrics.total ? 'Live records' : 'Ready for data', icon: Users },
-                                    { label: 'Regulars', value: clientMetrics.regulars, hint: 'Auto + VIP', icon: Star },
-                                    { label: 'First Timers', value: clientMetrics.firstTimers, hint: 'Auto detected', icon: Sparkles },
-                                    { label: 'Enriched', value: clientMetrics.enriched, hint: 'Notes / labels / photos', icon: Tag }
-                                ].map(metric => {
-                                    const IconCmp = metric.icon;
-                                    return (
-                                        <div key={metric.label} className="saas-card native-stat-card p-3 md:p-5">
-                                            <div className="flex items-start justify-between mb-3 md:mb-7">
-                                                <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-black"><IconCmp size={16}/></div>
-                                                <span className="hidden md:inline-flex text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-md">{metric.hint}</span>
-                                            </div>
-                                            <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.18em] md:tracking-[0.25em] text-neutral-400 mb-1 md:mb-2">{metric.label}</p>
-                                            <p className="metric-value text-2xl md:text-3xl font-bold tracking-tight text-black">{metric.value}</p>
+                            <div className="booking-desk-command rounded-lg border border-neutral-200 bg-white p-3 md:p-4 mb-4 md:mb-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0"><Users size={17}/></div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-lg md:text-xl font-bold tracking-tight text-black">Client Desk</h3>
+                                        <p className="text-xs md:text-sm text-neutral-500 truncate">
+                                            {clientMetrics.total ? `${clientMetrics.total} profiles, ${clientMetrics.regulars} regulars, ${clientMetrics.firstTimers} first timers.` : 'Ready for the first real client profile.'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 lg:min-w-[360px]">
+                                    {[
+                                        { label: 'Profiles', value: clientMetrics.total },
+                                        { label: 'Regulars', value: clientMetrics.regulars },
+                                        { label: 'Enriched', value: clientMetrics.enriched }
+                                    ].map(metric => (
+                                        <div key={metric.label} className="rounded-lg bg-neutral-50 border border-neutral-100 px-3 py-2">
+                                            <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400">{metric.label}</p>
+                                            <p className="metric-value text-lg font-bold text-black leading-none mt-1">{metric.value}</p>
                                         </div>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="md:hidden mb-4 rounded-lg border border-neutral-200 bg-white p-1.5 shadow-sm grid grid-cols-3 gap-1">
-                                {[
-                                    { id: 'directory', label: 'Directory', icon: Users },
-                                    { id: 'profile', label: 'File', icon: User },
-                                    { id: 'add', label: 'Add', icon: UserPlus }
-                                ].map(item => {
-                                    const IconCmp = item.icon;
-                                    const active = clientMobileView === item.id;
-                                    return (
-                                        <button
-                                            key={item.id}
-                                            type="button"
-                                            onClick={() => setClientMobileView(item.id)}
-                                            className={`h-10 rounded-md text-[9px] font-bold uppercase tracking-[0.14em] flex items-center justify-center gap-2 transition-all ${active ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-neutral-400 hover:text-black'}`}
-                                        >
-                                            <IconCmp size={14} /> {item.label}
-                                        </button>
-                                    );
-                                })}
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                                <section className={`xl:col-span-5 space-y-4 md:space-y-6 ${clientMobileView === 'directory' || clientMobileView === 'add' ? '' : 'hidden md:block'}`}>
+                                <section className={`${activeClient ? 'xl:col-span-5' : 'xl:col-span-12'} space-y-4 md:space-y-6 ${clientMobileView === 'directory' || clientMobileView === 'add' ? '' : 'hidden md:block'}`}>
                                     <div data-tour="clients-directory" className={`saas-card overflow-hidden ${clientMobileView === 'add' ? 'hidden md:block' : ''}`}>
                                         <div className="p-4 md:p-6 border-b border-neutral-100">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
@@ -5789,6 +5810,18 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                     className="w-full h-10 md:h-12 bg-neutral-50 border border-neutral-100 rounded-lg pl-11 pr-4 text-sm font-bold outline-none text-black focus:bg-white focus:border-black transition-colors"
                                                 />
                                             </div>
+                                            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                {clientDeskFilters.map(filter => (
+                                                    <button
+                                                        key={filter.id}
+                                                        type="button"
+                                                        onClick={() => setClientDeskFilter(filter.id)}
+                                                        className={`h-10 rounded-lg border text-[9px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${clientDeskFilter === filter.id ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white border-neutral-200 text-neutral-500 hover:text-black hover:border-black'}`}
+                                                    >
+                                                        {filter.label} <span className={`rounded-full px-2 py-0.5 ${clientDeskFilter === filter.id ? 'bg-white/15 text-white' : 'bg-neutral-100 text-neutral-500'}`}>{filter.count}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                         <div className="max-h-[58vh] md:max-h-[640px] overflow-y-auto divide-y divide-neutral-100">
                                             {displayClients.length === 0 ? (
@@ -5800,13 +5833,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             ) : displayClients.map(client => {
                                                 const allLabels = Array.from(new Set([...(client.autoLabels || []), ...(client.labels || [])])).slice(0, 3);
                                                 const isActive = activeClient?.id === client.id;
+                                                const openClientFile = () => {
+                                                    setSelectedClientId(client.id);
+                                                    setClientMobileView('profile');
+                                                };
                                                 return (
                                                     <button
                                                         key={client.id}
-                                                        onClick={() => {
-                                                            if (!client.isExample) setSelectedClientId(client.id);
-                                                            if (isMobileRuntime) setClientMobileView('profile');
-                                                        }}
+                                                        onClick={openClientFile}
                                                         className={`w-full text-left p-3 md:p-5 transition-all ${isActive ? 'bg-black text-white' : 'hover:bg-neutral-50 text-black'}`}
                                                     >
                                                         <div className="flex items-start gap-3 md:gap-4">
@@ -5825,6 +5859,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                     ))}
                                                                 </div>
                                                             </div>
+                                                            <span className={`h-10 px-3 rounded-lg flex items-center justify-center gap-2 text-[9px] font-bold uppercase tracking-widest shrink-0 ${isActive ? 'bg-white text-black' : 'bg-neutral-100 text-neutral-500'}`}>
+                                                                <FileText size={14}/> File
+                                                            </span>
                                                         </div>
                                                     </button>
                                                 );
@@ -5832,13 +5869,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         </div>
                                     </div>
 
-                                    <section className={`saas-panel p-4 md:p-6 ${clientMobileView === 'add' ? '' : 'hidden md:block'}`}>
+                                    <section className={`saas-panel p-4 md:p-6 ${clientMobileView === 'add' ? '' : 'hidden'}`}>
                                         <div className="flex items-start justify-between gap-4 mb-6">
                                             <div>
                                                 <h3 className="text-lg font-bold tracking-tight text-black">Add Client</h3>
                                                 <p className="text-sm text-neutral-500">Create a profile for walk-ins, DMs, or referrals.</p>
                                             </div>
-                                            <div className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0"><UserPlus size={16}/></div>
+                                            <button type="button" onClick={() => setClientMobileView('directory')} className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0"><X size={16}/></button>
                                         </div>
                                         <form onSubmit={handleManualClientSubmit} className="space-y-4">
                                             <div>
@@ -5873,7 +5910,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     </section>
                                 </section>
 
-                                <section className={`xl:col-span-7 space-y-4 md:space-y-6 ${clientMobileView === 'profile' ? '' : 'hidden md:block'}`}>
+                                <section className={`${activeClient ? 'xl:col-span-7' : 'hidden'} space-y-4 md:space-y-6 ${clientMobileView === 'profile' ? '' : 'hidden md:block'}`}>
                                     {activeClient ? (() => {
                                         const allLabels = Array.from(new Set([...(activeClient.autoLabels || []), ...(activeClient.labels || [])]));
                                         const isExampleClient = Boolean(activeClient.isExample);
@@ -6040,114 +6077,88 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 </section>
                                             </>
                                         );
-                                    })() : (
-                                        <div className="saas-card p-12 text-center">
-                                            <div className="w-14 h-14 rounded-lg bg-neutral-100 flex items-center justify-center mx-auto mb-5 text-neutral-400"><Users size={22}/></div>
-                                            <h3 className="text-lg font-bold tracking-tight text-black mb-2">No clients yet</h3>
-                                            <p className="text-sm text-neutral-500">New bookings and manually added clients will appear here.</p>
-                                        </div>
-                                    )}
+                                    })() : null}
                                 </section>
                             </div>
                         </div>
                     )}
 
-                    {activeTab === 'staff' && (
+                    {activeTab === 'staff' && (() => {
+                        const selectedStaffFile = displayStaffList.find(staff => staff.id === selectedStaffFileId) || null;
+                        const renderStaffAvatar = (staff, sizeClass = 'w-14 h-14') => {
+                            const initials = (staff?.name || 'Team Member').split(' ').map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase();
+                            return (
+                                <div className={`${sizeClass} rounded-full shadow-inner flex items-center justify-center font-bold text-white text-sm shrink-0 overflow-hidden`} style={{ backgroundColor: staff?.color || '#000000' }}>
+                                    {staff?.photoURL ? <img src={staff.photoURL} alt="" className="w-full h-full object-cover" /> : initials}
+                                </div>
+                            );
+                        };
+                        const renderStaffFile = selectedStaffFile ? (() => {
+                            const assignedBookings = visibleBookings.filter(b => b.staffId === selectedStaffFile.id || (selectedStaffFile.id === 'owner' && (!b.staffId || b.staffId === 'owner')));
+                            const roleLabel = selectedStaffFile.role === 'admin' ? 'Admin' : selectedStaffFile.role === 'owner' || selectedStaffFile.id === 'owner' ? 'Owner' : 'Staff';
+                            const statusLabel = selectedStaffFile.status === 'connected' ? 'Google account detected' : selectedStaffFile.accessEnabled === false ? 'Access disabled' : 'Access ready';
+                            return { assignedBookings, roleLabel, statusLabel };
+                        })() : null;
+
+                        return (
                         <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
                             <header className="dashboard-page-header mb-4 md:mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                                 <div>
                                     <h2 className="text-4xl md:text-4xl font-bold tracking-tight text-black">Team</h2>
-                                    <p className="text-neutral-500 text-sm md:text-base mt-2 max-w-2xl">Manage who can handle bookings, assign clients, and keep your calendar moving.</p>
+                                    <p className="text-neutral-500 text-sm md:text-base mt-2 max-w-2xl">Tap a teammate to open their file, or add someone new when the roster grows.</p>
                                 </div>
                                 <button onClick={() => { saveStaff(staffList); showToast("Team setup saved"); }} className="h-11 px-5 rounded-lg bg-black text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 transition-colors shadow-xl shadow-black/10 w-full sm:w-auto">
-                                    <Check size={15}/> Save Team Setup
+                                    <Check size={15}/> Save Team
                                 </button>
                             </header>
 
-                            <div className="native-stat-grid grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4 mb-4 md:mb-6">
-                                {[
-                                    { label: 'Team Members', value: displayStaffList.length, hint: 'Active roster', icon: Users },
-                                    { label: 'Admins', value: displayStaffList.filter(staff => staff.role === 'owner' || staff.role === 'admin').length, hint: 'Full access', icon: ShieldCheck },
-                                    { label: 'Connected', value: displayStaffList.filter(staff => staff.status === 'connected').length, hint: 'Detected accounts', icon: Wifi },
-                                    { label: 'Assignable', value: displayStaffList.filter(staff => staff.id !== 'owner').length, hint: 'Booking staff', icon: Briefcase }
-                                ].map(metric => {
-                                    const IconCmp = metric.icon;
-                                    return (
-                                        <div key={metric.label} className="saas-card native-stat-card p-5">
-                                            <div className="flex items-start justify-between mb-7">
-                                                <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-black"><IconCmp size={17}/></div>
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-md">{metric.hint}</span>
-                                            </div>
-                                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-400 mb-2">{metric.label}</p>
-                                            <p className="metric-value text-3xl font-bold tracking-tight text-black">{metric.value}</p>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                                <section data-tour="team-roster" className="xl:col-span-8 saas-card overflow-hidden">
-                                    <div className="p-5 md:p-6 border-b border-neutral-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                        <div>
-                                            <h3 className="text-lg font-bold tracking-tight text-black">Roster</h3>
-                                            <p className="text-sm text-neutral-500">People visible in booking assignment controls.</p>
-                                        </div>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md">{displayStaffList.length} Active</span>
+                            <section data-tour="team-roster" className="saas-card p-4 md:p-6 overflow-hidden">
+                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6">
+                                    <div>
+                                        <h3 className="text-xl md:text-2xl font-bold tracking-tight text-black">Team Roster</h3>
+                                        <p className="text-sm text-neutral-500">Floating profiles for staff files, assignment checks, and calendar ownership.</p>
                                     </div>
-                                    <div className="p-4 md:p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                        {displayStaffList.map((staff, index) => {
-                                            const initials = (staff.name || 'Team Member').split(' ').map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase();
-                                            const assignedBookings = visibleBookings.filter(b => b.staffId === staff.id).length;
-                                            const roleLabel = staff.role === 'admin' ? 'Admin' : staff.role === 'owner' || staff.id === 'owner' ? 'Owner' : 'Staff';
-                                            const statusLabel = staff.status === 'connected' ? 'Google detected' : staff.accessEnabled === false ? 'Access off' : 'Access ready';
-                                            return (
-                                                <div key={staff.id} className="group relative overflow-hidden rounded-lg border border-neutral-100 bg-neutral-50/70 p-5 transition-all hover:bg-white hover:border-neutral-200 hover:shadow-xl">
-                                                    <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: staff.color || '#000000' }} />
-                                                    <div className="flex items-start justify-between gap-4 mb-6">
-                                                        <div className="flex items-center gap-4 min-w-0">
-                                                            <div className="w-14 h-14 rounded-lg shadow-inner flex items-center justify-center font-bold text-white text-lg shrink-0 overflow-hidden" style={{ backgroundColor: staff.color || '#000000' }}>
-                                                                {staff.photoURL ? <img src={staff.photoURL} alt="" className="w-full h-full object-cover" /> : initials}
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <h4 className="font-bold text-lg text-black truncate">{staff.name}</h4>
-                                                                <p className="text-sm text-neutral-500 truncate">{staff.id === 'owner' ? 'Workspace owner' : staff.email}</p>
-                                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">{statusLabel}</p>
-                                                            </div>
-                                                        </div>
-                                                        {staff.id === 'owner' ? (
-                                                            <div className="w-9 h-9 rounded-lg bg-[#39FF14] text-black flex items-center justify-center shrink-0"><ShieldCheck size={16}/></div>
-                                                        ) : canManageTeam ? (
-                                                            <button onClick={() => saveStaff(staffList.filter(s => s.id !== staff.id))} className="w-9 h-9 rounded-lg flex items-center justify-center text-neutral-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0">
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        ) : (
-                                                            <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-400 flex items-center justify-center shrink-0"><ShieldCheck size={16}/></div>
-                                                        )}
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <div className="rounded-lg bg-white border border-neutral-100 p-3">
-                                                            <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Role</p>
-                                                            <p className="text-sm font-bold text-black">{roleLabel}</p>
-                                                        </div>
-                                                        <div className="rounded-lg bg-white border border-neutral-100 p-3">
-                                                            <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Bookings</p>
-                                                            <p className="text-sm font-bold text-black">{assignedBookings || (index === 0 ? visibleBookings.filter(b => !b.staffId || b.staffId === 'owner').length : 0)}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </section>
+                                    <span className="inline-flex w-fit text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-neutral-100 px-3 py-1.5 rounded-md">{displayStaffList.length} Active</span>
+                                </div>
+                                <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setTeamPanelMode('add'); setSelectedStaffFileId(null); }}
+                                        className={`min-w-[92px] md:min-w-[110px] rounded-2xl border p-3 md:p-4 flex flex-col items-center gap-3 transition-all ${teamPanelMode === 'add' ? 'bg-black text-white border-black shadow-xl shadow-black/10' : 'bg-white border-neutral-200 text-black hover:border-black'}`}
+                                    >
+                                        <span className={`w-14 h-14 rounded-full flex items-center justify-center ${teamPanelMode === 'add' ? 'bg-white text-black' : 'bg-neutral-100 text-black'}`}><Plus size={22}/></span>
+                                        <span className="text-[9px] font-bold uppercase tracking-widest">Add</span>
+                                    </button>
+                                    {displayStaffList.map(staff => {
+                                        const isSelected = teamPanelMode === 'file' && selectedStaffFileId === staff.id;
+                                        const roleLabel = staff.role === 'admin' ? 'Admin' : staff.role === 'owner' || staff.id === 'owner' ? 'Owner' : 'Staff';
+                                        return (
+                                            <button
+                                                key={staff.id}
+                                                type="button"
+                                                onClick={() => { setSelectedStaffFileId(staff.id); setTeamPanelMode('file'); }}
+                                                className={`min-w-[112px] md:min-w-[132px] rounded-2xl border p-3 md:p-4 flex flex-col items-center gap-3 transition-all ${isSelected ? 'bg-black text-white border-black shadow-xl shadow-black/10' : 'bg-white border-neutral-200 text-black hover:border-black hover:shadow-lg'}`}
+                                            >
+                                                {renderStaffAvatar(staff)}
+                                                <span className="w-full text-center">
+                                                    <span className="block text-[10px] md:text-xs font-bold truncate">{staff.name}</span>
+                                                    <span className={`block text-[8px] font-bold uppercase tracking-widest mt-1 ${isSelected ? 'text-white/55' : 'text-neutral-400'}`}>{roleLabel}</span>
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </section>
 
-                                <aside className="xl:col-span-4 space-y-6">
-                                    <section className="saas-panel p-5 md:p-6">
+                            <section className="mt-6">
+                                {teamPanelMode === 'add' ? (
+                                    <div className="saas-panel p-5 md:p-6 max-w-2xl">
                                         <div className="flex items-start justify-between gap-4 mb-6">
                                             <div>
-                                                <h3 className="text-lg font-bold tracking-tight text-black">Add Teammate</h3>
+                                                <h3 className="text-2xl font-bold tracking-tight text-black">Add Teammate</h3>
                                                 <p className="text-sm text-neutral-500">Grant workspace access by email. Existing Google accounts are detected automatically.</p>
                                             </div>
-                                            <div className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0"><Plus size={16}/></div>
+                                            <button type="button" onClick={() => setTeamPanelMode('roster')} className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0"><X size={16}/></button>
                                         </div>
                                         <form onSubmit={async (e) => {
                                             e.preventDefault();
@@ -6158,6 +6169,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             if(name && email) {
                                                 await createStaffMember({ name, email, color, role });
                                                 e.target.reset();
+                                                setTeamPanelMode('roster');
                                             }
                                         }} className="space-y-4">
                                             {!canManageTeam && isFirebaseConfigured && (
@@ -6165,57 +6177,85 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                     Your staff role can assign bookings and manage clients, but only owners/admins can grant team access.
                                                 </div>
                                             )}
-                                            <div>
-                                                <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-2">Name</label>
-                                                <input name="name" type="text" placeholder="Staff member" required disabled={!canManageTeam && isFirebaseConfigured} className="w-full h-12 bg-white border border-neutral-200 rounded-lg px-4 text-sm font-bold outline-none text-black focus:border-black transition-colors disabled:opacity-50" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-2">Email</label>
-                                                <input name="email" type="email" placeholder="ari@studio.com" required disabled={!canManageTeam && isFirebaseConfigured} className="w-full h-12 bg-white border border-neutral-200 rounded-lg px-4 text-sm font-bold outline-none text-black focus:border-black transition-colors disabled:opacity-50" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-2">Access Role</label>
-                                                <select name="role" defaultValue="staff" disabled={!canManageTeam && isFirebaseConfigured} className="w-full h-12 bg-white border border-neutral-200 rounded-lg px-4 text-sm font-bold outline-none text-black focus:border-black transition-colors disabled:opacity-50">
-                                                    <option value="staff">Staff - bookings and clients</option>
-                                                    <option value="admin">Admin - settings and team</option>
-                                                </select>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-4 rounded-lg bg-white border border-neutral-200 p-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-1">Profile Color</label>
-                                                    <p className="text-sm font-bold text-black">Used on booking cards</p>
+                                                    <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-2">Name</label>
+                                                    <input name="name" type="text" placeholder="Staff member" required disabled={!canManageTeam && isFirebaseConfigured} className="w-full h-12 bg-white border border-neutral-200 rounded-lg px-4 text-sm font-bold outline-none text-black focus:border-black transition-colors disabled:opacity-50" />
                                                 </div>
-                                                <input name="color" type="color" defaultValue="#39FF14" disabled={!canManageTeam && isFirebaseConfigured} className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-none p-0 outline-none disabled:opacity-50" />
+                                                <div>
+                                                    <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-2">Email</label>
+                                                    <input name="email" type="email" placeholder="ari@studio.com" required disabled={!canManageTeam && isFirebaseConfigured} className="w-full h-12 bg-white border border-neutral-200 rounded-lg px-4 text-sm font-bold outline-none text-black focus:border-black transition-colors disabled:opacity-50" />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                                                <div>
+                                                    <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-2">Access Role</label>
+                                                    <select name="role" defaultValue="staff" disabled={!canManageTeam && isFirebaseConfigured} className="w-full h-12 bg-white border border-neutral-200 rounded-lg px-4 text-sm font-bold outline-none text-black focus:border-black transition-colors disabled:opacity-50">
+                                                        <option value="staff">Staff - bookings and clients</option>
+                                                        <option value="admin">Admin - settings and team</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-2">Color</label>
+                                                    <input name="color" type="color" defaultValue="#39FF14" disabled={!canManageTeam && isFirebaseConfigured} className="w-14 h-12 rounded-lg cursor-pointer bg-transparent border-none p-0 outline-none disabled:opacity-50" />
+                                                </div>
                                             </div>
                                             <button type="submit" disabled={!canManageTeam && isFirebaseConfigured} className="w-full h-12 bg-black text-white rounded-lg flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors shadow-xl shadow-black/10 disabled:opacity-40 disabled:cursor-not-allowed">
                                                 <Plus size={15} /> Add Member
                                             </button>
                                         </form>
-                                    </section>
-
-                                    <section className="saas-card p-5">
-                                        <div className="flex items-center justify-between mb-5">
-                                            <h3 className="text-lg font-bold tracking-tight text-black">Assignment Ready</h3>
-                                            <span className="w-2.5 h-2.5 rounded-full bg-[#39FF14] shadow-[0_0_0_4px_rgba(57,255,20,0.16)]" />
-                                        </div>
-                                        <div className="space-y-3">
-                                            {[
-                                                ['Owner profile', displayStaffList.some(staff => staff.id === 'owner') ? 'Ready' : 'Missing'],
-                                                ['Booking dropdown', displayStaffList.length ? 'Connected' : 'Empty'],
-                                                ['Google detection', displayStaffList.some(staff => staff.status === 'connected') ? 'Active' : 'Ready'],
-                                                ['Staff access rules', isFirebaseConfigured ? 'Live' : 'Demo']
-                                            ].map(row => (
-                                                <div key={row[0]} className="flex items-center justify-between gap-4 text-sm">
-                                                    <span className="text-neutral-500">{row[0]}</span>
-                                                    <span className="font-bold text-black">{row[1]}</span>
+                                    </div>
+                                ) : teamPanelMode === 'file' && selectedStaffFile ? (
+                                    <div className="saas-card p-5 md:p-6 overflow-hidden relative">
+                                        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#39FF14,#7dd3fc,#c4b5fd,#f9a8d4)]" />
+                                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
+                                            <div className="flex items-start gap-4 min-w-0">
+                                                {renderStaffAvatar(selectedStaffFile, 'w-16 h-16 md:w-20 md:h-20')}
+                                                <div className="min-w-0 pt-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h3 className="text-2xl md:text-4xl font-bold tracking-tight text-black truncate">{selectedStaffFile.name}</h3>
+                                                        <span className="px-2.5 py-1 rounded-md bg-neutral-100 text-neutral-500 text-[9px] font-bold uppercase tracking-widest">{renderStaffFile.roleLabel}</span>
+                                                    </div>
+                                                    <p className="text-sm text-neutral-500 mt-2 truncate">{selectedStaffFile.email || 'No email on file'}</p>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mt-2">{renderStaffFile.statusLabel}</p>
                                                 </div>
-                                            ))}
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {selectedStaffFile.id !== 'owner' && canManageTeam && (
+                                                    <button onClick={() => { saveStaff(staffList.filter(s => s.id !== selectedStaffFile.id)); setSelectedStaffFileId(null); setTeamPanelMode('roster'); }} className="h-10 px-4 rounded-lg border border-red-100 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                                        <Trash2 size={14}/> Remove
+                                                    </button>
+                                                )}
+                                                <button type="button" onClick={() => { setTeamPanelMode('roster'); setSelectedStaffFileId(null); }} className="h-10 px-4 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                                    <X size={14}/> Close
+                                                </button>
+                                            </div>
                                         </div>
-                                    </section>
-                                </aside>
-                            </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div className="rounded-lg bg-neutral-50 border border-neutral-100 p-4">
+                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Assigned Bookings</p>
+                                                <p className="metric-value text-2xl font-bold text-black">{renderStaffFile.assignedBookings.length}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-neutral-50 border border-neutral-100 p-4">
+                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Calendar</p>
+                                                <p className="text-sm font-bold text-black">{selectedStaffFile.id === activeStaffProfile?.id ? 'Your default view' : 'View profile'}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-neutral-50 border border-neutral-100 p-4">
+                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Access</p>
+                                                <p className="text-sm font-bold text-black">{selectedStaffFile.accessEnabled === false ? 'Off' : 'On'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="saas-card p-8 md:p-10 text-center">
+                                        <div className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4 text-neutral-400"><Users size={22}/></div>
+                                        <h3 className="text-xl font-bold tracking-tight text-black">Choose a teammate</h3>
+                                        <p className="text-sm text-neutral-500 mt-2">Open a staff file from the row above, or tap the plus icon to invite someone.</p>
+                                    </div>
+                                )}
+                            </section>
                         </div>
-                    )}
+                    ); })()}
 
                     {activeTab === 'editor' && (
                     <div className={`flex-1 flex overflow-hidden mobile-editor-shell bg-[#F5F5F7] ${isPortraitMobileRuntime ? 'mobile-editor-portrait-runtime' : ''} ${editorCollapsed ? 'mobile-editor-panel-is-collapsed' : ''} ${mobileNavCollapsed ? 'mobile-editor-nav-is-collapsed' : ''}`}>

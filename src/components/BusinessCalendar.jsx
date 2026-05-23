@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarCheck, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Plus, RefreshCw, Users, X, XCircle } from 'lucide-react';
+import { CalendarCheck, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Pencil, Plus, RefreshCw, Users, X, XCircle } from 'lucide-react';
 import { getLocalDateStr } from '../utils/dates';
 
 // --- CALENDAR ENGINE (Business Settings) ---
@@ -23,6 +23,8 @@ import { getLocalDateStr } from '../utils/dates';
             const [newSlotTime, setNewSlotTime] = useState('18:00');
             const [isAddingDefaultSlot, setIsAddingDefaultSlot] = useState(false);
             const [defaultSlotTime, setDefaultSlotTime] = useState('12:00');
+            const [editingDefaultSlotIndex, setEditingDefaultSlotIndex] = useState(null);
+            const [editingDaySlotIndex, setEditingDaySlotIndex] = useState(null);
             const [scheduleStatsPeriod, setScheduleStatsPeriod] = useState('month');
             const calendarViewMode = scheduleStatsPeriod;
             const initialCalendarId = workspaceRole === 'staff' ? (activeStaffId || 'owner') : 'workspace';
@@ -302,13 +304,17 @@ import { getLocalDateStr } from '../utils/dates';
                 if (!guardCalendarEdit()) return;
                 const time = defaultSlotTime?.trim();
                 if (!time) return;
-                if (defaultTimes.includes(time)) {
+                if (defaultTimes.includes(time) && editingDefaultSlotIndex === null) {
                     showToast("That slot already exists.");
                     return;
                 }
                 setSettings(prev => {
+                    const nextTimes = [...defaultTimes];
+                    if (editingDefaultSlotIndex !== null) nextTimes[editingDefaultSlotIndex] = time;
+                    else nextTimes.push(time);
+                    const sortedTimes = [...new Set(nextTimes)].sort();
                     if (isWorkspaceCalendar) {
-                        return { ...prev, availableTimes: [...(prev.availableTimes || []), time].sort() };
+                        return { ...prev, availableTimes: sortedTimes };
                     }
                     const previousCalendar = prev.staffCalendars?.[selectedCalendarId] || {};
                     return {
@@ -318,13 +324,14 @@ import { getLocalDateStr } from '../utils/dates';
                             [selectedCalendarId]: {
                                 ...previousCalendar,
                                 staffId: selectedCalendarId,
-                                availableTimes: [...(Array.isArray(previousCalendar.availableTimes) ? previousCalendar.availableTimes : defaultTimes), time].sort(),
+                                availableTimes: sortedTimes,
                                 updatedAt: Date.now()
                             }
                         }
                     };
                 });
                 setIsAddingDefaultSlot(false);
+                setEditingDefaultSlotIndex(null);
             };
 
             const getNextOpenTime = (existingTimes = []) => {
@@ -343,13 +350,22 @@ import { getLocalDateStr } from '../utils/dates';
 
             const startAddingSlot = () => {
                 if (!guardCalendarEdit()) return;
+                setEditingDaySlotIndex(null);
                 setNewSlotTime(getNextOpenTime(selectedConfig?.times || []));
                 setIsAddingSlot(true);
             };
 
             const startAddingDefaultSlot = () => {
                 if (!guardCalendarEdit()) return;
+                setEditingDefaultSlotIndex(null);
                 setDefaultSlotTime(getNextOpenTime(defaultTimes));
+                setIsAddingDefaultSlot(true);
+            };
+
+            const startEditingDefaultSlot = (index) => {
+                if (!guardCalendarEdit()) return;
+                setEditingDefaultSlotIndex(index);
+                setDefaultSlotTime(defaultTimes[index] || '');
                 setIsAddingDefaultSlot(true);
             };
 
@@ -358,12 +374,23 @@ import { getLocalDateStr } from '../utils/dates';
                 if (!selectedConfig || !expandedDate) return;
                 const time = newSlotTime?.trim();
                 if (!time) return;
-                if (selectedConfig.times.includes(time)) {
+                if (selectedConfig.times.includes(time) && editingDaySlotIndex === null) {
                     showToast("That time already exists for this day.");
                     return;
                 }
-                updateDateConfig(expandedDate, { ...selectedConfig, times: [...selectedConfig.times, time].sort() });
+                const nextTimes = [...selectedConfig.times];
+                if (editingDaySlotIndex !== null) nextTimes[editingDaySlotIndex] = time;
+                else nextTimes.push(time);
+                updateDateConfig(expandedDate, { ...selectedConfig, times: [...new Set(nextTimes)].sort() });
                 setIsAddingSlot(false);
+                setEditingDaySlotIndex(null);
+            };
+
+            const startEditingDaySlot = (index) => {
+                if (!guardCalendarEdit()) return;
+                setEditingDaySlotIndex(index);
+                setNewSlotTime(selectedConfig?.times?.[index] || '');
+                setIsAddingSlot(true);
             };
 
             const selectedConfig = expandedDate ? getDayConfig(expandedDate) : null;
@@ -1018,7 +1045,17 @@ import { getLocalDateStr } from '../utils/dates';
                                                         {calendarBubble.count !== null && <span className="metric-value text-[14px] leading-none font-black tracking-tight">{calendarBubble.count}</span>}
                                                         <span className="text-[7px] uppercase tracking-[0.12em] leading-tight">{calendarBubble.caption}</span>
                                                     </span>
-                                                    <span className="schedule-day-row-action">Open day view</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setExpandedDate(dateStr);
+                                                            setSchedulePeriod('day');
+                                                        }}
+                                                        className="schedule-day-row-action"
+                                                    >
+                                                        Full view
+                                                    </button>
                                                 </div>
                                             </div>
                                         );
@@ -1042,21 +1079,22 @@ import { getLocalDateStr } from '../utils/dates';
                                 </div>
                                 {isAddingDefaultSlot && (
                                     <div className="mb-4 p-4 rounded-lg bg-white border border-neutral-200 shadow-[0_18px_50px_-34px_rgba(0,0,0,0.45)] animate-in fade-in zoom-in-95 duration-200">
-                                        <label className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 block mb-3">New Default Slot</label>
+                                        <label className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 block mb-3">{editingDefaultSlotIndex !== null ? 'Edit Default Slot' : 'New Default Slot'}</label>
                                         <div className="h-12 rounded-lg bg-neutral-50 border border-neutral-100 px-4 flex items-center gap-3 focus-within:bg-white focus-within:border-black transition-colors mb-3">
                                             <Clock size={15} className="text-neutral-400"/>
                                             <input
-                                                type="time"
+                                                type="text"
                                                 value={defaultSlotTime}
                                                 onChange={(event) => setDefaultSlotTime(event.target.value)}
+                                                placeholder="09:00 - 10:00"
                                                 className="w-full bg-transparent outline-none text-base font-bold tracking-tight text-black"
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <button onClick={saveDefaultTime} className="h-10 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-[0.12em] hover:bg-neutral-800 transition-colors">
-                                                Save Slot
+                                                {editingDefaultSlotIndex !== null ? 'Update Slot' : 'Save Slot'}
                                             </button>
-                                            <button onClick={() => setIsAddingDefaultSlot(false)} className="h-10 rounded-lg bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-[0.12em] hover:border-black transition-colors">
+                                            <button onClick={() => { setIsAddingDefaultSlot(false); setEditingDefaultSlotIndex(null); }} className="h-10 rounded-lg bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-[0.12em] hover:border-black transition-colors">
                                                 Cancel
                                             </button>
                                         </div>
@@ -1069,6 +1107,8 @@ import { getLocalDateStr } from '../utils/dates';
                                                 <Clock size={13} className="text-neutral-400"/>
                                                 {time}
                                             </span>
+                                            <div className="flex items-center gap-1">
+                                            <button onClick={() => startEditingDefaultSlot(i)} disabled={!canEditSelectedCalendar} className={`transition-colors ${canEditSelectedCalendar ? 'text-neutral-300 hover:text-black' : 'text-neutral-200 cursor-not-allowed'}`}><Pencil size={13}/></button>
                                             <button onClick={() => {
                                                 if (!guardCalendarEdit()) return;
                                                 setSettings(prev => {
@@ -1090,6 +1130,7 @@ import { getLocalDateStr } from '../utils/dates';
                                                 };
                                             });
                                             }} disabled={!canEditSelectedCalendar} className={`transition-colors ${canEditSelectedCalendar ? 'text-neutral-300 hover:text-red-500' : 'text-neutral-200 cursor-not-allowed'}`}><X size={13}/></button>
+                                            </div>
                                         </div>
                                     )) : (
                                         <p className="text-sm text-neutral-400 bg-white border border-dashed border-neutral-200 rounded-lg p-4 col-span-2">No default slots yet.</p>
@@ -1137,7 +1178,7 @@ import { getLocalDateStr } from '../utils/dates';
                                             </div>
                                         )}
                                         <div className="space-y-2 mb-5 max-h-[292px] overflow-y-auto no-scrollbar pr-1">
-                                            {selectedConfig.times.length ? selectedConfig.times.map(time => (
+                                            {selectedConfig.times.length ? selectedConfig.times.map((time, slotIndex) => (
                                                 <div key={time} className="schedule-selected-slot flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-white border border-neutral-200">
                                                     <div className="flex items-center gap-3 text-sm font-bold tracking-widest text-black">
                                                         <span className="w-8 h-8 rounded-md bg-neutral-50 border border-neutral-100 flex items-center justify-center">
@@ -1145,9 +1186,14 @@ import { getLocalDateStr } from '../utils/dates';
                                                         </span>
                                                         {time}
                                                     </div>
-                                                    <button onClick={() => updateDateConfig(expandedDate, { ...selectedConfig, times: selectedConfig.times.filter(t => t !== time) })} disabled={!canEditSelectedCalendar} className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${canEditSelectedCalendar ? 'text-neutral-300 hover:text-red-500 hover:bg-white' : 'text-neutral-200 cursor-not-allowed'}`}>
-                                                        <X size={15}/>
-                                                    </button>
+                                                    <div className="flex items-center gap-1">
+                                                        <button onClick={() => startEditingDaySlot(slotIndex)} disabled={!canEditSelectedCalendar} className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${canEditSelectedCalendar ? 'text-neutral-300 hover:text-black hover:bg-white' : 'text-neutral-200 cursor-not-allowed'}`}>
+                                                            <Pencil size={14}/>
+                                                        </button>
+                                                        <button onClick={() => updateDateConfig(expandedDate, { ...selectedConfig, times: selectedConfig.times.filter(t => t !== time) })} disabled={!canEditSelectedCalendar} className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${canEditSelectedCalendar ? 'text-neutral-300 hover:text-red-500 hover:bg-white' : 'text-neutral-200 cursor-not-allowed'}`}>
+                                                            <X size={15}/>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )) : (
                                                 <div className="p-6 rounded-lg border border-dashed border-neutral-200 text-sm text-neutral-400 text-center">This date is open, but has no times yet.</div>
@@ -1155,23 +1201,24 @@ import { getLocalDateStr } from '../utils/dates';
                                         </div>
                                         {isAddingSlot && (
                                             <div className="mb-5 p-4 rounded-lg border border-neutral-200 bg-white shadow-[0_18px_50px_-32px_rgba(0,0,0,0.45)] animate-in fade-in zoom-in-95 duration-300">
-                                                <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-3">New Time Slot</label>
+                                                <label className="text-[9px] font-bold uppercase tracking-[0.25em] text-neutral-400 block mb-3">{editingDaySlotIndex !== null ? 'Edit Time Slot' : 'New Time Slot'}</label>
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <div className="h-12 flex-1 rounded-lg bg-neutral-50 border border-neutral-100 px-4 flex items-center gap-3 focus-within:bg-white focus-within:border-neutral-300 transition-all">
                                                         <Clock size={15} className="text-neutral-400"/>
                                                         <input
-                                                            type="time"
+                                                            type="text"
                                                             value={newSlotTime}
                                                             onChange={(e) => setNewSlotTime(e.target.value)}
+                                                            placeholder="09:00 - 10:00"
                                                             className="w-full bg-transparent outline-none text-lg font-bold tracking-widest text-black"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <button onClick={saveNewSlot} className="h-10 rounded-lg bg-[#39FF14] text-black text-[10px] font-bold uppercase tracking-widest hover:scale-[1.01] transition-transform">
-                                                        Save Time
+                                                        {editingDaySlotIndex !== null ? 'Update Time' : 'Save Time'}
                                                     </button>
-                                                    <button onClick={() => setIsAddingSlot(false)} className="h-10 rounded-lg border border-neutral-200 text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-50 transition-colors">
+                                                    <button onClick={() => { setIsAddingSlot(false); setEditingDaySlotIndex(null); }} className="h-10 rounded-lg border border-neutral-200 text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-50 transition-colors">
                                                         Cancel
                                                     </button>
                                                 </div>

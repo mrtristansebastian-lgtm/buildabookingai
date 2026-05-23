@@ -1233,7 +1233,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px) and (orientation: portrait)')?.matches
             ));
             const [mobileNavCollapsed, setMobileNavCollapsed] = useState(false);
-            const [bookingDeskPeriod, setBookingDeskPeriod] = useState('month');
+            const [bookingDeskPeriod, setBookingDeskPeriod] = useState('day');
+            const [bookingCustomRange, setBookingCustomRange] = useState(() => {
+                const today = getLocalDateStr(new Date());
+                return { from: today, to: today };
+            });
+            const [bookingRangeDialogOpen, setBookingRangeDialogOpen] = useState(false);
             const [bookingFilter, setBookingFilter] = useState('upcoming');
             const [bookingSearch, setBookingSearch] = useState('');
             const [clientRecords, setClientRecords] = useState([]);
@@ -1649,6 +1654,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         rangeLabel: todayStart.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
                         start: monthStart,
                         end: monthEnd
+                    },
+                    custom: {
+                        id: 'custom',
+                        label: 'Custom',
+                        periodName: 'Custom',
+                        rangeLabel: `${formatRangeDate(new Date(`${bookingCustomRange.from}T00:00:00`))} - ${formatRangeDate(new Date(`${bookingCustomRange.to || bookingCustomRange.from}T00:00:00`))}`,
+                        start: new Date(`${bookingCustomRange.from}T00:00:00`),
+                        end: new Date(`${bookingCustomRange.to || bookingCustomRange.from}T00:00:00`)
                     }
                 };
                 const activePeriod = periodConfig[bookingDeskPeriod] || periodConfig.day;
@@ -1753,7 +1766,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         { label: 'History', value: historyRecords.length, hint: `${declinedRecords.length} declined`, icon: History }
                     ]
                 };
-            }, [bookingDeskPeriod, bookingFilter, bookingSearch, visibleBookings, staffList]);
+            }, [bookingDeskPeriod, bookingFilter, bookingSearch, visibleBookings, staffList, bookingCustomRange]);
 
             const filteredBookings = bookingDesk.filteredRows;
             const showBookingExample = bookingsReady && visibleBookings.length === 0;
@@ -7048,29 +7061,16 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         {bookingDesk.periods.map(period => (
                                             <button
                                                 key={period.id}
-                                                onClick={() => setBookingDeskPeriod(period.id)}
-                                                className={`flex-1 sm:flex-none h-10 px-5 rounded-md text-[10px] font-bold uppercase transition-all ${bookingDeskPeriod === period.id ? 'bg-black text-white shadow-lg' : 'text-neutral-500 hover:text-black hover:bg-white'}`}
+                                                onClick={() => {
+                                                    setBookingDeskPeriod(period.id);
+                                                    if (period.id === 'custom') setBookingRangeDialogOpen(true);
+                                                }}
+                                                className={`flex-1 sm:flex-none h-10 px-4 rounded-md text-[10px] font-bold uppercase transition-all ${bookingDeskPeriod === period.id ? 'bg-black text-white shadow-lg' : 'text-neutral-500 hover:text-black hover:bg-white'}`}
                                             >
                                                 {period.label}
                                             </button>
                                         ))}
                                     </div>
-                                </div>
-
-                                <div className="booking-desk-metrics grid grid-cols-2 xl:grid-cols-4 gap-2 mt-4">
-                                    {bookingDesk.metrics.map(metric => {
-                                        const IconCmp = metric.icon;
-                                        return (
-                                            <div key={metric.label} className="booking-desk-metric native-stat-card rounded-lg border border-neutral-100 bg-white p-3 md:p-4">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center text-black shrink-0"><IconCmp size={15}/></div>
-                                                    <span className="text-right leading-tight text-[9px] font-bold uppercase text-neutral-400 bg-neutral-50 px-2 py-1 rounded-md">{metric.hint}</span>
-                                                </div>
-                                                <p className="text-[9px] font-bold uppercase text-neutral-400 mt-5 mb-1">{metric.label}</p>
-                                                <p className="metric-value text-2xl md:text-3xl font-bold tracking-tight leading-none text-black">{metric.value}</p>
-                                            </div>
-                                        );
-                                    })}
                                 </div>
 
                                 <div className="booking-desk-controls mt-4 flex flex-col xl:flex-row gap-3">
@@ -7091,7 +7091,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 className={`h-11 px-3 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-2 ${bookingDesk.activeFilter === filter.id ? 'bg-black text-white shadow-lg' : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100 hover:text-black'}`}
                                             >
                                                 {filter.label}
-                                                <span className={`px-1.5 py-0.5 rounded ${bookingDesk.activeFilter === filter.id ? 'bg-white/15 text-white' : 'bg-white text-neutral-400'}`}>{filter.count}</span>
+                                                <span className={`min-w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${bookingDesk.activeFilter === filter.id ? 'native-gradient-icon text-black' : 'bg-white text-black border border-neutral-100'}`}>{filter.count}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -7242,6 +7242,51 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 })}
                             </div>
                         </section>
+                        {bookingRangeDialogOpen && (
+                            <div className="fixed inset-0 z-[1200] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+                                <div className="w-full sm:max-w-lg rounded-t-[1.5rem] sm:rounded-[1.25rem] bg-white border border-neutral-100 shadow-2xl p-5 sm:p-6">
+                                    <div className="flex items-start justify-between gap-4 mb-5">
+                                        <div>
+                                            <p className="text-[9px] font-bold uppercase text-neutral-400 mb-2">Custom timeframe</p>
+                                            <h3 className="text-2xl font-bold tracking-tight text-black">Choose booking dates</h3>
+                                            <p className="text-sm text-neutral-500 mt-2">Show only bookings inside this date range.</p>
+                                        </div>
+                                        <button type="button" onClick={() => setBookingRangeDialogOpen(false)} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black">
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                                        <label>
+                                            <span className="block text-[9px] font-bold uppercase text-neutral-400 mb-2">From</span>
+                                            <input
+                                                type="date"
+                                                value={bookingCustomRange.from}
+                                                onChange={(event) => setBookingCustomRange(prev => ({ ...prev, from: event.target.value, to: prev.to && prev.to >= event.target.value ? prev.to : event.target.value }))}
+                                                className="w-full h-12 rounded-lg bg-neutral-50 border border-neutral-100 px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black"
+                                            />
+                                        </label>
+                                        <label>
+                                            <span className="block text-[9px] font-bold uppercase text-neutral-400 mb-2">To</span>
+                                            <input
+                                                type="date"
+                                                value={bookingCustomRange.to}
+                                                min={bookingCustomRange.from}
+                                                onChange={(event) => setBookingCustomRange(prev => ({ ...prev, to: event.target.value }))}
+                                                className="w-full h-12 rounded-lg bg-neutral-50 border border-neutral-100 px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black"
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button type="button" onClick={() => setBookingRangeDialogOpen(false)} className="h-12 rounded-full bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase">
+                                            Cancel
+                                        </button>
+                                        <button type="button" onClick={() => { setBookingDeskPeriod('custom'); setBookingRangeDialogOpen(false); }} className="h-12 rounded-full native-gradient-button text-black text-[10px] font-bold uppercase">
+                                            Save Range
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     )}
 

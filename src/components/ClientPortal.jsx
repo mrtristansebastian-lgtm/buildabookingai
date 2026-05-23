@@ -68,6 +68,8 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
   const [messageDraft, setMessageDraft] = useState('');
   const [threadSearch, setThreadSearch] = useState('');
   const [rescheduleDraft, setRescheduleDraft] = useState({ bookingId: '', date: '', time: '' });
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+  const [runningLateDialog, setRunningLateDialog] = useState(null);
   const [counterDialog, setCounterDialog] = useState(null);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -437,12 +439,23 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
     setRescheduleDraft(prev => ({ ...prev, bookingId: booking.id }));
   };
 
+  const openRescheduleDialog = () => {
+    const booking = activeBooking || bookingSource[0];
+    setRescheduleDraft({
+      bookingId: booking?.id || '',
+      date: '',
+      time: ''
+    });
+    setRescheduleDialogOpen(true);
+  };
+
   const sendRescheduleRequest = async () => {
     const booking = bookingSource.find(item => item.id === rescheduleDraft.bookingId) || activeBooking;
     if (!booking) return;
     if (booking.isExample) {
       setActiveThreadId(exampleThread.id);
       setRescheduleDraft({ bookingId: booking.id, date: '', time: '' });
+      setRescheduleDialogOpen(false);
       setActiveView('chats');
       return;
     }
@@ -469,7 +482,21 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
       rescheduleStatus: 'requested'
     });
     setRescheduleDraft({ bookingId: booking.id, date: '', time: '' });
+    setRescheduleDialogOpen(false);
     setActiveView('chats');
+  };
+
+  const sendRunningLateUpdate = async () => {
+    const minutes = String(runningLateDialog?.minutes || '').trim();
+    const note = String(runningLateDialog?.note || '').trim();
+    const cleanMinutes = minutes || '10';
+    const text = note || `I am running about ${cleanMinutes} minutes late. I will keep you posted here.`;
+    await sendThreadMessage({
+      kind: 'running-late',
+      bookingId: activeBooking?.id || activeThread?.bookingId || '',
+      text
+    });
+    setRunningLateDialog(null);
   };
 
   const syncAcceptedReschedule = async (proposal = {}) => {
@@ -627,7 +654,7 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
     <section className={`client-chat-pane ${mobileChatOpen ? 'fixed inset-0 z-[999]' : 'hidden lg:flex'} lg:col-span-8 flex flex-col min-h-[100dvh] lg:min-h-[620px] bg-white`}>
       {activeThread ? (
         <>
-          <div className="client-chat-pane-header p-3 md:p-5 border-b border-neutral-100 flex items-center justify-between gap-3 bg-white">
+          <div className="client-chat-pane-header p-3 md:p-5 border-b border-neutral-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white">
             <div className="flex items-center gap-3 min-w-0">
               <button type="button" onClick={() => setMobileChatOpen(false)} className="lg:hidden w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0">
                 <ArrowLeft size={18} />
@@ -640,7 +667,23 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
                 <p className="text-xs text-neutral-400 truncate">{chatStaffName ? `${chatStaffName} is helping you` : activeBooking ? `${activeBooking.date} / ${activeBooking.time}` : 'Active support thread'}</p>
               </div>
             </div>
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="flex flex-wrap justify-start sm:justify-end gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={openRescheduleDialog}
+                disabled={!bookingSource.length || sending}
+                className="h-9 px-3 rounded-full bg-white border border-neutral-200 text-black text-[8px] font-bold uppercase tracking-widest flex items-center gap-2 hover:border-black disabled:opacity-40 transition-colors"
+              >
+                <RefreshCw size={12} /> Reschedule
+              </button>
+              <button
+                type="button"
+                onClick={() => setRunningLateDialog({ minutes: '10', note: '' })}
+                disabled={!activeThread || sending}
+                className="h-9 px-3 rounded-full bg-white border border-neutral-200 text-black text-[8px] font-bold uppercase tracking-widest flex items-center gap-2 hover:border-black disabled:opacity-40 transition-colors"
+              >
+                <Bell size={12} /> Running Late
+              </button>
               {activeThread.isExample && <span className="px-3 py-1.5 rounded-full bg-neutral-50 border border-neutral-100 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Example</span>}
               <span className={`px-3 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest ${statusStyles[activeThread.bookingStatus] || statusStyles.pending}`}>
                 {activeThread.bookingStatus || 'open'}
@@ -713,25 +756,7 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
             )}
           </div>
 
-          <div className="client-chat-composer p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-5 border-t border-neutral-100 bg-white space-y-3">
-            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
-                <select
-                  value={rescheduleDraft.bookingId || activeBooking?.id || ''}
-                  onChange={(event) => setRescheduleDraft(prev => ({ ...prev, bookingId: event.target.value }))}
-                  className="h-11 rounded-xl bg-white border border-neutral-100 px-3 text-xs font-bold outline-none"
-                >
-                  {bookingSource.map(booking => <option key={booking.id} value={booking.id}>{booking.date} / {booking.time}{booking.isExample ? ' (example)' : ''}</option>)}
-                </select>
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={rescheduleDraft.date} onChange={(event) => setRescheduleDraft(prev => ({ ...prev, date: event.target.value }))} placeholder="New date" className="h-11 rounded-xl bg-white border border-neutral-100 px-3 text-xs font-bold outline-none" />
-                  <input value={rescheduleDraft.time} onChange={(event) => setRescheduleDraft(prev => ({ ...prev, time: event.target.value }))} placeholder="New time" className="h-11 rounded-xl bg-white border border-neutral-100 px-3 text-xs font-bold outline-none" />
-                </div>
-                <button onClick={sendRescheduleRequest} disabled={!bookingSource.length || !rescheduleDraft.date.trim() || !rescheduleDraft.time.trim() || sending} className="h-11 px-4 rounded-xl bg-white border border-neutral-200 text-[9px] font-bold uppercase tracking-widest hover:border-black disabled:opacity-40">
-                  Reschedule
-                </button>
-              </div>
-            </div>
+          <div className="client-chat-composer p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-5 border-t border-neutral-100 bg-white">
             <div className="flex items-end gap-2">
               <textarea
                 value={messageDraft}
@@ -938,19 +963,6 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 lg:min-w-[290px]">
-            {[
-              ['Bookings', bookingSource.filter(item => !item.isExample).length || 0, BookOpen],
-              ['Updates', unreadCount, Bell],
-              ['Confirmed', confirmedCount, CheckCircle2]
-            ].map(([label, value, IconCmp]) => (
-              <div key={label} className="rounded-lg border border-neutral-100 bg-neutral-50/70 px-3 py-2.5">
-                <IconCmp size={14} className="mb-2 text-black" />
-                <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400">{label}</p>
-                <p className="metric-value text-lg font-bold text-black">{value}</p>
-              </div>
-            ))}
-          </div>
           {activeView === 'chats' && threadSource.length > 0 && (
             <button type="button" onClick={() => openThread(threadSource[0].id)} className="h-10 md:h-11 px-4 rounded-full bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:border-black transition-colors lg:ml-auto">
               Open latest update <ArrowRight size={13} />
@@ -971,6 +983,107 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
         {activeView === 'bookings' && renderBookings()}
         {activeView === 'profile' && renderProfile()}
       </main>
+
+      {rescheduleDialogOpen && (
+        <div className="fixed inset-0 z-[1200] bg-black/45 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full sm:max-w-xl rounded-t-[1.5rem] sm:rounded-[1.25rem] bg-white border border-neutral-100 shadow-2xl p-5 sm:p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 mb-2">Reschedule</p>
+                <h3 className="text-2xl font-bold tracking-tight text-black">Request a better time</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-500">Send the business a new date and time inside this chat thread.</p>
+              </div>
+              <button type="button" onClick={() => setRescheduleDialogOpen(false)} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-3 mb-5">
+              <label className="block">
+                <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 mb-2">Booking</span>
+                <select
+                  value={rescheduleDraft.bookingId || activeBooking?.id || ''}
+                  onChange={(event) => setRescheduleDraft(prev => ({ ...prev, bookingId: event.target.value }))}
+                  className="w-full h-12 rounded-lg bg-neutral-50 border border-neutral-100 px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black transition-colors"
+                >
+                  {bookingSource.map(booking => <option key={booking.id} value={booking.id}>{booking.date} / {booking.time}{booking.isExample ? ' (example)' : ''}</option>)}
+                </select>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 mb-2">New date</span>
+                  <input
+                    value={rescheduleDraft.date}
+                    onChange={(event) => setRescheduleDraft(prev => ({ ...prev, date: event.target.value }))}
+                    placeholder="Friday, May 22"
+                    className="w-full h-12 rounded-lg bg-neutral-50 border border-neutral-100 px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black transition-colors"
+                  />
+                </label>
+                <label className="block">
+                  <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 mb-2">New time</span>
+                  <input
+                    value={rescheduleDraft.time}
+                    onChange={(event) => setRescheduleDraft(prev => ({ ...prev, time: event.target.value }))}
+                    placeholder="14:30"
+                    className="w-full h-12 rounded-lg bg-neutral-50 border border-neutral-100 px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black transition-colors"
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button type="button" onClick={() => setRescheduleDialogOpen(false)} className="h-12 rounded-full bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-[0.12em] hover:border-black transition-colors">
+                Cancel
+              </button>
+              <button type="button" onClick={sendRescheduleRequest} disabled={!bookingSource.length || !rescheduleDraft.date.trim() || !rescheduleDraft.time.trim() || sending} className="h-12 rounded-full native-gradient-button text-black text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50 disabled:cursor-wait">
+                {sending ? 'Sending' : 'Send Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {runningLateDialog && (
+        <div className="fixed inset-0 z-[1200] bg-black/45 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full sm:max-w-lg rounded-t-[1.5rem] sm:rounded-[1.25rem] bg-white border border-neutral-100 shadow-2xl p-5 sm:p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 mb-2">Running late</p>
+                <h3 className="text-2xl font-bold tracking-tight text-black">Let them know quickly</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-500">We will send this as a chat update so the business sees it with your booking.</p>
+              </div>
+              <button type="button" onClick={() => setRunningLateDialog(null)} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <label className="block mb-3">
+              <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 mb-2">Minutes late</span>
+              <input
+                value={runningLateDialog.minutes}
+                onChange={(event) => setRunningLateDialog(prev => ({ ...prev, minutes: event.target.value }))}
+                placeholder="10"
+                className="w-full h-12 rounded-lg bg-neutral-50 border border-neutral-100 px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black transition-colors"
+              />
+            </label>
+            <label className="block mb-5">
+              <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400 mb-2">Message</span>
+              <textarea
+                rows={4}
+                value={runningLateDialog.note}
+                onChange={(event) => setRunningLateDialog(prev => ({ ...prev, note: event.target.value }))}
+                placeholder={`I am running about ${runningLateDialog.minutes || '10'} minutes late. I will keep you posted here.`}
+                className="w-full resize-none rounded-lg bg-neutral-50 border border-neutral-100 px-4 py-3 text-sm leading-relaxed text-black outline-none focus:bg-white focus:border-black transition-colors"
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button type="button" onClick={() => setRunningLateDialog(null)} className="h-12 rounded-full bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-[0.12em] hover:border-black transition-colors">
+                Cancel
+              </button>
+              <button type="button" onClick={sendRunningLateUpdate} disabled={sending} className="h-12 rounded-full native-gradient-button text-black text-[10px] font-bold uppercase tracking-[0.12em] disabled:opacity-50 disabled:cursor-wait">
+                {sending ? 'Sending' : 'Send Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {counterDialog && (
         <div className="fixed inset-0 z-[1200] bg-black/45 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">

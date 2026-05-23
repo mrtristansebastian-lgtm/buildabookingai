@@ -666,6 +666,10 @@ body {
             align-items: stretch;
         }
 
+        .schedule-detail-row .schedule-selected-panel {
+            order: -1;
+        }
+
         .schedule-detail-row > .saas-card {
             height: 100%;
         }
@@ -737,6 +741,14 @@ body {
 
         .schedule-day-row-action {
             align-self: flex-end;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 1.35rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid rgba(212, 212, 216, 0.8);
+            background: rgba(255, 255, 255, 0.86);
             font-size: 0.46rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -2148,6 +2160,11 @@ body {
             stroke: currentColor !important;
         }
 
+        .native-ui.dashboard-dark .mobile-guest-auth-cta button.bg-black,
+        .native-ui.dashboard-dark .mobile-guest-auth-cta button.bg-black :where(*) {
+            color: #ffffff !important;
+        }
+
         .native-ui.dashboard-dark .hover\:bg-white:hover,
         .native-ui.dashboard-dark .hover\:bg-neutral-50:hover,
         .native-ui.dashboard-dark .hover\:bg-neutral-50\/70:hover,
@@ -2222,6 +2239,11 @@ body {
         .native-ui.dashboard-dark .schedule-calendar-card .schedule-day-row-card .text-black,
         .native-ui.dashboard-dark .schedule-calendar-card .schedule-day-row-card .schedule-day-row-action {
             color: #f8fafc !important;
+        }
+
+        .native-ui.dashboard-dark .schedule-calendar-card .schedule-day-row-card .schedule-day-row-action {
+            background: #17191d !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
         }
 
         .native-ui.dashboard-dark .schedule-calendar-card .schedule-day-row-card .bg-neutral-50,
@@ -2575,6 +2597,19 @@ body {
             color: #f8fafc !important;
             border-color: rgba(255, 255, 255, 0.13) !important;
             box-shadow: 0 24px 74px -58px rgba(0, 0, 0, 0.88) !important;
+        }
+
+        .native-home.native-home-dark .native-feature-card::before {
+            opacity: 0.12 !important;
+            background:
+                linear-gradient(112deg, transparent 34%, rgba(255,255,255,0.2) 44%, rgba(57,255,20,0.12), rgba(20,167,255,0.16), rgba(117,92,255,0.14), rgba(255,79,216,0.12), transparent 72%),
+                var(--native-accent-gradient) !important;
+            background-size: 240% 100%, 420% 420% !important;
+            background-position: 50% 50%, var(--native-accent-x) 50% !important;
+        }
+
+        .native-home.native-home-dark .native-feature-card::after {
+            opacity: 0.34 !important;
         }
 
         .native-home.native-home-dark .native-feature-card h2,

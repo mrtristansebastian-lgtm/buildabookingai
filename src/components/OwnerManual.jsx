@@ -123,7 +123,7 @@ const manualSections = [
     label: 'Schedule',
     kicker: 'Availability studio',
     title: 'Control capacity without clutter.',
-    summary: 'Schedule manages open days, closed days, default slots, custom day slots, and booking rate by day, week, or month.',
+    summary: 'Schedule manages open days, closed days, staff availability, slot timelines, and booking capacity by day, week, or month.',
     icon: Calendar,
     target: { tab: 'business' },
     highlights: [
@@ -134,15 +134,16 @@ const manualSections = [
     actions: [
       { name: 'Month / Week / Day', meaning: 'Changes how much of the calendar is shown.' },
       { name: 'Hide Past', meaning: 'Shows only current and future days for a cleaner view.' },
-      { name: 'Default Slots', meaning: 'Defines the slots new open days start with.' },
-      { name: 'Add Slot', meaning: 'Adds a custom time to the selected day.' },
-      { name: 'Use Defaults', meaning: 'Resets the selected day to the default slot list.' },
+      { name: 'Slot Timeline', meaning: 'Shows every bookable time or time period for the selected day.' },
+      { name: 'Pencil', meaning: 'Opens the in-page editor for that slot.' },
+      { name: 'Set Time / Period', meaning: 'Switches between a single appointment time and a longer bookable time range.' },
+      { name: 'Delete Slot', meaning: 'Removes a time from that day when it is no longer offered.' },
       { name: 'Open / Closed', meaning: 'Controls whether clients can request that date.' }
     ],
     workflow: [
-      'Set default slots first.',
       'Open or close dates for the month.',
-      'Tune special days with custom slots.',
+      'Open a day and tune the slot timeline with single times or time periods.',
+      'Use staff calendar chips to check individual coverage.',
       'Check week or day stats before busy periods.'
     ],
     tips: [

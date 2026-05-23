@@ -2594,8 +2594,19 @@ body {
 
         .client-portal-shell.dashboard-dark .bg-white,
         .client-portal-shell.dashboard-dark .bg-neutral-50,
-        .client-portal-shell.dashboard-dark .bg-neutral-100 {
+        .client-portal-shell.dashboard-dark .bg-neutral-100,
+        .client-portal-shell.dashboard-dark .bg-neutral-50\/60 {
             background: #17191d !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .client-portal-shell.dashboard-dark .native-stat-card {
+            --native-beam-peak: 0.24;
+            --native-beam-tail: 0.16;
+            background:
+                linear-gradient(180deg, rgba(18, 19, 23, 0.96), rgba(11, 12, 16, 0.98)),
+                #101114 !important;
             color: #f8fafc !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
         }
@@ -2609,7 +2620,7 @@ body {
         }
 
         .native-home.native-home-dark {
-            background: #050506 !important;
+            background: #101114 !important;
             color: #f8fafc !important;
         }
 
@@ -2624,6 +2635,8 @@ body {
         }
 
         .native-home.native-home-dark .native-feature-card {
+            --native-beam-peak: 0.28;
+            --native-beam-tail: 0.2;
             background:
                 linear-gradient(180deg, rgba(18, 19, 23, 0.96), rgba(11, 12, 16, 0.98)),
                 #101114 !important;
@@ -2633,16 +2646,21 @@ body {
         }
 
         .native-home.native-home-dark .native-feature-card::before {
-            opacity: 0.12 !important;
             background:
-                linear-gradient(112deg, transparent 34%, rgba(255,255,255,0.2) 44%, rgba(57,255,20,0.12), rgba(20,167,255,0.16), rgba(117,92,255,0.14), rgba(255,79,216,0.12), transparent 72%),
+                linear-gradient(112deg, transparent 31%, rgba(255,255,255,0.28) 42%, rgba(244,255,58,0.2) 46%, rgba(57,255,20,0.22) 50%, rgba(20,167,255,0.28) 55%, rgba(117,92,255,0.24) 60%, rgba(255,79,216,0.2) 65%, transparent 74%),
                 var(--native-accent-gradient) !important;
             background-size: 240% 100%, 420% 420% !important;
             background-position: 50% 50%, var(--native-accent-x) 50% !important;
+            background-blend-mode: screen, normal !important;
+            filter: blur(14px) saturate(1.24) !important;
         }
 
         .native-home.native-home-dark .native-feature-card::after {
-            opacity: 0.34 !important;
+            background:
+                linear-gradient(112deg, transparent 24%, rgba(255,255,255,0.5) 38%, rgba(57,255,20,0.42), rgba(20,167,255,0.38), rgba(255,79,216,0.32), transparent 76%),
+                var(--native-accent-gradient) !important;
+            background-size: 220% 100%, 420% 420% !important;
+            background-position: -140% 50%, var(--native-accent-x) 50% !important;
         }
 
         .native-home.native-home-dark .native-feature-card h2,

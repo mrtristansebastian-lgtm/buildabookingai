@@ -80,8 +80,6 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
   const [browserPermission, setBrowserPermission] = useState(getBrowserNotificationPermission);
   const notificationSeenRef = useRef(new Set());
   const notificationsReadyRef = useRef(false);
-  const firstName = String(user?.displayName || user?.email || 'there').split(/[ @]/)[0] || 'there';
-
   const exampleBooking = useMemo(() => ({
     id: 'example-client-booking',
     threadId: 'example-client-thread',
@@ -939,7 +937,7 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-4 md:py-10">
-        {activeView === 'profile' && (
+        {activeView !== 'bookings' && (
         <section className="client-portal-summary mb-4 md:mb-6 rounded-[1.25rem] md:rounded-lg bg-white border border-neutral-200 p-4 md:p-5 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 native-gradient-ring">
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-lg native-gradient-icon flex items-center justify-center shrink-0 shadow-xl shadow-black/10">
@@ -949,10 +947,10 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
               <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.28em] text-neutral-400 mb-1">Your Booking Home</p>
               <h1 className="text-xl md:text-4xl font-bold tracking-tight">
                 {activeView === 'chats'
-                  ? <>Hi {firstName}, <span className="native-accent-text">stay connected.</span></>
+                  ? <>My <span className="native-accent-text">Chats</span></>
                   : activeView === 'bookings'
                     ? 'Your bookings, all in one place.'
-                    : 'Your client profile.'}
+                    : <>My <span className="native-accent-text">Profile</span></>}
               </h1>
               <p className="text-sm text-neutral-500 mt-1 max-w-2xl">
                 {activeView === 'chats'

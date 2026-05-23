@@ -6368,1237 +6368,237 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="editor-studio-console editor-command-center animate-in fade-in duration-700">
-                                    <section className="editor-command-map editor-room-launcher">
-                                        <div className="editor-command-section-head editor-room-launcher-head">
-                                            <div>
-                                                <span className="editor-studio-kicker">Editor rooms</span>
-                                                <h4>Choose what to tune.</h4>
-                                                <p>Open one focused room, make the change, and watch the preview update beside you.</p>
-                                            </div>
-                                            <div className="editor-room-launcher-actions">
-                                                <button type="button" onClick={startEditorStudioPresentation} className="editor-command-secondary">
-                                                    <Zap size={15} />
-                                                    {editorStudioPresenting ? 'Playing' : 'Preview build'}
-                                                </button>
-                                                <button type="button" onClick={() => setEditorStudioSoundEnabled(prev => !prev)} className="editor-command-secondary">
-                                                    <Signal size={15} />
-                                                    {editorStudioSoundEnabled ? 'Sound on' : 'Sound off'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="editor-command-journey editor-room-launcher-grid">
-                                            {[
-                                                { id: 'identity', icon: BadgeCheck, step: '01', title: 'Brand', note: 'Logo, banner, business name, intro message, and booking link.', meta: 'Identity' },
-                                                { id: 'themes', icon: Sparkles, step: '02', title: 'Theme', note: 'Industry, palette, light mode, dark mode, and generated looks.', meta: selectedIndustryFilter ? selectedIndustryName : 'Choose industry' },
-                                                { id: 'visuals', icon: Palette, step: '03', title: 'Visuals', note: 'Calendar rows, slots, buttons, fonts, spacing, and motion accents.', meta: selectedPaletteName || 'System' },
-                                                { id: 'features', icon: SlidersHorizontal, step: '04', title: 'Flow', note: 'Client fields, email opt-in, waitlist, socials, FAQ, and trust tools.', meta: `${settings.features?.faqEnabled ? 'FAQ on' : 'FAQ off'} / ${settings.features?.waitlist ? 'Waitlist on' : 'Waitlist off'}` },
-                                                { id: 'copy', icon: Type, step: '05', title: 'Copy', note: 'Headings, labels, button text, success state, and client-facing tone.', meta: settings.confirmButtonText || 'Button copy' }
-                                            ].map(card => {
-                                                const IconCmp = card.icon;
-                                                return (
-                                                    <button key={card.id} type="button" onClick={() => openEditorStudioModal(card.id)} className={`editor-command-journey-card ${editorStudioScene === card.id ? 'is-active' : ''}`}>
-                                                        <span className="editor-command-step">{card.step}</span>
-                                                        <span className="editor-command-icon"><IconCmp size={18} /></span>
-                                                        <span className="editor-command-card-copy">
-                                                            <strong>{card.title}</strong>
-                                                            <small>{card.note}</small>
-                                                        </span>
-                                                        <span className="editor-command-meta">{card.meta}</span>
-                                                        <ChevronRight size={16} className="editor-command-chevron" />
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </section>
-                                </div>
-
-                                {editorStudioModal && (
-                                    <div className="editor-studio-modal-backdrop" role="dialog" aria-modal="true">
-                                        <div className="editor-studio-modal-shell">
-                                            <div className="editor-studio-modal-header">
-                                                <div>
-                                                    <span className="editor-studio-kicker">Editing surface</span>
-                                                    <h3>{{
-                                                        identity: 'Brand Entrance',
-                                                        themes: 'AI Theme Designer',
-                                                        visuals: 'Visual System',
-                                                        features: 'Booking Tools',
-                                                        copy: 'Page Words'
-                                                    }[editorStudioModal]}</h3>
-                                                </div>
-                                                <button type="button" onClick={() => setEditorStudioModal(null)} className="editor-studio-modal-close" aria-label="Close editor modal">
-                                                    <X size={18} />
-                                                </button>
-                                            </div>
-
-                                            <div className="editor-studio-modal-body">
-                                                <section className={`editor-room-workspace editor-room-${editorStudioModal}`}>
-                                                    <div className="editor-room-font-strip">
+                                <div className="editor-live-rooms animate-in fade-in duration-700">
+                                    {(() => {
+                                        const activeRoom = editorStudioModal || 'identity';
+                                        const rooms = [
+                                            { id: 'identity', icon: BadgeCheck, number: '01', title: 'Brand', summary: 'Logo, banner, name, intro copy, and booking link.', status: settings.logo ? 'Logo ready' : 'Needs logo' },
+                                            { id: 'themes', icon: Sparkles, number: '02', title: 'Theme', summary: 'Industry-first looks, palette direction, and generated booking-page moods.', status: selectedIndustryFilter ? selectedIndustryName : 'Choose industry' },
+                                            { id: 'visuals', icon: Palette, number: '03', title: 'Visuals', summary: 'Calendar style, time slots, action buttons, fonts, and spacing.', status: selectedPaletteName || 'Palette' },
+                                            { id: 'features', icon: SlidersHorizontal, number: '04', title: 'Flow', summary: 'Client fields, email consent, FAQ, socials, waitlist, and trust tools.', status: settings.features?.faqEnabled ? 'FAQ on' : 'FAQ off' },
+                                            { id: 'copy', icon: Type, number: '05', title: 'Copy', summary: 'Words that guide clients from date to confirmed request.', status: settings.confirmButtonText || 'Button text' }
+                                        ];
+                                        const activeRoomData = rooms.find(room => room.id === activeRoom) || rooms[0];
+                                        const ActiveRoomIcon = activeRoomData.icon;
+                                        const openEditorRoom = (roomId) => {
+                                            setEditorStudioModal(roomId);
+                                            window.requestAnimationFrame(() => {
+                                                document.querySelector('.editor-live-workbench')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                            });
+                                        };
+                                        return (
+                                            <>
+                                                <section className="editor-live-room-rail">
+                                                    <div className="editor-live-room-head">
                                                         <div>
-                                                            <span className="editor-studio-kicker">Font mood</span>
-                                                            <strong>Choose the personality first.</strong>
+                                                            <span>Editor Studio</span>
+                                                            <h3>Choose a room.</h3>
+                                                            <p>Each room changes one part of the booking page. The preview on the right keeps the whole page in view.</p>
                                                         </div>
-                                                        <div className="editor-room-font-rail">
-                                                            {fontStylePresets.map(preset => (
-                                                                <button
-                                                                    key={preset.id}
-                                                                    type="button"
-                                                                    onClick={() => applyFontStylePreset(preset)}
-                                                                    className={(settings.headingFontFamily || settings.fontFamily) === (preset.headingFontFamily || preset.fontFamily) ? 'is-active' : ''}
-                                                                    style={{ fontFamily: getFontFamily(preset.headingFontFamily || preset.fontFamily) }}
-                                                                >
-                                                                    <b>Aa</b>
-                                                                    <span>{preset.label}</span>
-                                                                </button>
-                                                            ))}
+                                                        <div className="editor-live-room-actions">
+                                                            <button type="button" onClick={startEditorStudioPresentation}><Zap size={14} /> Preview build</button>
+                                                            <button type="button" onClick={() => setEditorStudioSoundEnabled(prev => !prev)}><Signal size={14} /> {editorStudioSoundEnabled ? 'Sound on' : 'Sound off'}</button>
                                                         </div>
                                                     </div>
-
-                                                    <div className="editor-room-preview-shell">
-                                                        <div className="editor-room-preview-top">
-                                                            <div>
-                                                                <span className="editor-studio-kicker">Live room preview</span>
-                                                                <h4>{{
-                                                                    identity: 'Brand entrance',
-                                                                    themes: selectedIndustryFilter ? `${selectedIndustryName} theme lab` : 'Industry theme lab',
-                                                                    visuals: 'Calendar, slots, and buttons',
-                                                                    features: 'Booking tools and FAQ',
-                                                                    copy: 'Words clients read'
-                                                                }[editorStudioModal]}</h4>
-                                                            </div>
-                                                            <span className="editor-room-live-badge">Updates preview</span>
-                                                        </div>
-
-                                                        {editorStudioModal === 'identity' && (
-                                                            <div className="editor-room-live-card editor-room-brand-preview">
-                                                                <div className="editor-room-banner-preview">
-                                                                    {settings.bannerImage ? <img src={settings.bannerImage} alt="" /> : <span>Optional banner</span>}
-                                                                </div>
-                                                                <div className="editor-room-brand-main" style={{ textAlign: getLogoDisplay(settings).alignment }}>
-                                                                    {getLogoDisplay(settings).visible && (
-                                                                        <div className="editor-room-logo-preview" style={{ width: `${Math.min(92, getLogoDisplay(settings).size)}px`, height: `${Math.min(92, getLogoDisplay(settings).size)}px` }}>
-                                                                            {settings.logo ? <img src={settings.logo} alt="" /> : <BuildABookingMark className="w-10 h-10" />}
-                                                                        </div>
-                                                                    )}
-                                                                    <input
-                                                                        type="text"
-                                                                        value={settings.tagline || ''}
-                                                                        onChange={(event) => handleSettingChange('tagline', event.target.value)}
-                                                                        className="editor-room-inline-kicker"
-                                                                        placeholder="Atelier 7B / Private"
-                                                                    />
-                                                                    <input
-                                                                        type="text"
-                                                                        value={settings.brandName || ''}
-                                                                        onChange={(event) => handleSettingChange('brandName', event.target.value)}
-                                                                        className="editor-room-inline-title"
-                                                                        style={{ fontFamily: getFontFamily(settings.brandNameFontFamily || settings.headingFontFamily || settings.fontFamily) }}
-                                                                        placeholder="Studio Noir"
-                                                                    />
-                                                                    <textarea
-                                                                        value={settings.welcomeMessage || ''}
-                                                                        onChange={(event) => handleSettingChange('welcomeMessage', event.target.value)}
-                                                                        className="editor-room-inline-copy"
-                                                                        placeholder="Reserve your private session."
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {editorStudioModal === 'themes' && (
-                                                            <div className="editor-room-live-card editor-room-theme-preview">
-                                                                <div className="editor-room-theme-brief-inline">
-                                                                    <span>{selectedIndustryFilter ? 'Industry selected' : 'Start here'}</span>
-                                                                    <h5>{selectedIndustryFilter ? `${selectedIndustryName} looks` : 'Choose an industry to generate real directions.'}</h5>
-                                                                    <p>{selectedIndustryFilter ? `Built around ${selectedPalettePhrase}, ${selectedStyleFilter.name.toLowerCase()} pacing, and client-facing booking flow.` : 'The theme engine stays focused so users never scroll through random styles.'}</p>
-                                                                </div>
-                                                                <div className="editor-room-industry-mini-grid">
-                                                                    {industryFilterOptions.slice(0, 8).map(industry => (
-                                                                        <button
-                                                                            key={industry.id}
-                                                                            type="button"
-                                                                            onClick={() => setThemeFilterValue('industry', industry.id)}
-                                                                            className={themeGenerationInputs.industry === industry.id ? 'is-active' : ''}
-                                                                        >
-                                                                            <span>{industry.swatches.slice(0, 3).map(color => <i key={color} style={{ backgroundColor: color }} />)}</span>
-                                                                            {industry.name}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                                <div className="editor-room-theme-mini-grid">
-                                                                    {visibleThemeCards.slice(0, 4).map(theme => (
-                                                                        <button
-                                                                            key={theme.id}
-                                                                            type="button"
-                                                                            onClick={() => applyTheme(theme.id)}
-                                                                            style={{ backgroundColor: theme.backgroundColor, color: theme.headingColor, borderColor: `${theme.primaryColor}66` }}
-                                                                        >
-                                                                            <span>{theme.name}</span>
-                                                                            <b style={{ fontFamily: getFontFamily(theme.headingFontFamily || theme.fontFamily) }}>Aa Bb</b>
-                                                                            <em style={{ backgroundColor: theme.nativeAccent ? undefined : theme.primaryColor, color: theme.buttonTextColor || '#050505' }}>Apply</em>
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {editorStudioModal === 'visuals' && (
-                                                            <div className="editor-room-live-card editor-room-visual-preview">
-                                                                <div className="editor-room-calendar-mini">
-                                                                    <span>{settings.dateLabel || 'Which day are you looking to book ?'}</span>
-                                                                    <div className="editor-room-date-row">
-                                                                        {['Tue 19', 'Wed 20', 'Thu 21'].map((label, index) => (
-                                                                            <button
-                                                                                key={label}
-                                                                                type="button"
-                                                                                className={index === 0 ? 'is-active' : ''}
-                                                                                style={{
-                                                                                    background: index === 0 ? settings.dateActiveBgColor || settings.primaryColor : settings.dateBgColor || '#f8fafc',
-                                                                                    color: index === 0 ? settings.dateActiveTextColor || '#050505' : settings.dateTextColor || '#050505',
-                                                                                    fontFamily: getFontFamily(settings.dateFontFamily || settings.fontFamily)
-                                                                                }}
-                                                                            >
-                                                                                {label}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="editor-room-slot-mini">
-                                                                    <span>{settings.timeLabel || 'Lets see what time works'}</span>
-                                                                    <div>
-                                                                        {(settings.availableTimes || ['09:00', '10:30', '12:00']).slice(0, 4).map(time => (
-                                                                            <button
-                                                                                key={time}
-                                                                                type="button"
-                                                                                style={{
-                                                                                    background: settings.slotBgColor || '#f8fafc',
-                                                                                    color: settings.slotTextColor || '#050505',
-                                                                                    fontFamily: getFontFamily(settings.slotFontFamily || settings.fontFamily)
-                                                                                }}
-                                                                            >
-                                                                                {time}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                                <input
-                                                                    type="text"
-                                                                    value={settings.confirmButtonText || ''}
-                                                                    onChange={(event) => handleSettingChange('confirmButtonText', event.target.value)}
-                                                                    className="editor-room-action-edit"
-                                                                    style={{
-                                                                        background: settings.buttonColor || settings.primaryColor || '#050505',
-                                                                        color: settings.buttonTextColor || '#fff',
-                                                                        borderRadius: settings.buttonStyle === 'sharp' ? '12px' : '999px',
-                                                                        fontFamily: getFontFamily(settings.buttonFontFamily || settings.fontFamily)
-                                                                    }}
-                                                                    placeholder="Confirm Booking"
-                                                                />
-                                                            </div>
-                                                        )}
-
-                                                        {editorStudioModal === 'features' && (
-                                                            <div className="editor-room-live-card editor-room-features-preview">
-                                                                <div className="editor-room-feature-line">
-                                                                    {[
-                                                                        { key: 'collectClientPhone', label: 'Phone', active: collectsClientPhone },
-                                                                        { key: 'collectClientEmail', label: 'Email', active: collectsClientEmail },
-                                                                        { key: 'collectClientNotes', label: 'Notes', active: collectsClientNotes },
-                                                                        { key: 'waitlist', label: 'Waitlist', active: settings.features?.waitlist }
-                                                                    ].map(item => (
-                                                                        <button key={item.key} type="button" onClick={() => handleFeatureChange(item.key, !item.active)} className={item.active ? 'is-on' : ''}>
-                                                                            <span>{item.label}</span>
-                                                                            <i />
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                                <div className={`editor-room-faq-live ${settings.features?.faqEnabled ? 'is-on' : ''}`}>
-                                                                    <div className="editor-room-faq-live-head">
-                                                                        <div>
-                                                                            <span className="editor-studio-kicker">FAQ section</span>
-                                                                            <h5>Answer questions before clients ask.</h5>
-                                                                        </div>
-                                                                        <button type="button" onClick={toggleFaqFeature}>{settings.features?.faqEnabled ? 'On' : 'Off'}</button>
-                                                                    </div>
-                                                                    {settings.features?.faqEnabled ? (
-                                                                        <div className="editor-room-faq-live-list">
-                                                                            {(settings.features?.faqs?.length ? settings.features.faqs : defaultFaqItems).map((faq, index) => (
-                                                                                <article key={index}>
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        value={faq.q}
-                                                                                        onChange={(event) => updateFaqItem(index, 'q', event.target.value)}
-                                                                                        placeholder="Can I reschedule?"
-                                                                                    />
-                                                                                    <textarea
-                                                                                        value={faq.a}
-                                                                                        onChange={(event) => updateFaqItem(index, 'a', event.target.value)}
-                                                                                        placeholder="Yes. Message us from your booking thread."
-                                                                                    />
-                                                                                </article>
-                                                                            ))}
-                                                                            <button type="button" onClick={addFaqItem} className="editor-room-faq-add-inline"><Plus size={14}/> Add question</button>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <p className="editor-room-muted-note">Turn FAQ on when policies, deposits, or reschedules need quick answers.</p>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {editorStudioModal === 'copy' && (
-                                                            <div className="editor-room-live-card editor-room-copy-preview">
-                                                                <label>
-                                                                    <span>Step 01</span>
-                                                                    <input type="text" value={settings.dateLabel || ''} onChange={(event) => handleSettingChange('dateLabel', event.target.value)} placeholder="Which day are you looking to book ?" />
-                                                                </label>
-                                                                <label>
-                                                                    <span>Step 02</span>
-                                                                    <input type="text" value={settings.timeLabel || ''} onChange={(event) => handleSettingChange('timeLabel', event.target.value)} placeholder="Lets see what time works" />
-                                                                </label>
-                                                                <label>
-                                                                    <span>Form headline</span>
-                                                                    <input type="text" value={settings.detailsSubHeading || ''} onChange={(event) => handleSettingChange('detailsSubHeading', event.target.value)} placeholder="Secure Your Slot" />
-                                                                </label>
-                                                                <label>
-                                                                    <span>Success state</span>
-                                                                    <input type="text" value={settings.successHeading || ''} onChange={(event) => handleSettingChange('successHeading', event.target.value)} placeholder="Booking Confirmed!" />
-                                                                </label>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="editor-room-spectrum">
-                                                        <div>
-                                                            <span className="editor-studio-kicker">Color spectrum</span>
-                                                            <strong>{selectedPaletteName} direction</strong>
-                                                        </div>
-                                                        <div className="editor-room-spectrum-rail">
-                                                            {paletteFilterOptions.map(palette => (
-                                                                <button
-                                                                    key={palette.id}
-                                                                    type="button"
-                                                                    onClick={() => setThemeFilterValue('palette', palette.id)}
-                                                                    className={themeGenerationInputs.palette === palette.id ? 'is-active' : ''}
-                                                                    title={palette.name}
-                                                                >
-                                                                    {palette.swatches.slice(0, 3).map(color => <i key={color} style={{ backgroundColor: color }} />)}
-                                                                    <span>{palette.id === 'all' ? 'Spectrum' : palette.name}</span>
-                                                                </button>
-                                                            ))}
-                                                            <label className={`editor-room-custom-color ${themeGenerationInputs.palette === 'custom' ? 'is-active' : ''}`}>
-                                                                <i style={{ backgroundColor: customThemeColor }} />
-                                                                <span>Custom</span>
-                                                                <input
-                                                                    type="color"
-                                                                    value={customThemeColor}
-                                                                    onChange={(event) => {
-                                                                        setCustomThemeColor(event.target.value);
-                                                                        setThemeFilterValue('palette', 'custom');
-                                                                    }}
-                                                                />
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </section>
-
-                                                {editorStudioModal === 'identity' && (
-                                                    <div className="editor-studio-modal-stack">
-                                                        <div className="editor-studio-two-col">
-                                                            <section className="editor-studio-panel">
-                                                                <p className="editor-studio-panel-title">Business Logo</p>
-                                                                <div className="editor-studio-media-box square">
-                                                                    {settings.logo ? <img src={settings.logo} alt="" /> : <User size={26} />}
-                                                                </div>
-                                                                <label className="editor-studio-dark-button">
-                                                                    <Camera size={14}/> Upload Logo
-                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { handleSettingImageUpload('logo', e.target.files[0], 'brand'); e.target.value = ''; }} />
-                                                                </label>
-                                                            </section>
-                                                            <section className="editor-studio-panel">
-                                                                <p className="editor-studio-panel-title">Landscape Banner</p>
-                                                                <div className="editor-studio-media-box">
-                                                                    {settings.bannerImage ? <img src={settings.bannerImage} alt="" /> : <Monitor size={26} />}
-                                                                </div>
-                                                                <label className="editor-studio-dark-button">
-                                                                    <Camera size={14}/> Upload Banner
-                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { handleSettingImageUpload('bannerImage', e.target.files[0], 'brand'); e.target.value = ''; }} />
-                                                                </label>
-                                                            </section>
-                                                        </div>
-                                                        <LogoDisplayControls settings={settings} onChange={handleLogoDisplayChange} />
-                                                        {identityTextControls.map(config => <IdentityTextControl key={config.id} settings={settings} config={config} onChange={handleSettingChange} />)}
-                                                        <section className="editor-studio-panel">
-                                                            <p className="editor-studio-panel-title">Booking Link</p>
-                                                            <div className="editor-studio-link-row">
-                                                                <span>{window.location.origin}/book/</span>
-                                                                <input type="text" value={settings.slug} onChange={(e) => handleSettingChange('slug', e.target.value)} />
-                                                            </div>
-                                                            <button type="button" onClick={() => copyToClipboard(bookingPageUrl, 'Booking page link')} className="editor-studio-dark-button"><Share2 size={14}/> Copy Link</button>
-                                                        </section>
-                                                    </div>
-                                                )}
-
-                                                {editorStudioModal === 'themes' && (
-                                                    <div className="editor-studio-modal-stack">
-                                                        <section className="editor-studio-panel editor-studio-theme-brief">
-                                                            <div>
-                                                                <span className="editor-studio-kicker">Theme brief</span>
-                                                                <h4>{selectedIndustryFilter ? <><span className="native-accent-text">{selectedIndustryName}</span> themes shaped for your business.</> : <>Choose your <span className="native-accent-text">industry first</span>.</>}</h4>
-                                                                <p>{themeBriefSupportText}</p>
-                                                            </div>
-                                                            <button type="button" onClick={handleAutoDetectThemePalette} disabled={paletteDetecting} className="editor-studio-light-button"><Pipette size={14}/>{paletteDetecting ? 'Reading' : 'Read Logo Colors'}</button>
-                                                        </section>
-                                                        <section className="editor-studio-panel">
-                                                            <div className="editor-studio-step-head"><span>1</span><div><strong>Industry first</strong><small>The engine changes layout, fonts, and energy from this choice.</small></div></div>
-                                                            <div className="editor-studio-industry-grid">
-                                                                {industryFilterOptions.map(industry => {
-                                                                    const isActive = themeGenerationInputs.industry === industry.id;
-                                                                    return (
-                                                                        <button key={industry.id} type="button" onClick={() => setThemeFilterValue('industry', industry.id)} className={`editor-studio-choice ${isActive ? 'is-active' : ''}`}>
-                                                                            <span className="editor-studio-swatches">{industry.swatches.map(color => <i key={color} style={{ backgroundColor: color }} />)}</span>
-                                                                            <strong>{industry.name}</strong>
-                                                                            <small>{industry.hint}</small>
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </section>
-                                                        <section className="editor-studio-panel">
-                                                            <div className="editor-studio-step-head"><span>2</span><div><strong>Color direction</strong><small>{selectedPaletteHint}</small></div></div>
-                                                            <div className="editor-studio-palette-row">
-                                                                {paletteFilterOptions.map(palette => {
-                                                                    const isActive = themeGenerationInputs.palette === palette.id;
-                                                                    return (
-                                                                        <button key={palette.id} type="button" onClick={() => setThemeFilterValue('palette', palette.id)} className={`editor-studio-palette-chip ${isActive ? 'is-active' : ''}`}>
-                                                                            {palette.swatches.slice(0, 3).map(color => <i key={color} style={{ backgroundColor: color }} />)}
-                                                                            <span>{palette.id === 'all' ? 'Spectrum' : palette.name}</span>
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </section>
-                                                        <section className="editor-studio-panel">
-                                                            <div className="editor-studio-step-head"><span>3</span><div><strong>Generated looks</strong><small>{themeBriefResultLabel}</small></div></div>
-                                                            <div className="editor-studio-theme-grid">
-                                                                {!themeGenerationInputs.industry && <div className="editor-studio-empty"><Sparkles size={24}/><strong>Select an industry to generate.</strong><span>No random themes. Every result starts from the business niche.</span></div>}
-                                                                {visibleThemeCards.map(t => {
-                                                                    const isNativeTheme = Boolean(t.nativeAccent);
-                                                                    const isSelectedTheme = settings.nativeAccent === t.nativeAccent && settings.primaryColor === t.primaryColor && settings.backgroundColor === t.backgroundColor && settings.fontFamily === t.fontFamily;
-                                                                    return (
-                                                                        <button key={t.id} type="button" onClick={() => applyTheme(t.id)} className={`editor-studio-theme-card ${isSelectedTheme ? 'is-selected' : ''} ${isNativeTheme ? 'native-theme-card-preview' : ''}`} style={{ backgroundColor: t.backgroundColor, color: t.headingColor, borderColor: isSelectedTheme ? t.primaryColor : `${t.headingColor}1f` }}>
-                                                                            <span>{t.name}</span>
-                                                                            <b style={{ fontFamily: getFontFamily(t.headingFontFamily || t.fontFamily) }}>Aa Bb</b>
-                                                                            <em style={{ backgroundColor: isNativeTheme ? undefined : t.primaryColor, color: t.buttonTextColor || '#000' }}>Action</em>
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </section>
-                                                    </div>
-                                                )}
-
-                                                {editorStudioModal === 'visuals' && (
-                                                    <div className="editor-studio-modal-stack">
-                                                        <VisualEditorGroup title="Page Palette" note="Core colors and typography used across the whole booking page.">
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                {[
-                                                                    { label: 'Accent', key: 'primaryColor' },
-                                                                    { label: 'Background', key: 'backgroundColor' },
-                                                                    { label: 'Heading Text', key: 'headingColor', fontKey: 'headingFontFamily' },
-                                                                    { label: 'Body Text', key: 'bodyColor', fontKey: 'bodyFontFamily' }
-                                                                ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                                            </div>
-                                                        </VisualEditorGroup>
-                                                        <VisualEditorGroup title="Calendar + Time Slots" note="The booking rhythm clients feel when choosing a day and time.">
-                                                            <StyleSegmentedControl value={settings.dateStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => handleSettingChange('dateStyle', value)} label="Calendar Style" />
-                                                            <StyleSegmentedControl value={settings.timeSlotStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => { handleSettingChange('timeSlotStyle', value); handleSettingChange('availabilityStyle', value); }} label="Time Box Style" />
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                {[
-                                                                    { label: 'Date Background', key: 'dateBgColor' },
-                                                                    { label: 'Active Date Background', key: 'dateActiveBgColor' },
-                                                                    { label: 'Time Box Bg', key: 'slotBgColor' },
-                                                                    { label: 'Time Box Text', key: 'slotTextColor', fontKey: 'slotFontFamily' }
-                                                                ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                                            </div>
-                                                        </VisualEditorGroup>
-                                                        <VisualEditorGroup title="Action Button" note="The button clients trust before submitting.">
-                                                            <StyleSegmentedControl value={settings.actionButtonStyle || 'solid'} onChange={(value) => handleSettingChange('actionButtonStyle', value)} label="Action Style" />
-                                                            <ButtonShapeControl value={settings.buttonStyle || 'pill'} onChange={(value) => handleSettingChange('buttonStyle', value)} />
-                                                        </VisualEditorGroup>
-                                                        <LetterSpacingControl settings={settings} onChange={handleSettingChange} />
-                                                    </div>
-                                                )}
-
-                                                {editorStudioModal === 'features' && (
-                                                    <div className="editor-studio-modal-stack">
-                                                        <section className="editor-studio-feature-grid">
-                                                            {[
-                                                                { key: 'collectClientPhone', icon: Phone, label: 'Mobile Number', note: 'Used for contact records and follow-ups.', active: collectsClientPhone },
-                                                                { key: 'collectClientEmail', icon: Mail, label: 'Email Address', note: 'Required for email updates and client portal matching.', active: collectsClientEmail },
-                                                                { key: 'collectClientNotes', icon: MessageSquare, label: 'Client Note', note: 'Adds context before clients submit.', active: collectsClientNotes },
-                                                                { key: 'waitlist', icon: Clock, label: 'Waitlist Fallback', note: 'Let clients join standby when a day is full.', active: settings.features?.waitlist },
-                                                                { key: 'faqEnabled', icon: HelpCircle, label: 'FAQ Section', note: 'Answer common questions before clients submit.', active: settings.features?.faqEnabled, onClick: toggleFaqFeature },
-                                                                { key: 'socialLinks', icon: Share2, label: 'Social Footer', note: 'Clickable socials below the booking action.', active: settings.features?.socialLinks }
-                                                            ].map(item => {
-                                                                const IconCmp = item.icon;
-                                                                const toggleFeature = item.onClick || (() => handleFeatureChange(item.key, !item.active));
-                                                                return (
-                                                                    <button key={item.key} type="button" onClick={toggleFeature} className={`editor-studio-feature-toggle ${item.active ? 'is-on' : ''}`}>
-                                                                        <IconCmp size={18} />
-                                                                        <span><strong>{item.label}</strong><small>{item.note}</small></span>
-                                                                        <i />
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        </section>
-
-                                                        <section className={`editor-studio-faq-builder ${settings.features?.faqEnabled ? 'is-enabled' : ''}`}>
-                                                            <div className="editor-studio-faq-head">
-                                                                <div>
-                                                                    <span className="editor-studio-kicker">Client questions</span>
-                                                                    <h4>Booking page FAQ</h4>
-                                                                    <p>Keep quick answers beside the booking form so clients feel confident before they submit.</p>
-                                                                </div>
-                                                                <button type="button" onClick={toggleFaqFeature} className={`editor-studio-faq-master ${settings.features?.faqEnabled ? 'is-on' : ''}`}>
-                                                                    {settings.features?.faqEnabled ? 'Shown' : 'Hidden'}
-                                                                </button>
-                                                            </div>
-
-                                                            {settings.features?.faqEnabled ? (
-                                                                <div className="editor-studio-faq-list">
-                                                                    {(settings.features?.faqs || []).map((faq, i) => (
-                                                                        <article key={i} className="editor-studio-faq-card">
-                                                                            <div className="editor-studio-faq-card-top">
-                                                                                <span>Question {i + 1}</span>
-                                                                                <button type="button" onClick={() => removeFaqItem(i)} aria-label={`Remove question ${i + 1}`}>
-                                                                                    <X size={14} />
-                                                                                </button>
-                                                                            </div>
-                                                                            <label>
-                                                                                <small>Client sees</small>
-                                                                                <input type="text" value={faq.q} onChange={(e) => updateFaqItem(i, 'q', e.target.value)} placeholder="Can I reschedule my booking?" />
-                                                                            </label>
-                                                                            <label>
-                                                                                <small>Your answer</small>
-                                                                                <textarea value={faq.a} onChange={(e) => updateFaqItem(i, 'a', e.target.value)} placeholder="Yes. Send us a message from your booking thread and we will help you find another time." />
-                                                                            </label>
-                                                                        </article>
-                                                                    ))}
-                                                                    <button type="button" onClick={addFaqItem} className="editor-studio-faq-add">
-                                                                        <Plus size={16} />
-                                                                        Add another question
-                                                                    </button>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="editor-studio-faq-empty">
-                                                                    <HelpCircle size={18} />
-                                                                    <div>
-                                                                        <strong>FAQ is hidden right now.</strong>
-                                                                        <span>Turn it on when you want to explain policies, deposits, late arrivals, or reschedules.</span>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </section>
-                                                    </div>
-                                                )}
-
-                                                {editorStudioModal === 'copy' && (
-                                                    <div className="editor-studio-modal-stack">
-                                                        {[
-                                                            { key: 'dateLabel', l: 'Date Selection Title' },
-                                                            { key: 'timeLabel', l: 'Time Selection Title' },
-                                                            { key: 'detailsHeading', l: 'Details Section Title' },
-                                                            { key: 'detailsSubHeading', l: 'Details Sub-Title' },
-                                                            { key: 'confirmButtonText', l: 'Final Submit Button' },
-                                                            { key: 'successHeading', l: 'Success Screen Title' }
-                                                        ].map(item => (
-                                                            <label key={item.key} className="editor-studio-copy-field">
-                                                                <span>{item.l}</span>
-                                                                <input type="text" value={settings[item.key]} onChange={(e) => handleSettingChange(item.key, e.target.value)} />
-                                                            </label>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="hidden">
-                                {editorTab === 'identity' && (
-                                <div className="space-y-10 animate-in fade-in duration-700">
-                                    <div className="space-y-5">
-                                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                                        <div>
-                                            <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Booking Page Media</label>
-                                            <p className="text-xs text-neutral-400 font-medium mt-2">Upload the images clients see first on your booking page.</p>
-                                        </div>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-50 border border-neutral-100 px-3 py-2 rounded-lg">Shared Assets</span>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="bg-neutral-50 rounded-lg border border-neutral-100/70 p-4 md:p-5">
-                                            <div className="grid grid-cols-1 xl:grid-cols-[220px_minmax(0,1fr)] gap-5 items-start">
-                                                <div className="rounded-lg bg-white border border-neutral-100 p-4 shadow-inner">
-                                                    <div className="w-full aspect-square rounded-lg bg-neutral-50 border border-neutral-100 flex items-center justify-center overflow-hidden mb-4">
-                                                        {settings.logo ? <img src={settings.logo} className="w-full h-full object-contain" /> : <User size={22} className="text-neutral-300" />}
-                                                    </div>
-                                                    <p className="text-sm font-bold text-black">Business Logo</p>
-                                                    <p className="text-xs text-neutral-400 leading-relaxed mt-1">Shared with Business Profile.</p>
-                                                    <div className="flex flex-wrap gap-2 mt-4">
-                                                        <label className="h-10 px-4 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2">
-                                                            <Camera size={14}/> Upload
-                                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                                                const file = e.target.files[0];
-                                                                handleSettingImageUpload('logo', file, 'brand');
-                                                                e.target.value = '';
-                                                            }}/>
-                                                        </label>
-                                                        {settings.logo && <button onClick={() => handleSettingChange('logo', '')} className="h-10 px-4 rounded-lg bg-white border border-neutral-200 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-colors">Remove</button>}
-                                                    </div>
-                                                </div>
-                                                <LogoDisplayControls settings={settings} onChange={handleLogoDisplayChange} className="xl:pl-5 xl:border-l border-neutral-100" />
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-neutral-50 rounded-lg border border-neutral-100/70 p-4 md:p-5">
-                                            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_220px] gap-5 items-center">
-                                                <div className="w-full aspect-[16/6] min-h-[150px] rounded-lg bg-white border border-neutral-100 shadow-inner flex items-center justify-center overflow-hidden">
-                                                    {settings.bannerImage ? <img src={settings.bannerImage} className="w-full h-full object-cover" /> : (
-                                                        <div className="text-center px-4">
-                                                            <Monitor size={24} className="mx-auto text-neutral-300" />
-                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-300 mt-2">Optional Banner</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-black">Landscape Banner</p>
-                                                    <p className="text-xs text-neutral-400 leading-relaxed mt-1">Shown above the booking page heading. Wide images work best.</p>
-                                                    <div className="flex flex-wrap gap-2 mt-4">
-                                                        <label className="h-10 px-4 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2">
-                                                            <Camera size={14}/> Upload
-                                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                                                const file = e.target.files[0];
-                                                                handleSettingImageUpload('bannerImage', file, 'brand');
-                                                                e.target.value = '';
-                                                            }}/>
-                                                        </label>
-                                                        {settings.bannerImage && <button onClick={() => handleSettingChange('bannerImage', '')} className="h-10 px-4 rounded-lg bg-white border border-neutral-200 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-colors">Remove</button>}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    </div>
-                                    <div className="space-y-5">
-                                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                                        <div>
-                                            <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Business Text</label>
-                                            <p className="text-xs text-neutral-400 font-medium mt-2">Fine tune the booking page title, tagline, and intro copy. Position follows the logo setting above.</p>
-                                        </div>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-50 border border-neutral-100 px-3 py-2 rounded-lg">Size And Fonts</span>
-                                    </div>
-                                    {identityTextControls.map(config => (
-                                        <IdentityTextControl
-                                            key={config.id}
-                                            settings={settings}
-                                            config={config}
-                                            onChange={handleSettingChange}
-                                        />
-                                    ))}
-                                    </div>
-                                    <div className="space-y-5 pt-10 border-t border-neutral-50">
-                                    <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Booking Link</label>
-                                    <div className="flex flex-col sm:flex-row sm:items-center bg-neutral-50 rounded-lg px-5 md:px-8 py-4 md:py-6 border border-neutral-100/50 shadow-inner">
-                                        <span className="text-neutral-300 font-bold uppercase tracking-widest text-[10px] md:text-xs">{window.location.origin}/book/</span>
-                                        <input type="text" value={settings.slug} onChange={(e) => handleSettingChange('slug', e.target.value)} className="flex-1 bg-transparent border-none font-bold text-black outline-none ml-0 sm:ml-2 mt-1 sm:mt-0 text-sm" />
-                                    </div>
-                                    <button onClick={() => copyToClipboard(bookingPageUrl, 'Booking page link')} className="w-full h-11 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 transition-colors">
-                                        <Share2 size={14}/> Copy Booking Link
-                                    </button>
-                                    </div>
-                                </div>
-                                )}
-
-                                {editorTab === 'themes' && (
-                                <div className="space-y-12 animate-in fade-in duration-700">
-                                    <div data-tour="editor-theme-library">
-                                        <div className="flex items-center justify-between gap-4 mb-6">
-                                            <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">{isMobileWebEditorRuntime ? 'Mobile Theme Starter' : 'Industry Theme Engine'}</label>
-                                        </div>
-                                        {isMobileWebEditorRuntime && (
-                                            <div className="mobile-editor-starter-note mb-4 rounded-[20px] border border-neutral-100 bg-white p-3 shadow-[0_18px_48px_rgba(15,23,42,0.055)] overflow-hidden relative">
-                                                <div className="absolute inset-x-0 top-0 h-0.5 opacity-80" style={{ backgroundImage: 'var(--native-accent-gradient)', backgroundSize: '420% 420%', backgroundPosition: 'var(--native-accent-x) 50%' }} />
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center shrink-0">
-                                                        <Monitor size={17} />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                            <p className="text-[8px] font-bold uppercase tracking-[0.28em] text-neutral-400">Mobile Web Editor</p>
-                                                        </div>
-                                                        <h3 className="text-lg font-black tracking-[-0.04em] leading-tight text-black">Fast starter mode.</h3>
-                                                        <p className="text-xs text-neutral-500 font-medium leading-relaxed mt-1">
-                                                            Choose a starter here, then tune colors, fonts, buttons, and spacing in Visuals. Full engine is best on PC or the mobile app.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                        {!isMobileWebEditorRuntime && (
-                                        <div className="theme-brief-panel mb-7 rounded-[28px] border border-neutral-100 bg-white p-4 sm:p-5 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-                                            <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5 mb-5">
-                                                <div className="min-w-0">
-                                                    <p className="text-[9px] font-bold uppercase tracking-[0.45em] text-neutral-300 mb-3">Theme Brief</p>
-                                                    <h3 className="text-2xl sm:text-3xl font-black tracking-[-0.04em] leading-none text-black">
-                                                        {!selectedIndustryFilter ? (
-                                                            <>
-                                                                Choose your <span className="native-accent-text">industry first</span>.
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <span className="native-accent-text">{selectedIndustryName}</span> themes shaped for your business.
-                                                            </>
-                                                        )}
-                                                        <span className="block mt-2 text-lg sm:text-xl leading-snug tracking-[-0.03em] text-neutral-500">{themeBriefSupportText}</span>
-                                                    </h3>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleAutoDetectThemePalette}
-                                                    disabled={paletteDetecting}
-                                                    className="h-11 px-4 rounded-full border border-neutral-100 bg-neutral-50 text-black text-[9px] font-bold uppercase tracking-widest shadow-sm hover:border-black hover:bg-white transition-all disabled:cursor-wait disabled:text-neutral-400 flex items-center justify-center gap-2 shrink-0"
-                                                >
-                                                    <Pipette size={14} />
-                                                    {paletteDetecting ? 'Reading Brand' : detectedThemePalette ? `${themePaletteLabel(detectedThemePalette)} Detected` : 'Read Logo Colors'}
-                                                </button>
-                                            </div>
-                                            <p className="text-xs font-semibold text-neutral-400 -mt-2 mb-5">
-                                                Brand reader checks {brandSignalPhrase}, then starts the palette. Font personality now lives in Visuals.
-                                            </p>
-
-                                            <div className="mb-5">
-                                                <div className="flex items-center justify-between gap-3 mb-3">
-                                                    <div>
-                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">1. Choose Industry</p>
-                                                        <p className="text-xs font-semibold text-neutral-400 mt-1">This sets the personality, pace, fonts, and layout feel.</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <button type="button" onClick={() => scrollThemePaletteRail(-1)} title="Previous industries" className="w-8 h-8 rounded-full bg-white border border-neutral-100 text-neutral-400 hover:text-black hover:border-neutral-300 shadow-sm flex items-center justify-center transition-all">
-                                                            <ChevronLeft size={15} />
-                                                        </button>
-                                                        <button type="button" onClick={() => scrollThemePaletteRail(1)} title="Next industries" className="w-8 h-8 rounded-full bg-black text-white shadow-lg flex items-center justify-center hover:scale-105 transition-all">
-                                                            <ChevronRight size={15} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div ref={themePaletteRailRef} className="overflow-x-auto no-scrollbar pb-2 scroll-smooth snap-x snap-mandatory">
-                                                    <div className="flex gap-3 min-w-max">
-                                                        {industryFilterOptions.map(industry => {
-                                                            const isActive = themeGenerationInputs.industry === industry.id;
+                                                    <div className="editor-live-room-grid">
+                                                        {rooms.map(room => {
+                                                            const RoomIcon = room.icon;
+                                                            const isActive = activeRoom === room.id;
                                                             return (
-                                                                <button key={industry.id} type="button" onClick={() => setThemeFilterValue('industry', industry.id)} className={`group w-44 p-3 rounded-2xl border text-left transition-all snap-start ${isActive ? 'bg-black text-white border-black shadow-xl' : 'bg-neutral-50 text-black border-neutral-100 hover:bg-white hover:border-neutral-300 hover:-translate-y-0.5'}`}>
-                                                                    <div className="flex items-center mb-4">
-                                                                        {industry.swatches.map((color, i) => (
-                                                                            <span key={color} className={`w-7 h-7 rounded-full border ${isActive ? 'border-white/30' : 'border-black/10'} ${i > 0 ? '-ml-2' : ''}`} style={{ backgroundColor: color }} />
-                                                                        ))}
-                                                                    </div>
-                                                                    <div className="min-w-0">
-                                                                        <p className="text-[11px] font-bold uppercase tracking-widest truncate">{industry.name}</p>
-                                                                        <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 truncate ${isActive ? 'text-white/45' : 'text-neutral-300'}`}>{industry.hint}</p>
-                                                                    </div>
+                                                                <button key={room.id} type="button" onClick={() => openEditorRoom(room.id)} className={`editor-live-room-card ${isActive ? 'is-active' : ''}`}>
+                                                                    <span className="editor-live-room-number">{room.number}</span>
+                                                                    <span className="editor-live-room-icon"><RoomIcon size={17} /></span>
+                                                                    <span className="editor-live-room-copy">
+                                                                        <strong>{room.title}</strong>
+                                                                        <small>{room.summary}</small>
+                                                                    </span>
+                                                                    <em>{room.status}</em>
                                                                 </button>
                                                             );
                                                         })}
                                                     </div>
-                                                </div>
-                                            </div>
+                                                </section>
 
-                                            <div className="theme-color-direction-panel rounded-[26px] border border-neutral-100 bg-neutral-50/70 p-4 sm:p-5">
-                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                                                    <div>
-                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">2. Color Direction</p>
-                                                        <p className="text-xs font-semibold text-neutral-400 mt-1">{selectedPaletteHint}. Each color creates light and dark-mode directions for the selected industry.</p>
-                                                    </div>
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-black bg-white px-3 py-1.5 rounded-full self-start sm:self-auto">{selectedPaletteName}</span>
-                                                </div>
-                                                <div className="flex flex-wrap items-center gap-2.5">
-                                                    {paletteFilterOptions.map(palette => {
-                                                        const isActive = themeGenerationInputs.palette === palette.id;
-                                                        return (
-                                                            <button key={palette.id} type="button" onClick={() => setThemeFilterValue('palette', palette.id)} className={`group h-12 px-3 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${isActive ? 'bg-black text-white border-black shadow-lg' : 'bg-white text-neutral-500 border-neutral-100 hover:text-black hover:border-neutral-300'}`}>
-                                                                <span className="flex items-center">
-                                                                    {palette.swatches.slice(0, 3).map((color, i) => (
-                                                                        <span key={color} className={`w-5 h-5 rounded-full border ${isActive ? 'border-white/30' : 'border-black/10'} ${i > 0 ? '-ml-1.5' : ''}`} style={{ backgroundColor: color }} />
-                                                                    ))}
-                                                                </span>
-                                                                <span className="hidden sm:inline">{palette.id === 'all' ? 'Spectrum' : palette.name}</span>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setThemeFilterValue('palette', 'custom');
-                                                            setCustomThemePaletteOpen(value => !value);
-                                                        }}
-                                                        className={`h-12 px-3 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${themeGenerationInputs.palette === 'custom' ? 'bg-black text-white border-black shadow-lg' : 'bg-white text-neutral-500 border-neutral-100 hover:text-black hover:border-neutral-300'}`}
-                                                    >
-                                                        <span className="w-5 h-5 rounded-full border border-black/10 shadow-inner" style={{ backgroundColor: customThemeColor }} />
-                                                        <span>Custom</span>
-                                                    </button>
-                                                    {(themeGenerationInputs.palette === 'custom' || customThemePaletteOpen) && (
-                                                        <label className="h-12 pl-3 pr-2 rounded-full border border-neutral-100 bg-white flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-neutral-500">
-                                                            Pick Color
-                                                            <input
-                                                                type="color"
-                                                                value={customThemeColor}
-                                                                onChange={(event) => {
-                                                                    setCustomThemeColor(event.target.value);
-                                                                    setThemeFilterValue('palette', 'custom');
-                                                                }}
-                                                                className="w-8 h-8 rounded-full border-0 bg-transparent p-0 cursor-pointer"
-                                                                aria-label="Choose custom theme color"
-                                                            />
-                                                        </label>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-neutral-100 pt-4">
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-black">{themeBriefResultLabel}</p>
-                                                <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Built from your theme brief</p>
-                                            </div>
-                                        </div>
-                                        )}
-                                        <div className="theme-template-panel mb-5 rounded-[22px] border border-neutral-100 bg-white p-3.5 sm:p-5 shadow-[0_20px_60px_rgba(15,23,42,0.045)]">
-                                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
-                                                <div className="min-w-0">
-                                                    <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.35em] text-neutral-300 mb-1.5">Saved Looks</p>
-                                                    <h4 className="text-lg sm:text-xl font-black tracking-[-0.04em] text-black leading-tight">Save the current theme.</h4>
-                                                    <p className="text-xs sm:text-sm text-neutral-400 font-medium mt-1">Name it once, then reuse it for launches, seasons, or new offers.</p>
-                                                </div>
-                                                <div className="w-full lg:max-w-md flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={themeTemplateName}
-                                                        onChange={(event) => setThemeTemplateName(event.target.value)}
-                                                        placeholder={suggestedThemeTemplateName}
-                                                        className="h-11 flex-1 min-w-0 rounded-lg border border-neutral-100 bg-neutral-50 px-3 sm:px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-black transition-all"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={saveCurrentThemeTemplate}
-                                                        className="h-11 px-3 sm:px-5 rounded-lg bg-black text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] sm:tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-black/10 shrink-0"
-                                                    >
-                                                        <Check size={14} />
-                                                        <span className="sm:hidden">Save</span>
-                                                        <span className="hidden sm:inline">Save Template</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            {savedThemeTemplates.length > 0 && (
-                                                <div className="mt-4 border-t border-neutral-100 pt-4">
-                                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 mb-3">Saved Looks</p>
-                                                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                                        {savedThemeTemplates.map(template => (
-                                                            <div key={template.id} className="shrink-0 min-w-[190px] rounded-2xl border border-neutral-100 bg-neutral-50 p-3 flex items-center justify-between gap-3">
-                                                                <button type="button" onClick={() => applySavedThemeTemplate(template)} className="min-w-0 text-left">
-                                                                    <span className="block text-[10px] font-bold uppercase tracking-widest text-black truncate">{template.name}</span>
-                                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-neutral-300 mt-1">Apply template</span>
-                                                                </button>
-                                                                <button type="button" onClick={() => deleteThemeTemplate(template.id)} title="Delete template" className="w-8 h-8 rounded-full bg-white border border-neutral-100 text-neutral-400 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center">
-                                                                    <Trash2 size={13} />
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="theme-card-list grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[560px] overflow-y-auto pr-2 pb-4 no-scrollbar">
-                                            {!isMobileWebEditorRuntime && !themeGenerationInputs.industry && (
-                                                <div className="md:col-span-2 min-h-[260px] rounded-[26px] border border-dashed border-neutral-200 bg-neutral-50/70 flex flex-col items-center justify-center text-center p-8">
-                                                    <div className="w-14 h-14 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center text-black shadow-sm mb-5">
-                                                        <Sparkles size={20} />
-                                                    </div>
-                                                    <h4 className="text-2xl font-black tracking-[-0.04em] text-black">Choose an industry first.</h4>
-                                                    <p className="text-sm text-neutral-400 font-medium max-w-md mt-2">The theme designer will build light and dark theme directions after it knows the business type.</p>
-                                                </div>
-                                            )}
-                                            {visibleThemeCards.map(t => {
-                                                const isNativeTheme = Boolean(t.nativeAccent);
-                                                const isSelectedTheme = settings.nativeAccent === t.nativeAccent && settings.primaryColor === t.primaryColor && settings.backgroundColor === t.backgroundColor && settings.fontFamily === t.fontFamily;
-                                                return (
-                                                <button data-theme-card key={t.id} onClick={() => applyTheme(t.id)} className={`group relative min-h-[230px] p-6 rounded-lg border transition-all overflow-hidden text-left flex flex-col justify-between hover:-translate-y-0.5 ${isNativeTheme ? 'native-theme-card-preview' : ''}`} style={{ backgroundColor: t.backgroundColor, borderColor: isNativeTheme ? 'rgba(117,92,255,0.28)' : (t.headingColor || '#000') + '15', boxShadow: isSelectedTheme ? (isNativeTheme ? '0 0 0 2px rgba(117,92,255,0.55), 0 22px 45px rgba(20,167,255,0.14)' : `0 0 0 2px ${t.primaryColor}, 0 22px 45px rgba(0,0,0,0.12)`) : '0 4px 15px rgba(0,0,0,0.05)' }}>
-                                                    {!isNativeTheme && (
-                                                        <div className="absolute inset-x-0 top-0 h-1 opacity-90" style={{ backgroundColor: t.primaryColor }} />
-                                                    )}
-                                                    <div className="flex items-center justify-between w-full mb-6">
-                                                        <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[70%]" style={{ color: t.bodyColor }}>{t.name}</span>
-                                                        <div className="flex gap-1.5 shrink-0">
-                                                            <div className={`w-3.5 h-3.5 rounded-full shadow-sm border border-black/5 ${isNativeTheme ? 'native-theme-swatch' : ''}`} style={isNativeTheme ? undefined : { backgroundColor: t.primaryColor }} />
-                                                            <div className="w-3.5 h-3.5 rounded-full shadow-sm border border-black/5" style={{ backgroundColor: t.headingColor }} />
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-4 w-full">
-                                                        <h4 className="text-3xl font-bold tracking-tighter" style={{ color: t.headingColor, fontFamily: getFontFamily(t.headingFontFamily || t.fontFamily) }}>Aa Bb</h4>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`h-7 px-3 rounded-full text-[8px] font-bold uppercase tracking-widest flex items-center ${isNativeTheme ? 'native-theme-soft-pill' : ''}`} style={isNativeTheme ? { color: '#050505', border: '1px solid transparent' } : { backgroundColor: t.dateActiveBgColor === 'transparent' ? 'transparent' : t.dateActiveBgColor, color: t.dateActiveTextColor, border: `1px solid ${t.primaryColor}33` }}>Tue 19</span>
-                                                            <span className="h-7 px-3 rounded-full text-[8px] font-bold uppercase tracking-widest flex items-center" style={{ color: t.bodyColor, border: `1px solid ${t.bodyColor}20` }}>FAQ</span>
-                                                        </div>
-                                                        
-                                                        <div className="flex gap-2 w-full pt-2">
-                                                            <div className={`h-8 flex-1 flex items-center justify-center text-[8px] font-bold shadow-sm ${isNativeTheme ? 'native-theme-soft-slot' : ''}`} style={isNativeTheme ? {
-                                                                color: t.headingColor,
-                                                                borderRadius: t.buttonStyle === 'pill' ? '12px' : '4px',
-                                                                border: '1px solid transparent'
-                                                            } : { 
-                                                                backgroundColor: t.availabilityStyle === 'solid' ? t.slotBgColor : (t.availabilityStyle === 'outline' ? 'transparent' : 'transparent'), 
-                                                                color: t.availabilityStyle === 'minimal' ? t.headingColor : t.slotTextColor, 
-                                                                borderRadius: t.buttonStyle === 'pill' ? '12px' : '4px', 
-                                                                border: t.availabilityStyle === 'outline' ? `1px solid ${t.primaryColor}50` : 'none' 
-                                                            }}>12:00</div>
-                                                            <div className={`h-8 flex-1 flex items-center justify-center text-[8px] font-bold uppercase tracking-widest shadow-md ${isNativeTheme ? 'native-theme-action' : ''}`} style={isNativeTheme ? {
-                                                                color: '#050505',
-                                                                borderRadius: t.buttonStyle === 'pill' ? '99px' : '4px'
-                                                            } : { 
-                                                                backgroundColor: t.primaryColor, 
-                                                                color: t.buttonTextColor || '#000', 
-                                                                borderRadius: t.buttonStyle === 'pill' ? '99px' : '4px' 
-                                                            }}>Action</div>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-1.5 pt-1">
-                                                            {[t.palette, t.styleTags?.[1] || t.styleTags?.[0], t.industryTags?.[0]].filter(Boolean).map(tag => (
-                                                                <span key={tag} className="px-2 py-1 rounded-full text-[7px] font-bold uppercase tracking-widest" style={{ color: t.bodyColor, backgroundColor: t.faqBgColor }}>{tag}</span>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            );})}
-                                        </div>
-                                        {hasMoreThemes && (
-                                            <button
-                                                type="button"
-                                                onClick={loadMoreThemes}
-                                                disabled={themeBatchLoading}
-                                                className="mt-4 w-full h-12 rounded-lg border border-neutral-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest hover:border-black transition-colors disabled:cursor-wait disabled:text-neutral-400 flex items-center justify-center gap-3"
-                                            >
-                                                {themeBatchLoading && (
-                                                    <span className="brand-loader-dot" aria-hidden="true">
-                                                        <BuildABookingMark className="w-4 h-4" />
-                                                    </span>
-                                                )}
-                                                {themeBatchLoading ? 'Loading Themes' : 'Load More Themes'}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                                )}
-
-                                {editorTab === 'visuals' && (
-                                <div className="space-y-6 animate-in fade-in duration-700 pb-10">
-                                    <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Visual System</label>
-
-                                    <VisualEditorGroup title="Page Palette" note="Core colors and typography used across the whole booking page.">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { label: 'Accent', key: 'primaryColor' },
-                                                { label: 'Background', key: 'backgroundColor' },
-                                                { label: 'Heading Text', key: 'headingColor', fontKey: 'headingFontFamily' },
-                                                { label: 'Body Text', key: 'bodyColor', fontKey: 'bodyFontFamily' }
-                                            ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                        </div>
-                                    </VisualEditorGroup>
-
-                                    <VisualEditorGroup title="Calendar Buttons" note="Controls the day selector style, colors, and date font.">
-                                        <StyleSegmentedControl value={settings.dateStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => handleSettingChange('dateStyle', value)} label="Calendar Style" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { label: 'Date Background', key: 'dateBgColor' },
-                                                { label: 'Date Text', key: 'dateTextColor', fontKey: 'dateFontFamily' },
-                                                { label: 'Active Date Background', key: 'dateActiveBgColor' },
-                                                { label: 'Active Date Text', key: 'dateActiveTextColor', fontKey: 'dateFontFamily' }
-                                            ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                        </div>
-                                    </VisualEditorGroup>
-
-                                    <VisualEditorGroup title="Time Boxes" note="Controls the available time slot buttons clients tap.">
-                                        <StyleSegmentedControl value={settings.timeSlotStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => {
-                                            handleSettingChange('timeSlotStyle', value);
-                                            handleSettingChange('availabilityStyle', value);
-                                        }} label="Time Box Style" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { label: 'Time Box Bg', key: 'slotBgColor' },
-                                                { label: 'Time Box Text', key: 'slotTextColor', fontKey: 'slotFontFamily' }
-                                            ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                        </div>
-                                    </VisualEditorGroup>
-
-                                    <VisualEditorGroup title="Action Button" note="Controls the final booking button style and typography.">
-                                        <StyleSegmentedControl value={settings.actionButtonStyle || 'solid'} onChange={(value) => handleSettingChange('actionButtonStyle', value)} label="Action Style" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { label: 'Action Background', key: 'primaryColor' },
-                                                { label: 'Action Text', key: 'buttonTextColor', fontKey: 'buttonFontFamily' }
-                                            ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                        </div>
-                                        <ButtonShapeControl value={settings.buttonStyle || 'pill'} onChange={(value) => handleSettingChange('buttonStyle', value)} />
-                                    </VisualEditorGroup>
-
-                                    <VisualEditorGroup title="FAQ Styling" note="Applies when the FAQ feature is enabled.">
-                                        <StyleSegmentedControl value={settings.faqStyle || 'minimal'} onChange={(value) => handleSettingChange('faqStyle', value)} label="FAQ Style" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { label: 'FAQ Background', key: 'faqBgColor' },
-                                                { label: 'FAQ Border', key: 'faqBorderColor' },
-                                                { label: 'Question Text', key: 'faqTextColor', fontKey: 'faqFontFamily' },
-                                                { label: 'Answer Text', key: 'faqAnswerColor', fontKey: 'faqFontFamily' }
-                                            ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                        </div>
-                                    </VisualEditorGroup>
-
-                                    <VisualEditorGroup title="Social Footer" note="Styles the clickable social icons below the action button.">
-                                        <StyleSegmentedControl value={settings.socialIconStyle || 'outline'} onChange={(value) => handleSettingChange('socialIconStyle', value)} label="Icon Style" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { label: 'Icon Background', key: 'socialIconBgColor' },
-                                                { label: 'Icon / Label Color', key: 'socialIconColor' },
-                                                { label: 'Solid Text Color', key: 'socialIconTextColor' }
-                                            ].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}
-                                        </div>
-                                    </VisualEditorGroup>
-
-                                    <div className="pt-6 border-t border-neutral-50">
-                                        <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block mb-6">Typography Engine</label>
-                                        <div className="space-y-8">
-                                            <div className="rounded-[22px] border border-neutral-100 bg-neutral-50/70 p-4">
-                                                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-4">
-                                                    <div>
-                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Master Font Style</p>
-                                                        <p className="text-xs text-neutral-400 font-semibold mt-1">Use this after picking a theme to shift the full page into a clearer brand voice.</p>
-                                                    </div>
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-black bg-white px-3 py-1.5 rounded-full self-start sm:self-auto">Style System</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                                    {fontStylePresets.map(preset => (
-                                                        <button
-                                                            key={preset.id}
-                                                            type="button"
-                                                            onClick={() => applyFontStylePreset(preset)}
-                                                            className="rounded-2xl border border-neutral-100 bg-white p-3 text-left hover:border-black hover:-translate-y-0.5 transition-all"
-                                                        >
-                                                            <span className="block text-base font-black tracking-[-0.04em] text-black" style={{ fontFamily: getFontFamily(preset.headingFontFamily) }}>Aa Bb</span>
-                                                            <span className="block text-[10px] font-bold uppercase tracking-widest text-black mt-2">{preset.label}</span>
-                                                            <span className="block text-[9px] font-bold uppercase tracking-widest text-neutral-300 mt-1">{preset.note}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <LetterSpacingControl settings={settings} onChange={handleSettingChange} />
-                                            {['Sans', 'Serif', 'Display', 'Mono', 'Brush'].map(cat => (
-                                                <div key={cat}>
-                                                    <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-4">{cat}</p>
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                        {FONT_OPTIONS.filter(f => f.category === cat).map(f => (
-                                                            <button
-                                                                key={f.id}
-                                                                onClick={() => handleSettingChange('fontFamily', f.id)}
-                                                                className={`py-4 px-2 rounded-lg text-sm transition-all border ${settings.fontFamily === f.id ? 'bg-black text-white border-black shadow-xl' : 'bg-neutral-50 text-neutral-500 border-transparent hover:bg-neutral-100 hover:text-black'}`}
-                                                                style={{ fontFamily: f.family }}
-                                                            >
-                                                                {f.name}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                )}
-
-                                {editorTab === 'features' && (
-                                <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-                                    <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Booking Features</label>
-
-                                    <div className="rounded-lg border border-neutral-100 bg-white overflow-hidden shadow-[0_20px_70px_-65px_rgba(15,23,42,0.7)]">
-                                        <div className="p-4 md:p-6 border-b border-neutral-100">
-                                            <p className="text-sm font-bold text-black">Client Detail Fields</p>
-                                            <p className="text-xs text-neutral-400 font-medium mt-1 max-w-2xl">Choose exactly what clients need to leave before they request a booking. Email updates and client portal access only run when the matching contact field is collected.</p>
-                                        </div>
-                                        <div className="grid grid-cols-1 xl:grid-cols-3 divide-y xl:divide-y-0 xl:divide-x divide-neutral-100">
-                                            {[
-                                                { key: 'collectClientPhone', icon: Phone, label: 'Mobile Number', note: 'Used for phone follow-ups and contact records.', active: collectsClientPhone },
-                                                { key: 'collectClientEmail', icon: Mail, label: 'Email Address', note: 'Used for client email updates and CRM records.', active: collectsClientEmail },
-                                                { key: 'collectClientNotes', icon: MessageSquare, label: 'Client Note', note: 'Adds an optional note field for requests or context.', active: collectsClientNotes }
-                                            ].map(item => {
-                                                const IconCmp = item.icon;
-                                                return (
-                                                    <div key={item.key} className="p-4 md:p-5 flex items-start justify-between gap-4">
-                                                        <div className="flex items-start gap-3 min-w-0">
-                                                            <div className={`w-10 h-10 rounded-lg border flex items-center justify-center shrink-0 ${item.active ? 'bg-black text-white border-black' : 'bg-neutral-50 text-neutral-400 border-neutral-100'}`}>
-                                                                <IconCmp size={16} />
-                                                            </div>
+                                                <section className={`editor-live-workbench editor-live-workbench-${activeRoom}`}>
+                                                    <div className="editor-live-workbench-head">
+                                                        <div className="editor-live-workbench-title">
+                                                            <span><ActiveRoomIcon size={18} /></span>
                                                             <div>
-                                                                <p className="text-sm font-bold text-black">{item.label}</p>
-                                                                <p className="text-xs text-neutral-400 font-medium mt-1 leading-relaxed">{item.note}</p>
+                                                                <p>{activeRoomData.number} / {activeRoomData.title} Room</p>
+                                                                <h3>{{
+                                                                    identity: 'Set the first impression.',
+                                                                    themes: selectedIndustryFilter ? `${selectedIndustryName} theme designer.` : 'Start with the industry.',
+                                                                    visuals: 'Tune the booking feel.',
+                                                                    features: 'Shape the booking flow.',
+                                                                    copy: 'Write the client journey.'
+                                                                }[activeRoom]}</h3>
                                                             </div>
                                                         </div>
-                                                        <button onClick={() => handleFeatureChange(item.key, !item.active)} className={`w-14 h-8 rounded-full flex items-center px-1 transition-colors shrink-0 ${item.active ? 'bg-[#39FF14]' : 'bg-neutral-200'}`} aria-pressed={Boolean(item.active)}>
-                                                            <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${item.active ? 'translate-x-6' : ''}`} />
-                                                        </button>
+                                                        {activeRoom !== 'identity' && <button type="button" onClick={() => setEditorStudioModal('identity')} className="editor-live-reset-room">Brand room</button>}
                                                     </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
 
-                                    <div className="space-y-4">
-                                        {[
-                                            { key: 'loadingScreen', label: 'Loading Logo Pulse', note: 'Brief branded loading moment before the page appears.' },
-                                            { key: 'birthday', label: 'Birthday Capture', note: 'Adds an optional birthday field to the details form.' },
-                                            { key: 'waitlist', label: 'Waitlist Fallback', note: 'Allows clients to join standby when a day has no slots.' },
-                                            { key: 'firstAvailable', label: 'First Available Button', note: 'Lets clients jump to the next open day.' },
-                                            { key: 'socialProof', label: 'Social Proof Ticker', note: 'Shows a small confidence cue under the action button.' }
-                                        ].map(f => (
-                                            <div key={f.key} className="flex items-center justify-between gap-4 bg-neutral-50 p-4 md:p-6 rounded-lg border border-neutral-100/50">
-                                                <div>
-                                                    <span className="text-sm font-bold text-black">{f.label}</span>
-                                                    <p className="text-xs text-neutral-400 font-medium mt-1">{f.note}</p>
-                                                </div>
-                                                <button onClick={() => handleFeatureChange(f.key, !settings.features?.[f.key])} className={`w-14 h-8 rounded-full flex items-center px-1 transition-colors shrink-0 ${settings.features?.[f.key] ? 'bg-[#39FF14]' : 'bg-neutral-200'}`} aria-pressed={Boolean(settings.features?.[f.key])}>
-                                                    <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${settings.features?.[f.key] ? 'translate-x-6' : ''}`} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
+                                                    <div className="editor-live-workbench-body">
+                                                        <div className="editor-live-section-preview">
+                                                            {activeRoom === 'identity' && (
+                                                                <div className="editor-live-preview-card identity-preview-card">
+                                                                    <div className="editor-live-banner-preview">{settings.bannerImage ? <img src={settings.bannerImage} alt="" /> : <span>Banner area</span>}</div>
+                                                                    <div className="editor-live-brand-frame" style={{ textAlign: getLogoDisplay(settings).alignment }}>
+                                                                        {getLogoDisplay(settings).visible && (
+                                                                            <div className="editor-live-logo-preview" style={{ width: `${Math.min(84, getLogoDisplay(settings).size)}px`, height: `${Math.min(84, getLogoDisplay(settings).size)}px` }}>
+                                                                                {settings.logo ? <img src={settings.logo} alt="" /> : <BuildABookingMark className="w-9 h-9" />}
+                                                                            </div>
+                                                                        )}
+                                                                        <input type="text" value={settings.tagline || ''} onChange={(event) => handleSettingChange('tagline', event.target.value)} placeholder="Atelier 7B / Private" />
+                                                                        <textarea value={settings.brandName || ''} onChange={(event) => handleSettingChange('brandName', event.target.value)} placeholder="Studio Noir" style={{ fontFamily: getFontFamily(settings.brandNameFontFamily || settings.headingFontFamily || settings.fontFamily) }} />
+                                                                        <textarea value={settings.welcomeMessage || ''} onChange={(event) => handleSettingChange('welcomeMessage', event.target.value)} placeholder="Reserve your private session." />
+                                                                    </div>
+                                                                </div>
+                                                            )}
 
-                                    <div className="rounded-lg border border-neutral-100 bg-neutral-50 overflow-hidden">
-                                        <div className="p-4 md:p-6 flex items-center justify-between gap-4">
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-11 h-11 rounded-lg bg-white border border-neutral-100 flex items-center justify-center text-black shrink-0">
-                                                    <Mail size={17} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-black">Email Updates Opt-In</p>
-                                                    <p className="text-xs text-neutral-400 font-medium mt-1 max-w-lg">Adds a consent checkbox before the booking button. Email messages only send when the email field is on and the client accepts updates.</p>
-                                                </div>
-                                            </div>
-                                            <button disabled={!collectsClientEmail} onClick={() => collectsClientEmail && handleFeatureChange('emailUpdates', !emailUpdatesEnabled)} className={`w-14 h-8 rounded-full flex items-center px-1 transition-colors shrink-0 ${emailUpdatesEnabled && collectsClientEmail ? 'bg-[#39FF14]' : 'bg-neutral-200'} ${!collectsClientEmail ? 'opacity-50 cursor-not-allowed' : ''}`} aria-pressed={Boolean(emailUpdatesEnabled && collectsClientEmail)}>
-                                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${emailUpdatesEnabled && collectsClientEmail ? 'translate-x-6' : ''}`} />
-                                            </button>
-                                        </div>
-                                        {!collectsClientEmail && (
-                                            <div className="border-t border-neutral-100 bg-white p-4 md:p-6">
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Email updates are off because email address collection is off.</p>
-                                            </div>
-                                        )}
-                                        {emailUpdatesEnabled && collectsClientEmail && (
-                                            <div className="border-t border-neutral-100 bg-white p-4 md:p-6">
-                                                <EmailNotificationSettings
-                                                    communications={communications}
-                                                    setCommunications={setCommunications}
-                                                    saveComms={saveComms}
-                                                    showToast={showToast}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
+                                                            {activeRoom === 'themes' && (
+                                                                <div className="editor-live-preview-card theme-preview-card">
+                                                                    <div className="editor-live-theme-brief">
+                                                                        <span>{selectedIndustryFilter ? 'Theme brief' : 'Choose industry'}</span>
+                                                                        <h4>{selectedIndustryFilter ? `${selectedIndustryName} booking pages` : 'No random themes.'}</h4>
+                                                                        <p>{selectedIndustryFilter ? `Built around ${selectedPalettePhrase}, client trust, and a ${selectedIndustryName.toLowerCase()}-ready visual rhythm.` : 'Pick an industry and the engine generates looks that fit that business type first.'}</p>
+                                                                    </div>
+                                                                    <div className="editor-live-theme-strip">
+                                                                        {(visibleThemeCards.length ? visibleThemeCards : mobileWebEditorThemes).slice(0, 3).map(theme => (
+                                                                            <button key={theme.id} type="button" onClick={() => applyTheme(theme.id)} style={{ backgroundColor: theme.backgroundColor, color: theme.headingColor, borderColor: `${theme.primaryColor}55` }}>
+                                                                                <span>{theme.name}</span>
+                                                                                <b style={{ fontFamily: getFontFamily(theme.headingFontFamily || theme.fontFamily) }}>Aa Bb</b>
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
 
-                                    <div className="rounded-lg border border-neutral-100 bg-neutral-50 overflow-hidden">
-                                        <div className="p-4 md:p-6 flex items-center justify-between gap-4">
-                                            <div>
-                                                <p className="text-sm font-bold text-black">FAQ After Details</p>
-                                                <p className="text-xs text-neutral-400 font-medium mt-1">Shows client questions inside the details step, before the final booking action.</p>
-                                            </div>
-                                            <button onClick={toggleFaqFeature} className={`w-14 h-8 rounded-full flex items-center px-1 transition-colors shrink-0 ${settings.features?.faqEnabled ? 'bg-[#39FF14]' : 'bg-neutral-200'}`} aria-pressed={Boolean(settings.features?.faqEnabled)}>
-                                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${settings.features?.faqEnabled ? 'translate-x-6' : ''}`} />
-                                            </button>
-                                        </div>
-                                        {settings.features?.faqEnabled && (
-                                            <div className="border-t border-neutral-100 bg-white p-4 md:p-6 space-y-4">
-                                                {(settings.features?.faqs || []).map((faq, i) => (
-                                                    <details key={i} className="group rounded-lg border border-neutral-100 bg-neutral-50 open:bg-white open:shadow-sm transition-all">
-                                                        <summary className="list-none cursor-pointer p-4 flex items-center justify-between gap-4">
-                                                            <span className="text-xs font-bold uppercase tracking-widest text-neutral-500">{faq.q || `Question ${i + 1}`}</span>
-                                                            <ChevronDown size={15} className="text-neutral-300 transition-transform group-open:rotate-180" />
-                                                        </summary>
-                                                        <div className="px-4 pb-4 space-y-3">
-                                                            <input type="text" value={faq.q} onChange={(e) => updateFaqItem(i, 'q', e.target.value)} placeholder="Question" className="w-full bg-white border border-neutral-100 rounded-lg px-4 py-3 font-bold text-sm outline-none focus:border-black transition-colors" />
-                                                            <textarea value={faq.a} onChange={(e) => updateFaqItem(i, 'a', e.target.value)} placeholder="Answer" className="w-full bg-white border border-neutral-100 rounded-lg px-4 py-3 text-sm font-medium outline-none resize-none min-h-[92px] focus:border-black transition-colors" />
-                                                            <button onClick={() => removeFaqItem(i)} className="h-9 px-3 rounded-lg bg-white border border-neutral-100 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center gap-2">
-                                                                <X size={13} /> Remove
-                                                            </button>
+                                                            {activeRoom === 'visuals' && (
+                                                                <div className="editor-live-preview-card visuals-preview-card">
+                                                                    <div className="editor-live-date-row">
+                                                                        {['Tue 19', 'Wed 20', 'Thu 21'].map((label, index) => (
+                                                                            <button key={label} type="button" className={index === 0 ? 'is-active' : ''} style={{ background: index === 0 ? settings.dateActiveBgColor || settings.primaryColor : settings.dateBgColor || '#f8fafc', color: index === 0 ? settings.dateActiveTextColor || '#050505' : settings.dateTextColor || '#050505', fontFamily: getFontFamily(settings.dateFontFamily || settings.fontFamily) }}>{label}</button>
+                                                                        ))}
+                                                                    </div>
+                                                                    <div className="editor-live-slot-row">
+                                                                        {(settings.availableTimes || ['09:00', '10:30', '12:00']).slice(0, 4).map(time => <button key={time} type="button" style={{ background: settings.slotBgColor || '#f8fafc', color: settings.slotTextColor || '#050505', fontFamily: getFontFamily(settings.slotFontFamily || settings.fontFamily) }}>{time}</button>)}
+                                                                    </div>
+                                                                    <input type="text" value={settings.confirmButtonText || ''} onChange={(event) => handleSettingChange('confirmButtonText', event.target.value)} style={{ background: settings.buttonColor || settings.primaryColor || '#050505', color: settings.buttonTextColor || '#fff', borderRadius: settings.buttonStyle === 'sharp' ? '14px' : '999px', fontFamily: getFontFamily(settings.buttonFontFamily || settings.fontFamily) }} placeholder="Confirm Booking" />
+                                                                </div>
+                                                            )}
+
+                                                            {activeRoom === 'features' && (
+                                                                <div className="editor-live-preview-card features-preview-card">
+                                                                    <div className="editor-live-feature-toggles">
+                                                                        {[
+                                                                            { key: 'collectClientPhone', label: 'Phone', active: collectsClientPhone },
+                                                                            { key: 'collectClientEmail', label: 'Email', active: collectsClientEmail },
+                                                                            { key: 'collectClientNotes', label: 'Notes', active: collectsClientNotes },
+                                                                            { key: 'waitlist', label: 'Waitlist', active: settings.features?.waitlist },
+                                                                            { key: 'faqEnabled', label: 'FAQ', active: settings.features?.faqEnabled, onClick: toggleFaqFeature },
+                                                                            { key: 'socialLinks', label: 'Socials', active: settings.features?.socialLinks }
+                                                                        ].map(item => {
+                                                                            const onClick = item.onClick || (() => handleFeatureChange(item.key, !item.active));
+                                                                            return <button key={item.key} type="button" onClick={onClick} className={item.active ? 'is-on' : ''}><span>{item.label}</span><i /></button>;
+                                                                        })}
+                                                                    </div>
+                                                                    <div className={`editor-live-faq-card ${settings.features?.faqEnabled ? 'is-on' : ''}`}>
+                                                                        <div><strong>FAQ</strong><button type="button" onClick={toggleFaqFeature}>{settings.features?.faqEnabled ? 'Shown' : 'Hidden'}</button></div>
+                                                                        {settings.features?.faqEnabled ? (settings.features?.faqs || []).slice(0, 2).map((faq, index) => (
+                                                                            <label key={index}><input value={faq.q} onChange={(event) => updateFaqItem(index, 'q', event.target.value)} placeholder="Question" /><textarea value={faq.a} onChange={(event) => updateFaqItem(index, 'a', event.target.value)} placeholder="Answer" /></label>
+                                                                        )) : <p>Turn this on when clients need policies, deposits, or reschedule answers.</p>}
+                                                                        {settings.features?.faqEnabled && <button type="button" onClick={addFaqItem} className="editor-live-add-question"><Plus size={14}/> Add question</button>}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {activeRoom === 'copy' && (
+                                                                <div className="editor-live-preview-card copy-preview-card">
+                                                                    {[
+                                                                        { key: 'dateLabel', label: 'Date step' },
+                                                                        { key: 'timeLabel', label: 'Time step' },
+                                                                        { key: 'detailsHeading', label: 'Form headline' },
+                                                                        { key: 'detailsSubHeading', label: 'Form subheading' },
+                                                                        { key: 'confirmButtonText', label: 'Action button' },
+                                                                        { key: 'successHeading', label: 'Success state' }
+                                                                    ].map(item => <label key={item.key}><span>{item.label}</span><input type="text" value={settings[item.key] || ''} onChange={(event) => handleSettingChange(item.key, event.target.value)} /></label>)}
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </details>
-                                                ))}
-                                                <button onClick={addFaqItem} className="w-full py-5 rounded-lg border-2 border-dashed border-neutral-200 text-neutral-400 font-bold text-xs uppercase tracking-widest hover:border-black hover:text-black transition-all">Add Question</button>
-                                            </div>
-                                        )}
-                                    </div>
 
-                                    <div className="rounded-lg border border-neutral-100 bg-neutral-50 overflow-hidden">
-                                        <div className="p-4 md:p-6 flex items-center justify-between gap-4">
-                                            <div>
-                                                <p className="text-sm font-bold text-black">Social Footer Links</p>
-                                                <p className="text-xs text-neutral-400 font-medium mt-1">Adds clickable social icons below the booking action button.</p>
-                                            </div>
-                                            <button onClick={() => handleFeatureChange('socialLinks', !settings.features?.socialLinks)} className={`w-14 h-8 rounded-full flex items-center px-1 transition-colors shrink-0 ${settings.features?.socialLinks ? 'bg-[#39FF14]' : 'bg-neutral-200'}`} aria-pressed={Boolean(settings.features?.socialLinks)}>
-                                                <div className={`w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${settings.features?.socialLinks ? 'translate-x-6' : ''}`} />
-                                            </button>
-                                        </div>
-                                        {settings.features?.socialLinks && (
-                                            <div className="border-t border-neutral-100 bg-white p-4 md:p-6 space-y-4">
-                                                {[
-                                                    ['instagram', 'Instagram', '@yourstudio'],
-                                                    ['tiktok', 'TikTok', '@yourstudio'],
-                                                    ['facebook', 'Facebook', 'your page or handle'],
-                                                    ['website', 'Website', 'https://yourwebsite.com']
-                                                ].map(([key, label, placeholder]) => (
-                                                    <div key={key}>
-                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-2 ml-2">{label}</p>
-                                                        <input type="text" value={settings.socials?.[key] || ''} onChange={(e) => handleSocialChange(key, e.target.value)} placeholder={placeholder} className="w-full bg-neutral-50 border border-neutral-100 rounded-lg px-5 py-4 text-sm font-bold outline-none focus:bg-white focus:border-black transition-all" />
+                                                        <div className="editor-live-control-deck">
+                                                            {activeRoom === 'identity' && (
+                                                                <>
+                                                                    <div className="editor-live-control-row media-controls">
+                                                                        <label><Camera size={15}/> Upload logo<input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; handleSettingImageUpload('logo', file, 'brand'); e.target.value = ''; }} /></label>
+                                                                        <label><Monitor size={15}/> Upload banner<input type="file" accept="image/*" onChange={(e) => { const file = e.target.files[0]; handleSettingImageUpload('bannerImage', file, 'brand'); e.target.value = ''; }} /></label>
+                                                                        <button type="button" onClick={() => copyToClipboard(bookingPageUrl, 'Booking page link')}><Share2 size={15}/> Copy link</button>
+                                                                    </div>
+                                                                    <LogoDisplayControls settings={settings} onChange={handleLogoDisplayChange} />
+                                                                </>
+                                                            )}
+
+                                                            {activeRoom === 'themes' && (
+                                                                <>
+                                                                    <div className="editor-live-control-title"><span>01</span><strong>Industry</strong><small>The page mood starts here.</small></div>
+                                                                    <div className="editor-live-scroll-row">
+                                                                        {industryFilterOptions.map(industry => <button key={industry.id} type="button" onClick={() => setThemeFilterValue('industry', industry.id)} className={themeGenerationInputs.industry === industry.id ? 'is-active' : ''}><span>{industry.swatches.slice(0, 3).map(color => <i key={color} style={{ backgroundColor: color }} />)}</span>{industry.name}</button>)}
+                                                                    </div>
+                                                                    <div className="editor-live-control-title"><span>02</span><strong>Palette</strong><small>{selectedPaletteHint}</small></div>
+                                                                    <div className="editor-live-chip-row">
+                                                                        {paletteFilterOptions.map(palette => <button key={palette.id} type="button" onClick={() => setThemeFilterValue('palette', palette.id)} className={themeGenerationInputs.palette === palette.id ? 'is-active' : ''}>{palette.swatches.slice(0, 3).map(color => <i key={color} style={{ backgroundColor: color }} />)}<span>{palette.id === 'all' ? 'Spectrum' : palette.name}</span></button>)}
+                                                                        <label className={`editor-live-color-chip ${themeGenerationInputs.palette === 'custom' ? 'is-active' : ''}`}><i style={{ backgroundColor: customThemeColor }} /><span>Custom</span><input type="color" value={customThemeColor} onChange={(event) => { setCustomThemeColor(event.target.value); setThemeFilterValue('palette', 'custom'); }} /></label>
+                                                                    </div>
+                                                                    <button type="button" onClick={handleAutoDetectThemePalette} disabled={paletteDetecting} className="editor-live-detect-button"><Pipette size={15}/>{paletteDetecting ? 'Reading brand' : 'Read logo colors'}</button>
+                                                                </>
+                                                            )}
+
+                                                            {activeRoom === 'visuals' && (
+                                                                <>
+                                                                    <VisualEditorGroup title="Page Palette" note="Core colors and typography used across the whole booking page."><div className="grid grid-cols-1 md:grid-cols-2 gap-3">{[{ label: 'Accent', key: 'primaryColor' }, { label: 'Background', key: 'backgroundColor' }, { label: 'Heading Text', key: 'headingColor', fontKey: 'headingFontFamily' }, { label: 'Body Text', key: 'bodyColor', fontKey: 'bodyFontFamily' }].map(item => <ColorFontControl key={item.key} settings={settings} item={item} onChange={handleSettingChange} />)}</div></VisualEditorGroup>
+                                                                    <VisualEditorGroup title="Calendar + Time Slots" note="The booking rhythm clients feel when choosing a day and time."><StyleSegmentedControl value={settings.dateStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => handleSettingChange('dateStyle', value)} label="Calendar Style" /><StyleSegmentedControl value={settings.timeSlotStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => { handleSettingChange('timeSlotStyle', value); handleSettingChange('availabilityStyle', value); }} label="Time Box Style" /></VisualEditorGroup>
+                                                                    <VisualEditorGroup title="Action Button" note="The final booking action."><StyleSegmentedControl value={settings.actionButtonStyle || 'solid'} onChange={(value) => handleSettingChange('actionButtonStyle', value)} label="Action Style" /><ButtonShapeControl value={settings.buttonStyle || 'pill'} onChange={(value) => handleSettingChange('buttonStyle', value)} /></VisualEditorGroup>
+                                                                    <LetterSpacingControl settings={settings} onChange={handleSettingChange} />
+                                                                </>
+                                                            )}
+
+                                                            {activeRoom === 'features' && (
+                                                                <>
+                                                                    <div className="editor-live-control-title"><span>01</span><strong>Client detail fields</strong><small>Only ask for what the business needs.</small></div>
+                                                                    <div className="editor-live-feature-grid">{[
+                                                                        { key: 'collectClientPhone', icon: Phone, label: 'Mobile Number', note: 'Contact records and follow-ups.', active: collectsClientPhone },
+                                                                        { key: 'collectClientEmail', icon: Mail, label: 'Email Address', note: 'Email updates and portal matching.', active: collectsClientEmail },
+                                                                        { key: 'collectClientNotes', icon: MessageSquare, label: 'Client Note', note: 'Context before submit.', active: collectsClientNotes }
+                                                                    ].map(item => { const IconCmp = item.icon; return <button key={item.key} type="button" onClick={() => handleFeatureChange(item.key, !item.active)} className={item.active ? 'is-on' : ''}><IconCmp size={16}/><span><strong>{item.label}</strong><small>{item.note}</small></span><i /></button>; })}</div>
+                                                                    <div className="editor-live-control-title"><span>02</span><strong>Booking page tools</strong><small>FAQ, socials, email consent, and waitlist.</small></div>
+                                                                    <div className="editor-live-feature-grid">{[
+                                                                        { key: 'waitlist', icon: Clock, label: 'Waitlist', note: 'Standby when full.', active: settings.features?.waitlist },
+                                                                        { key: 'faqEnabled', icon: HelpCircle, label: 'FAQ Section', note: 'Answers before submit.', active: settings.features?.faqEnabled, onClick: toggleFaqFeature },
+                                                                        { key: 'socialLinks', icon: Share2, label: 'Social Footer', note: 'Clickable profile links.', active: settings.features?.socialLinks },
+                                                                        { key: 'emailUpdates', icon: Mail, label: 'Email Opt-In', note: 'Consent checkbox.', active: emailUpdatesEnabled && collectsClientEmail, disabled: !collectsClientEmail }
+                                                                    ].map(item => { const IconCmp = item.icon; const onClick = item.onClick || (() => !item.disabled && handleFeatureChange(item.key, !item.active)); return <button key={item.key} type="button" onClick={onClick} className={`${item.active ? 'is-on' : ''} ${item.disabled ? 'is-disabled' : ''}`}><IconCmp size={16}/><span><strong>{item.label}</strong><small>{item.note}</small></span><i /></button>; })}</div>
+                                                                </>
+                                                            )}
+
+                                                            {activeRoom === 'copy' && (
+                                                                <div className="editor-live-copy-grid">{[
+                                                                    { key: 'dateLabel', l: 'Date Selection Title' },
+                                                                    { key: 'timeLabel', l: 'Time Selection Title' },
+                                                                    { key: 'detailsHeading', l: 'Details Section Title' },
+                                                                    { key: 'detailsSubHeading', l: 'Details Sub-Title' },
+                                                                    { key: 'confirmButtonText', l: 'Final Submit Button' },
+                                                                    { key: 'successHeading', l: 'Success Screen Title' }
+                                                                ].map(item => <label key={item.key}><span>{item.l}</span><input type="text" value={settings[item.key] || ''} onChange={(e) => handleSettingChange(item.key, e.target.value)} /></label>)}</div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                                </section>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
 
-                                    <div className="pt-8 border-t border-neutral-50 space-y-6">
-                                        <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">External Links</label>
-                                        <div>
-                                            <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-3 ml-4">Google Maps Link (Shows Get Directions)</p>
-                                            <input type="url" value={settings.features?.location || ''} onChange={(e) => handleFeatureChange('location', e.target.value)} placeholder="https://maps.app.goo.gl/..." className="w-full bg-neutral-50 border-none rounded-lg px-5 md:px-8 py-4 md:py-5 text-sm font-medium outline-none" />
-                                        </div>
-                                    </div>
-                                </div>
-                                )}
-
-                                {editorTab === 'copy' && (
-                                <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-                                    <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-neutral-300 block">Interface Wording</label>
-                                    {[
-                                    { key: 'dateLabel', l: 'Date Selection Title' },
-                                    { key: 'timeLabel', l: 'Time Selection Title' },
-                                    { key: 'detailsHeading', l: 'Details Section Title' },
-                                    { key: 'detailsSubHeading', l: 'Details Sub-Title' },
-                                    { key: 'confirmButtonText', l: 'Final Submit Button' },
-                                    { key: 'successHeading', l: 'Success Screen Title' }
-                                    ].map(item => (
-                                    <div key={item.key} className="space-y-2">
-                                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 ml-6">{item.l}</p>
-                                        <input type="text" value={settings[item.key]} onChange={(e) => handleSettingChange(item.key, e.target.value)} className="w-full bg-neutral-50 border-none rounded-lg px-5 md:px-8 py-4 md:py-5 text-sm font-bold focus:bg-white transition-all outline-none text-black shadow-inner" />
-                                    </div>
-                                    ))}
-                                </div>
-                                )}
-                                </div>
                             </div>
-
                             <div className="editor-publish-footer p-2.5 sm:p-5 md:p-8 border-t border-neutral-50 flex-shrink-0 bg-white">
                                 <div className="grid grid-cols-2 sm:grid-cols-[0.72fr_1fr] gap-2 sm:gap-3">
                                     <button

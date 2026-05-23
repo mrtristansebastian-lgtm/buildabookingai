@@ -2644,6 +2644,729 @@ body {
             gap: 1rem;
         }
 
+        .editor-live-rooms {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .editor-live-room-rail,
+        .editor-live-workbench {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 26px;
+            box-shadow: 0 28px 80px -66px rgba(15, 23, 42, 0.7);
+            overflow: hidden;
+        }
+
+        .editor-live-room-rail {
+            padding: clamp(0.85rem, 1.8vw, 1.1rem);
+        }
+
+        .editor-live-room-head,
+        .editor-live-workbench-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .editor-live-room-head span,
+        .editor-live-workbench-title p,
+        .editor-live-control-title span,
+        .editor-live-theme-brief span,
+        .editor-live-brand-frame input,
+        .editor-live-copy-grid span {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .editor-live-room-head h3,
+        .editor-live-workbench-title h3 {
+            color: #050505;
+            font-size: clamp(1.35rem, 2.8vw, 2rem);
+            font-weight: 950;
+            letter-spacing: -0.055em;
+            line-height: 0.98;
+            margin-top: 0.22rem;
+        }
+
+        .editor-live-room-head p {
+            max-width: 31rem;
+            margin-top: 0.35rem;
+            color: #64748b;
+            font-size: 0.76rem;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .editor-live-room-actions,
+        .editor-live-control-row {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+        }
+
+        .editor-live-room-actions button,
+        .editor-live-reset-room,
+        .editor-live-control-row button,
+        .editor-live-control-row label,
+        .editor-live-detect-button {
+            min-height: 2.5rem;
+            border-radius: 999px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: #fff;
+            color: #050505;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.48rem;
+            padding: 0 0.9rem;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            box-shadow: 0 12px 34px -30px rgba(15, 23, 42, 0.7);
+        }
+
+        .editor-live-control-row label {
+            cursor: pointer;
+        }
+
+        .editor-live-control-row input[type="file"] {
+            display: none;
+        }
+
+        .editor-live-room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+            gap: 0.6rem;
+            margin-top: 0.85rem;
+        }
+
+        .editor-live-room-card {
+            min-height: 5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: linear-gradient(135deg, #fff, #f8fafc);
+            padding: 0.7rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            grid-template-rows: auto auto;
+            gap: 0.45rem 0.65rem;
+            text-align: left;
+            transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .editor-live-room-card:hover,
+        .editor-live-room-card.is-active {
+            transform: translateY(-1px);
+            border-color: rgba(14, 165, 233, 0.42);
+            box-shadow: 0 24px 55px -48px rgba(14, 165, 233, 0.65);
+        }
+
+        .editor-live-room-number {
+            grid-column: 1;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 0.34rem 0.48rem;
+            font-size: 0.52rem;
+            font-weight: 900;
+        }
+
+        .editor-live-room-icon,
+        .editor-live-workbench-title > span {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #050505;
+            background: linear-gradient(135deg, rgba(217, 249, 157, 0.9), rgba(186, 230, 253, 0.86), rgba(243, 232, 255, 0.86));
+        }
+
+        .editor-live-room-copy {
+            grid-column: 2;
+            grid-row: 1 / 3;
+            min-width: 0;
+            align-self: center;
+        }
+
+        .editor-live-room-copy strong {
+            display: block;
+            color: #050505;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: -0.035em;
+        }
+
+        .editor-live-room-copy small {
+            display: block;
+            margin-top: 0.18rem;
+            color: #64748b;
+            font-size: 0.68rem;
+            font-weight: 700;
+            line-height: 1.32;
+        }
+
+        .editor-live-room-card em {
+            grid-column: 3;
+            grid-row: 1 / 3;
+            align-self: center;
+            max-width: 7.5rem;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 0.4rem 0.52rem;
+            font-size: 0.5rem;
+            font-style: normal;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .editor-live-workbench {
+            padding: clamp(0.95rem, 2vw, 1.25rem);
+        }
+
+        .editor-live-workbench-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 0;
+        }
+
+        .editor-live-workbench-body {
+            display: grid;
+            grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+            gap: 0.85rem;
+            margin-top: 1rem;
+            align-items: start;
+        }
+
+        .editor-live-section-preview,
+        .editor-live-control-deck {
+            min-width: 0;
+        }
+
+        .editor-live-preview-card,
+        .editor-live-control-deck > .editor-studio-panel,
+        .editor-live-faq-card {
+            border-radius: 22px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: #fff;
+            box-shadow: 0 20px 60px -52px rgba(15, 23, 42, 0.55);
+        }
+
+        .editor-live-preview-card {
+            padding: 1rem;
+            min-height: 18rem;
+            display: grid;
+            gap: 0.8rem;
+            align-content: start;
+        }
+
+        .editor-live-banner-preview {
+            min-height: 7rem;
+            border-radius: 18px;
+            border: 1px solid rgba(15, 23, 42, 0.07);
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #cbd5e1;
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .editor-live-banner-preview img,
+        .editor-live-logo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .editor-live-brand-frame {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .editor-live-logo-preview {
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px solid rgba(15, 23, 42, 0.07);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .editor-live-brand-frame textarea,
+        .editor-live-brand-frame input,
+        .copy-preview-card input,
+        .editor-live-copy-grid input,
+        .editor-live-faq-card input,
+        .editor-live-faq-card textarea {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #050505;
+        }
+
+        .editor-live-brand-frame textarea:nth-of-type(1) {
+            min-height: 3.45rem;
+            resize: none;
+            font-size: clamp(1.75rem, 3.8vw, 2.85rem);
+            font-weight: 950;
+            letter-spacing: -0.055em;
+            line-height: 0.95;
+        }
+
+        .editor-live-brand-frame textarea:nth-of-type(2) {
+            min-height: 4.2rem;
+            resize: none;
+            color: #64748b;
+            font-size: 0.95rem;
+            font-weight: 650;
+            line-height: 1.45;
+        }
+
+        .editor-live-theme-brief h4 {
+            color: #050505;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            font-weight: 950;
+            letter-spacing: -0.06em;
+            line-height: 0.95;
+        }
+
+        .editor-live-theme-brief p {
+            margin-top: 0.55rem;
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .editor-live-theme-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+
+        .editor-live-theme-strip button {
+            min-height: 8.5rem;
+            border-radius: 18px;
+            border: 1px solid;
+            padding: 0.75rem;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .editor-live-theme-strip span {
+            font-size: 0.56rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .editor-live-theme-strip b {
+            font-size: 1.65rem;
+            letter-spacing: -0.05em;
+        }
+
+        .editor-live-date-row,
+        .editor-live-slot-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+
+        .editor-live-date-row button,
+        .editor-live-slot-row button {
+            min-height: 4.2rem;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            font-weight: 900;
+        }
+
+        .visuals-preview-card > input {
+            min-height: 3.4rem;
+            border: 0;
+            outline: 0;
+            padding: 0 1rem;
+            text-align: center;
+            font-size: 0.74rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .editor-live-control-deck {
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .editor-live-control-title {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            min-width: 0;
+        }
+
+        .editor-live-control-title span {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            background: #050505;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .editor-live-control-title strong {
+            display: block;
+            color: #050505;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: -0.035em;
+        }
+
+        .editor-live-control-title small {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.66rem;
+            font-weight: 700;
+        }
+
+        .editor-live-scroll-row {
+            display: flex;
+            gap: 0.55rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            scrollbar-width: none;
+        }
+
+        .editor-live-scroll-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .editor-live-scroll-row button,
+        .editor-live-chip-row button,
+        .editor-live-color-chip {
+            border-radius: 18px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: #fff;
+            color: #050505;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .editor-live-scroll-row button {
+            min-width: 9.5rem;
+            min-height: 4.8rem;
+            padding: 0.7rem;
+            text-align: left;
+        }
+
+        .editor-live-scroll-row span,
+        .editor-live-chip-row button,
+        .editor-live-color-chip {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .editor-live-scroll-row i,
+        .editor-live-chip-row i,
+        .editor-live-color-chip i {
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.85);
+        }
+
+        .editor-live-scroll-row i + i,
+        .editor-live-chip-row i + i {
+            margin-left: -0.38rem;
+        }
+
+        .editor-live-scroll-row button.is-active,
+        .editor-live-chip-row button.is-active,
+        .editor-live-color-chip.is-active {
+            background: #050505;
+            color: #fff;
+            border-color: #050505;
+        }
+
+        .editor-live-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .editor-live-chip-row button,
+        .editor-live-color-chip {
+            min-height: 2.7rem;
+            padding: 0 0.8rem;
+            gap: 0.35rem;
+        }
+
+        .editor-live-color-chip {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .editor-live-color-chip input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .editor-live-feature-toggles,
+        .editor-live-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+
+        .editor-live-feature-toggles button,
+        .editor-live-feature-grid button {
+            border-radius: 18px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: #fff;
+            color: #050505;
+            min-height: 3.4rem;
+            padding: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            text-align: left;
+        }
+
+        .editor-live-feature-toggles button {
+            justify-content: space-between;
+        }
+
+        .editor-live-feature-grid button > span {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .editor-live-feature-grid strong {
+            display: block;
+            font-size: 0.74rem;
+            font-weight: 900;
+        }
+
+        .editor-live-feature-grid small {
+            display: block;
+            margin-top: 0.12rem;
+            color: #94a3b8;
+            font-size: 0.62rem;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .editor-live-feature-toggles i,
+        .editor-live-feature-grid i {
+            width: 1.45rem;
+            height: 1.45rem;
+            border-radius: 999px;
+            background: #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .editor-live-feature-toggles .is-on,
+        .editor-live-feature-grid .is-on {
+            border-color: rgba(14, 165, 233, 0.34);
+            background: linear-gradient(135deg, rgba(217, 249, 157, 0.62), rgba(186, 230, 253, 0.52), rgba(243, 232, 255, 0.42));
+        }
+
+        .editor-live-feature-toggles .is-on i,
+        .editor-live-feature-grid .is-on i {
+            background: #050505;
+        }
+
+        .editor-live-feature-grid .is-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .editor-live-faq-card {
+            padding: 0.85rem;
+            display: grid;
+            gap: 0.65rem;
+        }
+
+        .editor-live-faq-card > div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.7rem;
+        }
+
+        .editor-live-faq-card strong {
+            color: #050505;
+            font-size: 1rem;
+            font-weight: 950;
+        }
+
+        .editor-live-faq-card button,
+        .editor-live-add-question {
+            min-height: 2.35rem;
+            border-radius: 999px;
+            background: #050505;
+            color: #fff;
+            padding: 0 0.8rem;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+        }
+
+        .editor-live-faq-card label,
+        .copy-preview-card label,
+        .editor-live-copy-grid label {
+            display: grid;
+            gap: 0.3rem;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            padding: 0.7rem;
+        }
+
+        .editor-live-faq-card textarea {
+            min-height: 4.4rem;
+            resize: vertical;
+        }
+
+        .editor-live-copy-grid {
+            display: grid;
+            gap: 0.6rem;
+        }
+
+        @media (max-width: 767px) {
+            .editor-panel-scroll {
+                padding: 1rem !important;
+            }
+
+            .editor-live-room-head {
+                align-items: flex-start;
+            }
+
+            .editor-live-room-head p,
+            .editor-live-room-actions {
+                display: none;
+            }
+
+            .editor-live-room-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-live-room-card {
+                min-height: 4.3rem;
+            }
+
+            .editor-live-room-copy small,
+            .editor-live-room-card em {
+                display: none;
+            }
+
+            .editor-live-workbench-body {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-live-preview-card {
+                min-height: unset;
+            }
+
+            .editor-live-theme-strip,
+            .editor-live-feature-toggles,
+            .editor-live-feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-live-brand-frame textarea:nth-of-type(1) {
+                font-size: 1.95rem;
+            }
+        }
+
+        .native-ui.dashboard-dark .editor-live-room-rail,
+        .native-ui.dashboard-dark .editor-live-workbench,
+        .native-ui.dashboard-dark .editor-live-preview-card,
+        .native-ui.dashboard-dark .editor-live-control-deck > .editor-studio-panel,
+        .native-ui.dashboard-dark .editor-live-faq-card {
+            background: #111318 !important;
+            color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        .native-ui.dashboard-dark .editor-live-room-head h3,
+        .native-ui.dashboard-dark .editor-live-workbench-title h3,
+        .native-ui.dashboard-dark .editor-live-room-copy strong,
+        .native-ui.dashboard-dark .editor-live-theme-brief h4,
+        .native-ui.dashboard-dark .editor-live-control-title strong,
+        .native-ui.dashboard-dark .editor-live-feature-grid strong,
+        .native-ui.dashboard-dark .editor-live-faq-card strong,
+        .native-ui.dashboard-dark .editor-live-brand-frame textarea,
+        .native-ui.dashboard-dark .editor-live-copy-grid input,
+        .native-ui.dashboard-dark .copy-preview-card input,
+        .native-ui.dashboard-dark .editor-live-faq-card input,
+        .native-ui.dashboard-dark .editor-live-faq-card textarea {
+            color: #f8fafc !important;
+        }
+
+        .native-ui.dashboard-dark .editor-live-room-head p,
+        .native-ui.dashboard-dark .editor-live-room-copy small,
+        .native-ui.dashboard-dark .editor-live-theme-brief p,
+        .native-ui.dashboard-dark .editor-live-control-title small {
+            color: #94a3b8 !important;
+        }
+
+        .native-ui.dashboard-dark .editor-live-room-card,
+        .native-ui.dashboard-dark .editor-live-room-actions button,
+        .native-ui.dashboard-dark .editor-live-reset-room,
+        .native-ui.dashboard-dark .editor-live-control-row button,
+        .native-ui.dashboard-dark .editor-live-control-row label,
+        .native-ui.dashboard-dark .editor-live-detect-button,
+        .native-ui.dashboard-dark .editor-live-scroll-row button,
+        .native-ui.dashboard-dark .editor-live-chip-row button,
+        .native-ui.dashboard-dark .editor-live-color-chip,
+        .native-ui.dashboard-dark .editor-live-feature-toggles button,
+        .native-ui.dashboard-dark .editor-live-feature-grid button,
+        .native-ui.dashboard-dark .editor-live-faq-card label,
+        .native-ui.dashboard-dark .copy-preview-card label,
+        .native-ui.dashboard-dark .editor-live-copy-grid label,
+        .native-ui.dashboard-dark .editor-live-banner-preview,
+        .native-ui.dashboard-dark .editor-live-logo-preview {
+            background: #171a20 !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
         .editor-command-center {
             gap: 1rem;
         }

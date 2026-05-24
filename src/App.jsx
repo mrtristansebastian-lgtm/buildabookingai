@@ -3520,12 +3520,18 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const openEditorRoom = (roomId) => {
                 setEditorStudioModal(roomId);
                 setEditorTab(roomTabMap[roomId] || 'identity');
-                if (roomId === 'faq' && !settings.features?.faqEnabled) {
+                if (roomId === 'faq') {
                     setSettings(prev => ({
                         ...prev,
-                        features: { ...(prev.features || {}), faqEnabled: true }
+                        features: {
+                            ...(prev.features || {}),
+                            faqEnabled: true,
+                            faqs: Array.isArray(prev.features?.faqs) && prev.features.faqs.length > 0
+                                ? prev.features.faqs
+                                : defaultFaqItems
+                        }
                     }));
-                    window.setTimeout(() => focusEditorPreviewRoom(roomId), 220);
+                    window.setTimeout(() => focusEditorPreviewRoom(roomId), 360);
                 } else {
                     focusEditorPreviewRoom(roomId);
                 }

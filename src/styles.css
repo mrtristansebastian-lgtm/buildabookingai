@@ -3468,8 +3468,8 @@ body {
         }
 
         .editor-cinema-hero {
-            min-height: clamp(14rem, 28vw, 19rem);
-            padding: clamp(1rem, 2.8vw, 1.65rem);
+            min-height: clamp(9.5rem, 18vw, 13rem);
+            padding: clamp(0.9rem, 2vw, 1.25rem);
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
@@ -3499,9 +3499,9 @@ body {
         }
 
         .editor-cinema-hero-copy h3 {
-            margin-top: 0.65rem;
+            margin-top: 0.45rem;
             color: #050505;
-            font-size: clamp(2.4rem, 6vw, 4.8rem);
+            font-size: clamp(2rem, 4.2vw, 3.25rem);
             font-weight: 950;
             letter-spacing: -0.085em;
             line-height: 0.84;
@@ -3509,9 +3509,9 @@ body {
 
         .editor-cinema-hero-copy p {
             max-width: 30rem;
-            margin-top: 0.85rem;
+            margin-top: 0.65rem;
             color: #475569;
-            font-size: 0.95rem;
+            font-size: 0.82rem;
             font-weight: 700;
             line-height: 1.45;
         }
@@ -3553,8 +3553,8 @@ body {
         }
 
         .editor-cinema-track button {
-            min-width: 7.65rem;
-            min-height: 4.15rem;
+            min-width: 6.55rem;
+            min-height: 3.35rem;
             border-radius: 999px;
             border: 1px solid rgba(255,255,255,0.72);
             background: rgba(248, 250, 252, 0.76);
@@ -3570,8 +3570,8 @@ body {
 
         .editor-cinema-track button i {
             grid-row: 1 / 3;
-            width: 2.15rem;
-            height: 2.15rem;
+            width: 1.8rem;
+            height: 1.8rem;
             border-radius: 999px;
             background: #fff;
             display: inline-flex;
@@ -3621,7 +3621,7 @@ body {
         .editor-cinema-stage-head h3 {
             margin-top: 0.28rem;
             color: #050505;
-            font-size: clamp(2rem, 4.8vw, 3.6rem);
+            font-size: clamp(1.65rem, 3.4vw, 2.55rem);
             font-weight: 950;
             letter-spacing: -0.075em;
             line-height: 0.9;
@@ -3638,9 +3638,13 @@ body {
 
         .editor-cinema-stage-body {
             display: grid;
-            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+            grid-template-columns: 1fr;
             gap: 0.85rem;
             padding: clamp(0.85rem, 2vw, 1.2rem);
+        }
+
+        .editor-cinema-live-card {
+            display: none;
         }
 
         .editor-cinema-live-card,
@@ -4064,13 +4068,13 @@ body {
             }
 
             .editor-cinema-hero {
-                min-height: 18rem;
+                min-height: 12rem;
                 align-items: flex-start;
                 flex-direction: column;
             }
 
             .editor-cinema-hero-copy h3 {
-                font-size: 3rem;
+                font-size: 2.35rem;
             }
 
             .editor-cinema-track button {
@@ -4214,14 +4218,14 @@ body {
         }
 
         .mobile-editor-panel .editor-cinema-hero {
-            min-height: 13.5rem;
-            padding: 1.05rem;
+            min-height: 10.5rem;
+            padding: 0.9rem;
             align-items: flex-end;
         }
 
         .mobile-editor-panel .editor-cinema-hero-copy h3 {
             max-width: 25rem;
-            font-size: clamp(2.35rem, 5vw, 3.35rem);
+            font-size: clamp(1.8rem, 3.8vw, 2.45rem);
             line-height: 0.88;
         }
 
@@ -4235,7 +4239,7 @@ body {
         }
 
         .mobile-editor-panel .editor-cinema-stage-head h3 {
-            font-size: clamp(2rem, 4.8vw, 2.85rem);
+            font-size: clamp(1.55rem, 3.4vw, 2.15rem);
             line-height: 0.9;
         }
 
@@ -4270,6 +4274,119 @@ body {
         .mobile-editor-panel .cinema-toggle-grid,
         .mobile-editor-panel .cinema-field-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .editor-preview-room-nav {
+            position: absolute;
+            z-index: 64;
+            display: flex;
+            gap: 0.35rem;
+            padding: 0.35rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.78);
+            background: rgba(255,255,255,0.78);
+            box-shadow: 0 18px 60px -42px rgba(15,23,42,0.72);
+            backdrop-filter: blur(22px) saturate(1.25);
+        }
+
+        .editor-preview-room-nav.is-desktop {
+            top: 5.4rem;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: min(64vw, 46rem);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .editor-preview-room-nav.is-phone {
+            top: 50%;
+            left: max(1rem, 5vw);
+            transform: translateY(-50%);
+            flex-direction: column;
+            border-radius: 1.35rem;
+            max-height: 72vh;
+            overflow-y: auto;
+        }
+
+        .editor-preview-room-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .editor-preview-room-nav button {
+            min-width: 2.35rem;
+            height: 2.35rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            border: 1px solid transparent;
+            background: rgba(248,250,252,0.82);
+            color: #64748b;
+            font-size: 0.58rem;
+            font-weight: 950;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: transform 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .editor-preview-room-nav.is-desktop button {
+            padding: 0 0.75rem;
+        }
+
+        .editor-preview-room-nav.is-phone button span {
+            display: none;
+        }
+
+        .editor-preview-room-nav button:hover {
+            transform: translateY(-1px);
+            color: #050505;
+        }
+
+        .editor-preview-room-nav button.is-active {
+            background: #050505;
+            color: #fff;
+            box-shadow: 0 16px 34px -24px rgba(0,0,0,0.92);
+        }
+
+        .booking-preview-room-flash {
+            position: relative;
+            border-radius: 22px;
+            animation: bookingPreviewRoomFlash 2.35s ease both;
+        }
+
+        @keyframes bookingPreviewRoomFlash {
+            0% {
+                box-shadow: 0 0 0 0 rgba(103,232,249,0), 0 0 0 0 rgba(240,171,252,0);
+                outline: 0 solid rgba(190,242,100,0);
+            }
+            12%, 62% {
+                box-shadow:
+                    0 0 0 2px rgba(190,242,100,0.95),
+                    0 0 0 5px rgba(103,232,249,0.62),
+                    0 0 42px rgba(167,139,250,0.35),
+                    0 0 78px rgba(240,171,252,0.24);
+                outline: 2px solid rgba(240,171,252,0.62);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(103,232,249,0), 0 0 0 0 rgba(240,171,252,0);
+                outline: 0 solid rgba(190,242,100,0);
+            }
+        }
+
+        .native-ui.dashboard-dark .editor-preview-room-nav {
+            background: rgba(17,19,24,0.84);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .native-ui.dashboard-dark .editor-preview-room-nav button {
+            background: #171a20;
+            color: #b6c2d1;
+        }
+
+        .native-ui.dashboard-dark .editor-preview-room-nav button.is-active {
+            background: #f8fafc;
+            color: #050505;
         }
 
         .editor-command-center {

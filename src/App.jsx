@@ -3443,7 +3443,57 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }, "Theme template removed.");
             };
 
-            const handleInspect = (tab) => { if (activeTab !== 'editor') setActiveTab('editor'); setEditorCollapsed(false); setEditorTab(tab); };
+            const editorRoomPreviewTargets = {
+                identity: 'identity',
+                industry: 'identity',
+                palette: 'identity',
+                themes: 'identity',
+                typography: 'identity',
+                visuals: 'calendar',
+                buttons: 'action',
+                features: 'features',
+                copy: 'copy',
+                launch: 'action'
+            };
+            const editorRoomScenes = [
+                { id: 'identity', number: '01', icon: BadgeCheck, title: 'Brand' },
+                { id: 'industry', number: '02', icon: Sparkles, title: 'Industry' },
+                { id: 'palette', number: '03', icon: Pipette, title: 'Color' },
+                { id: 'themes', number: '04', icon: Layers, title: 'Look' },
+                { id: 'typography', number: '05', icon: Type, title: 'Type' },
+                { id: 'visuals', number: '06', icon: Palette, title: 'Calendar' },
+                { id: 'buttons', number: '07', icon: SlidersHorizontal, title: 'Buttons' },
+                { id: 'features', number: '08', icon: CheckCircle2, title: 'Tools' },
+                { id: 'copy', number: '09', icon: MessageSquare, title: 'Copy' },
+                { id: 'launch', number: '10', icon: Zap, title: 'Launch' }
+            ];
+            const focusEditorPreviewRoom = (roomId) => {
+                if (typeof document === 'undefined') return;
+                const targetName = editorRoomPreviewTargets[roomId] || roomId;
+                window.requestAnimationFrame(() => {
+                    const previewScroller = document.querySelector('.editor-preview-frame .overflow-y-auto');
+                    const target = document.querySelector(`[data-preview-section="${targetName}"]`);
+                    if (!target) return;
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                    target.classList.remove('booking-preview-room-flash');
+                    void target.offsetWidth;
+                    target.classList.add('booking-preview-room-flash');
+                    window.setTimeout(() => target.classList.remove('booking-preview-room-flash'), 2400);
+                    previewScroller?.classList.add('is-room-scrolling');
+                    window.setTimeout(() => previewScroller?.classList.remove('is-room-scrolling'), 900);
+                });
+            };
+            const openEditorRoom = (roomId) => {
+                setEditorStudioModal(roomId);
+                setEditorTab(['identity', 'industry', 'palette', 'themes'].includes(roomId) ? 'themes' : roomId);
+                focusEditorPreviewRoom(roomId);
+                playEditorStudioSound('step');
+            };
+            const handleInspect = (tab) => {
+                if (activeTab !== 'editor') setActiveTab('editor');
+                setEditorCollapsed(false);
+                openEditorRoom(tab);
+            };
             const playEditorStudioSound = (type = 'open') => {
                 if (!editorStudioSoundEnabled || typeof window === 'undefined') return;
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -3496,14 +3546,15 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 playEditorStudioSound(soundType);
             };
             const startEditorStudioPresentation = () => {
-                const scenes = ['identity', 'themes', 'visuals', 'features', 'copy'];
+                const scenes = ['identity', 'industry', 'palette', 'themes', 'typography', 'visuals', 'buttons', 'features', 'copy', 'launch'];
                 editorStudioPresentationRef.current.forEach(timer => window.clearTimeout(timer));
                 setEditorStudioPresenting(true);
                 setEditorStudioModal(null);
                 scenes.forEach((scene, index) => {
                     const timer = window.setTimeout(() => {
                         setEditorStudioScene(scene);
-                        setEditorTab(scene);
+                        setEditorTab(['identity', 'industry', 'palette', 'themes'].includes(scene) ? 'themes' : scene);
+                        focusEditorPreviewRoom(scene);
                         setPreviewKey(prev => prev + 1);
                         playEditorStudioSound(index === scenes.length - 1 ? 'complete' : 'step');
                         if (index === scenes.length - 1) {
@@ -6366,29 +6417,46 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     <div className="mobile-editor-rotate-prompt rounded-lg border border-black/10 bg-black text-white p-4 shadow-2xl items-start gap-3">
                                         <RefreshCw size={18} className="text-[#39FF14] shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest mb-1">Rotate For Editor</p>
-                                            <p className="text-xs text-white/65 leading-relaxed">Turn your phone sideways for the live preview workspace. You can still edit settings here in portrait.</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest mb-1">Rotate To Start Editing</p>
+                                            <p className="text-xs text-white/65 leading-relaxed">Turn your phone sideways to open the full editing workspace with the room timeline, settings, and live mockup together.</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="editor-cinema-studio animate-in fade-in duration-700">
                                     {(() => {
-                                        const scenes = [
-                                            { id: 'identity', number: '01', icon: BadgeCheck, title: 'Brand entrance', prompt: 'Name, logo, banner, and the first sentence clients trust.' },
-                                            { id: 'themes', number: '02', icon: Sparkles, title: 'Theme direction', prompt: 'Choose the industry, color world, and design mood.' },
-                                            { id: 'typography', number: '03', icon: Type, title: 'Typography', prompt: 'Shape every heading, paragraph, label, and letter spacing.' },
-                                            { id: 'visuals', number: '04', icon: Palette, title: 'Calendar scene', prompt: 'Tune calendar tiles, slot cards, page rhythm, and spacing.' },
-                                            { id: 'buttons', number: '05', icon: SlidersHorizontal, title: 'Buttons', prompt: 'Style every client action from time choice to final submit.' },
-                                            { id: 'features', number: '06', icon: CheckCircle2, title: 'Booking tools', prompt: 'Client fields, FAQ, socials, email consent, and waitlist.' },
-                                            { id: 'copy', number: '07', icon: MessageSquare, title: 'Page copy', prompt: 'Write the words clients see at every step.' },
-                                            { id: 'launch', number: '08', icon: Zap, title: 'Launch pass', prompt: 'Save, publish, and preview the finished booking experience.' }
-                                        ];
+                                        const scenes = editorRoomScenes.map(scene => ({
+                                            ...scene,
+                                            title: {
+                                                identity: 'Brand entrance',
+                                                industry: 'Industry',
+                                                palette: 'Color direction',
+                                                themes: 'Generated look',
+                                                typography: 'Typography',
+                                                visuals: 'Calendar scene',
+                                                buttons: 'Buttons',
+                                                features: 'Booking tools',
+                                                copy: 'Page copy',
+                                                launch: 'Launch pass'
+                                            }[scene.id],
+                                            prompt: {
+                                                identity: 'Name, logo, banner, and the first sentence clients trust.',
+                                                industry: 'Choose the business world so the editor knows what kind of experience to shape.',
+                                                palette: 'Pick a color family, add a custom tone, or read the palette from your logo.',
+                                                themes: 'Choose a polished look built from the industry and color direction.',
+                                                typography: 'Shape every heading, paragraph, label, and letter spacing.',
+                                                visuals: 'Tune calendar tiles, slot cards, page rhythm, and spacing.',
+                                                buttons: 'Style every client action from time choice to final submit.',
+                                                features: 'Client fields, FAQ, socials, email consent, and waitlist.',
+                                                copy: 'Write the words clients see at every step.',
+                                                launch: 'Save, publish, and preview the finished booking experience.'
+                                            }[scene.id]
+                                        }));
                                         const activeSceneId = editorStudioModal || 'identity';
                                         const activeIndex = Math.max(0, scenes.findIndex(scene => scene.id === activeSceneId));
                                         const activeScene = scenes[activeIndex] || scenes[0];
                                         const ActiveSceneIcon = activeScene.icon;
                                         const goScene = (sceneId) => {
-                                            setEditorStudioModal(sceneId);
+                                            openEditorRoom(sceneId);
                                             window.requestAnimationFrame(() => {
                                                 document.querySelector('.editor-cinema-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                             });
@@ -6401,8 +6469,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 <section className="editor-cinema-hero">
                                                     <div className="editor-cinema-hero-copy">
                                                         <span>Live Design Session</span>
-                                                        <h3>Design it like an iPhone lock screen.</h3>
-                                                        <p>Tap through the timeline, tune each layer, then watch the full booking page come together in the preview. Clean enough for beginners, powerful enough for a real brand.</p>
+                                                        <h3>Customize your booking page.</h3>
+                                                        <p>Choose each room, tune the exact part of the page, and watch the live preview move with you. Simple for beginners, deep enough for a real brand.</p>
                                                     </div>
                                                     <div className="editor-cinema-hero-actions">
                                                         <button type="button" onClick={() => goScene('identity')}><Zap size={14} /> Start designing</button>
@@ -6453,11 +6521,29 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                 </div>
                                                             )}
 
-                                                            {activeScene.id === 'themes' && (
+                                                            {activeScene.id === 'industry' && (
                                                                 <div className="cinema-theme-preview">
                                                                     <span>{selectedIndustryFilter ? selectedIndustryName : 'Choose an industry'}</span>
-                                                                    <h4>{selectedIndustryFilter ? `${selectedIndustryName} themes shaped for your business.` : 'No random templates.'}</h4>
-                                                                    <p>{selectedIndustryFilter ? `The engine builds around ${selectedPalettePhrase}, client trust, and a visual rhythm that fits ${selectedIndustryName.toLowerCase()}.` : 'Pick an industry first, then color and style become tailored to that world.'}</p>
+                                                                    <h4>{selectedIndustryFilter ? `${selectedIndustryName} gets its own rhythm.` : 'Start with the business type.'}</h4>
+                                                                    <p>{selectedIndustryFilter ? `The next rooms use ${selectedIndustryName.toLowerCase()} logic for layout, tone, fonts, and booking flow.` : 'No random templates. The page starts by understanding the kind of business being booked.'}</p>
+                                                                    <div>{industryFilterOptions.slice(0, 4).map(industry => <button key={industry.id} type="button" onClick={() => setThemeFilterValue('industry', industry.id)}><small>{industry.name}</small><b>{industry.subtitle || industry.hint || 'Industry'}</b></button>)}</div>
+                                                                </div>
+                                                            )}
+
+                                                            {activeScene.id === 'palette' && (
+                                                                <div className="cinema-theme-preview">
+                                                                    <span>{selectedPaletteName || 'Color direction'}</span>
+                                                                    <h4>{selectedIndustryFilter ? `${selectedPalettePhrase} for ${selectedIndustryName}.` : 'Choose color after industry.'}</h4>
+                                                                    <p>{selectedIndustryFilter ? 'Pick a broad color direction, custom color, or extract a palette from your uploaded logo and banner.' : 'The palette room becomes sharper once the industry room is complete.'}</p>
+                                                                    <div>{paletteFilterOptions.slice(0, 4).map(palette => <button key={palette.id} type="button" onClick={() => setThemeFilterValue('palette', palette.id)}>{palette.swatches.slice(0, 3).map(color => <i key={color} style={{ backgroundColor: color }} />)}<small>{palette.name}</small></button>)}</div>
+                                                                </div>
+                                                            )}
+
+                                                            {activeScene.id === 'themes' && (
+                                                                <div className="cinema-theme-preview">
+                                                                    <span>{selectedIndustryFilter ? `${selectedIndustryName} themes` : 'Generated looks'}</span>
+                                                                    <h4>{selectedIndustryFilter ? `Pick the look clients feel first.` : 'Choose industry first.'}</h4>
+                                                                    <p>{selectedIndustryFilter ? `These looks are built from ${selectedPalettePhrase}, your industry, and the booking page flow.` : 'A tailored theme set appears after the industry room is selected.'}</p>
                                                                     <div>{(visibleThemeCards.length ? visibleThemeCards : mobileWebEditorThemes).slice(0, 3).map(theme => <button key={theme.id} type="button" onClick={() => applyTheme(theme.id)} style={{ backgroundColor: theme.backgroundColor, color: theme.headingColor, borderColor: `${theme.primaryColor}66` }}><small>{theme.name}</small><b style={{ fontFamily: getFontFamily(theme.headingFontFamily || theme.fontFamily) }}>Aa Bb</b></button>)}</div>
                                                                 </div>
                                                             )}
@@ -6519,12 +6605,21 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                 <LogoDisplayControls settings={settings} onChange={handleLogoDisplayChange} />
                                                             </>}
 
-                                                            {activeScene.id === 'themes' && <>
+                                                            {activeScene.id === 'industry' && <>
                                                                 <div className="cinema-control-title"><span>Industry</span><small>The theme starts here.</small></div>
                                                                 <div className="cinema-chip-scroll">{industryFilterOptions.map(industry => <button key={industry.id} type="button" onClick={() => setThemeFilterValue('industry', industry.id)} className={themeGenerationInputs.industry === industry.id ? 'is-active' : ''}>{industry.name}</button>)}</div>
+                                                            </>}
+
+                                                            {activeScene.id === 'palette' && <>
                                                                 <div className="cinema-control-title"><span>Color direction</span><small>{selectedPaletteHint}</small></div>
                                                                 <div className="cinema-color-grid">{paletteFilterOptions.map(palette => <button key={palette.id} type="button" onClick={() => setThemeFilterValue('palette', palette.id)} className={themeGenerationInputs.palette === palette.id ? 'is-active' : ''}>{palette.swatches.slice(0, 3).map(color => <i key={color} style={{ backgroundColor: color }} />)}<span>{palette.id === 'all' ? 'Spectrum' : palette.name}</span></button>)}<label className={themeGenerationInputs.palette === 'custom' ? 'is-active' : ''}><i style={{ backgroundColor: customThemeColor }} /><span>Custom</span><input type="color" value={customThemeColor} onChange={(event) => { setCustomThemeColor(event.target.value); setThemeFilterValue('palette', 'custom'); }} /></label></div>
                                                                 <button type="button" onClick={handleAutoDetectThemePalette} disabled={paletteDetecting}><Pipette size={15}/>{paletteDetecting ? 'Reading brand' : 'Read logo colors'}</button>
+                                                            </>}
+
+                                                            {activeScene.id === 'themes' && <>
+                                                                <div className="cinema-control-title"><span>Generated looks</span><small>{selectedIndustryFilter ? `${selectedIndustryName} with ${selectedPalettePhrase}` : 'Choose industry first'}</small></div>
+                                                                <div className="cinema-chip-scroll">{(visibleThemeCards.length ? visibleThemeCards : mobileWebEditorThemes).slice(0, 10).map(theme => <button key={theme.id} type="button" onClick={() => applyTheme(theme.id)} className={settings.themeId === theme.id ? 'is-active' : ''}>{theme.name}</button>)}</div>
+                                                                <button type="button" onClick={saveCurrentThemeTemplate}><CheckCircle2 size={15}/> Save this look</button>
                                                             </>}
 
                                                             {activeScene.id === 'typography' && <>
@@ -6632,6 +6727,25 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             </button>
                         </div>
 
+                        <div className={`editor-preview-room-nav ${device === 'mobile' ? 'is-phone' : 'is-desktop'}`} aria-label="Preview editing rooms">
+                            {editorRoomScenes.map((scene) => {
+                                const SceneIcon = scene.icon;
+                                const isActive = (editorStudioModal || 'identity') === scene.id;
+                                return (
+                                    <button
+                                        key={scene.id}
+                                        type="button"
+                                        onClick={() => openEditorRoom(scene.id)}
+                                        className={isActive ? 'is-active' : ''}
+                                        title={scene.title}
+                                    >
+                                        <SceneIcon size={13} />
+                                        <span>{scene.title}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
                         <div
                             style={{
                                 width: `${editorPreviewFrame.width}px`,
@@ -6678,7 +6792,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     <MousePointerClick size={12} /> Design Inspector Live
                                 </div>
                                 <Suspense fallback={<LazySectionFallback label="Loading preview" />}>
-                                    <BookingFlow key={previewKey} settings={settings} isPreview={true} onInspect={handleInspect} onComplete={handleBookingComplete} />
+                                    <BookingFlow key={previewKey} settings={settings} isPreview={true} onInspect={handleInspect} onSettingChange={handleSettingChange} onComplete={handleBookingComplete} />
                                 </Suspense>
                                 </>
                             ) : (

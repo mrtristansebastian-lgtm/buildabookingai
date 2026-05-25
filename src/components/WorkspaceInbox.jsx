@@ -36,6 +36,7 @@ export function WorkspaceInbox({
   const [threadsReady, setThreadsReady] = useState(false);
   const [activeThreadId, setActiveThreadId] = useState('');
   const [threadQuery, setThreadQuery] = useState('');
+  const [supportFilter, setSupportFilter] = useState('all');
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
@@ -453,50 +454,64 @@ export function WorkspaceInbox({
     return { label: 'Confirm', disabled: false, className: 'native-gradient-button' };
   })();
 
-  const unreadCount = threads.reduce((sum, thread) => sum + Number(thread.ownerUnread || 0), 0);
-  const needsReplyCount = threads.filter(thread => Number(thread.ownerUnread || 0) > 0 || ['requested', 'countered'].includes(thread.rescheduleStatus)).length;
-  const openRequestCount = threads.filter(thread => ['pending', 'waitlist'].includes(thread.bookingStatus)).length;
-  const linkedBookingCount = threads.filter(thread => thread.bookingId).length;
+  const matchesSupportFilter = (thread, filter = supportFilter) => {
+    if (filter === 'unread') return Number(thread.ownerUnread || 0) > 0;
+    if (filter === 'requests') return ['pending', 'requested'].includes(String(thread.bookingStatus || '').toLowerCase());
+    if (filter === 'confirmed') return String(thread.bookingStatus || '').toLowerCase() === 'confirmed';
+    if (filter === 'waitlist') return String(thread.bookingStatus || '').toLowerCase() === 'waitlist';
+    if (filter === 'reschedules') return ['requested', 'countered'].includes(String(thread.rescheduleStatus || '').toLowerCase());
+    return true;
+  };
+  const supportTabs = [
+    { id: 'all', label: 'All', count: threadSource.length, icon: MessageCircle },
+    { id: 'unread', label: 'Unread', count: threadSource.filter(thread => matchesSupportFilter(thread, 'unread')).length, icon: Bell },
+    { id: 'requests', label: 'Requests', count: threadSource.filter(thread => matchesSupportFilter(thread, 'requests')).length, icon: Calendar },
+    { id: 'confirmed', label: 'Confirmed', count: threadSource.filter(thread => matchesSupportFilter(thread, 'confirmed')).length, icon: Check },
+    { id: 'waitlist', label: 'Waitlist', count: threadSource.filter(thread => matchesSupportFilter(thread, 'waitlist')).length, icon: Clock },
+    { id: 'reschedules', label: 'Reschedules', count: threadSource.filter(thread => matchesSupportFilter(thread, 'reschedules')).length, icon: RefreshCw }
+  ];
+  const selectSupportFilter = (nextFilter) => {
+    setSupportFilter(nextFilter);
+    const nextThread = threadSource.find(thread => matchesSupportFilter(thread, nextFilter));
+    setActiveThreadId(nextThread?.id || '');
+  };
   const filteredThreads = useMemo(() => {
     const queryText = threadQuery.trim().toLowerCase();
-    if (!queryText) return threadSource;
-    return threadSource.filter(thread => [
+    return threadSource.filter(thread => {
+      if (!matchesSupportFilter(thread)) return false;
+      if (!queryText) return true;
+      return [
       thread.clientName,
       thread.clientEmail,
       thread.workspaceName,
       thread.lastMessage,
       thread.bookingStatus
-    ].some(value => String(value || '').toLowerCase().includes(queryText)));
-  }, [threadQuery, threadSource]);
+      ].some(value => String(value || '').toLowerCase().includes(queryText));
+    });
+  }, [threadQuery, threadSource, supportFilter]);
 
   return (
     <>
     <section data-tour="client-inbox" className={`support-inbox-card support-inbox-pro support-desk-shell saas-card overflow-hidden bg-white native-gradient-ring ${chatFullscreen ? 'fixed inset-3 z-[80] flex flex-col rounded-[1.25rem] shadow-2xl' : ''}`}>
       <div className="h-1 native-gradient-line" />
-      <div className={`${chatFullscreen ? 'hidden' : 'p-3 md:p-5'} support-inbox-topbar support-command-bar border-b border-neutral-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4`}>
-        <div className="max-w-3xl">
-          <div className="support-command-pill inline-flex items-center gap-2 rounded-full bg-neutral-50 border border-neutral-100 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-2">
-            <MessageCircle size={13} className="text-black" />
-            Live Support Inbox
-          </div>
-          <h2 className="support-command-title text-lg md:text-3xl font-bold tracking-tight text-black">A calm desk for every client conversation.</h2>
-          <p className="support-command-copy hidden sm:block text-sm text-neutral-500 mt-1 max-w-2xl">Reply, confirm, reschedule, and send running-late updates with the booking context beside the chat.</p>
-          {shouldShowExampleThread && <p className="mt-3 inline-flex rounded-full bg-neutral-50 border border-neutral-100 px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Example preview only - not saved or counted</p>}
-        </div>
-        <div className="support-inbox-pulse grid grid-cols-3 gap-2 w-full lg:w-[360px] xl:w-[390px] shrink-0">
-          {[
-            ['Needs Reply', needsReplyCount, Bell],
-            ['Open Requests', openRequestCount, MessageCircle],
-            ['Linked Bookings', linkedBookingCount, Calendar]
-          ].map(([label, value, IconCmp]) => (
-            <div key={label} className="support-pulse-chip rounded-lg border border-neutral-100 bg-white p-2.5 md:p-3">
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-neutral-50 border border-neutral-100 flex items-center justify-center mb-2 text-black">
-                <IconCmp size={14} />
-              </div>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400">{label}</p>
-              <p className="metric-value text-lg md:text-xl font-bold text-black">{value}</p>
-            </div>
-          ))}
+      <div className={`${chatFullscreen ? 'hidden' : 'p-2 md:p-3'} support-mail-tabs border-b border-neutral-100`}>
+        <div className="support-mail-tabs-track flex items-center gap-2 overflow-x-auto">
+          {supportTabs.map((tab) => {
+            const IconCmp = tab.icon;
+            const active = supportFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => selectSupportFilter(tab.id)}
+                className={`support-mail-tab ${active ? 'is-active' : ''} h-10 rounded-full border px-3 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 shrink-0`}
+              >
+                <IconCmp size={13} />
+                {tab.label}
+                <span className="support-mail-tab-count min-w-5 h-5 rounded-full flex items-center justify-center text-[9px]">{tab.count}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -506,7 +521,9 @@ export function WorkspaceInbox({
             <div className="support-rail-head flex items-center justify-between gap-3 mb-3">
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Inbox</p>
-                <h3 className="text-lg font-bold tracking-tight text-black">Client threads</h3>
+                <h3 className="text-lg font-bold tracking-tight text-black">
+                  {supportTabs.find(tab => tab.id === supportFilter)?.label || 'Client'} threads
+                </h3>
               </div>
               <span className="support-rail-count rounded-full border border-neutral-100 bg-white px-3 py-1 text-[10px] font-bold text-black">{filteredThreads.length}</span>
             </div>

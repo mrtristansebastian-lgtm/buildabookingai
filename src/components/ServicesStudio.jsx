@@ -9,7 +9,6 @@ import {
   Image,
   Plus,
   Search,
-  SlidersHorizontal,
   Tag,
   Trash2,
   UserPlus,
@@ -74,13 +73,6 @@ export const ServicesStudio = ({
       .filter(Boolean);
     return Array.from(new Set(categories)).sort((a, b) => a.localeCompare(b));
   }, [services]);
-
-  const deskStats = useMemo(() => ([
-    { label: 'Services', value: services.length, icon: Briefcase },
-    { label: 'Live', value: services.filter(service => service.active !== false).length, icon: Check },
-    { label: 'Hidden', value: services.filter(service => service.active === false).length, icon: SlidersHorizontal },
-    { label: 'Staff', value: staffOptions.length, icon: Users }
-  ]), [services, staffOptions.length]);
 
   const filteredServices = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -203,47 +195,23 @@ export const ServicesStudio = ({
 
   return (
     <div className="services-studio space-y-5">
-      <header className="dashboard-page-header mb-4 md:mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <header className="dashboard-page-header mb-4 md:mb-6">
         <div>
           <h2 className="text-4xl md:text-4xl font-bold tracking-tight text-black">Services</h2>
           <p className="text-neutral-500 text-sm md:text-base mt-2 max-w-2xl">
             Build the bookable menu clients choose from. Manage prices, durations, categories, galleries, and the staff who can deliver each service.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreateService}
-          disabled={!canManageWorkspace}
-          className="native-gradient-button h-11 md:h-12 px-5 md:px-6 rounded-lg text-black text-[10px] md:text-[11px] font-bold uppercase tracking-widest inline-flex items-center justify-center gap-2 shadow-xl shadow-black/10 transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
-        >
-          <Plus size={15} /> Create Service
-        </button>
       </header>
 
       <section className="service-desk-shell rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
         <div className="service-desk-command p-4 md:p-5 border-b border-neutral-100">
-          <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-neutral-400">Services Desk</p>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-black mt-1">Bookable services</h2>
-              <p className="text-sm text-neutral-500 mt-1 max-w-2xl">
-                Search, filter, and open a service file without spreading the whole setup across the page.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full xl:w-auto">
-              {deskStats.map(stat => {
-                const Icon = stat.icon;
-                return (
-                  <div key={stat.label} className="service-desk-metric rounded-xl border border-neutral-100 bg-neutral-50 px-3 py-3 min-w-[7rem]">
-                    <div className="w-8 h-8 rounded-lg bg-white border border-neutral-100 inline-flex items-center justify-center mb-2">
-                      <Icon size={15} />
-                    </div>
-                    <p className="text-2xl font-black text-black leading-none">{stat.value}</p>
-                    <p className="text-[9px] font-black uppercase tracking-[0.16em] text-neutral-400 mt-1">{stat.label}</p>
-                  </div>
-                );
-              })}
-            </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-neutral-400">Services Desk</p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-black mt-1">Bookable services</h2>
+            <p className="text-sm text-neutral-500 mt-1 max-w-2xl">
+              Search, filter, and open a service file without spreading the whole setup across the page.
+            </p>
           </div>
         </div>
 
@@ -262,7 +230,7 @@ export const ServicesStudio = ({
               type="button"
               onClick={openCreateService}
               disabled={!canManageWorkspace}
-              className="h-12 px-5 rounded-xl bg-black text-white text-[10px] font-black uppercase tracking-[0.16em] inline-flex items-center justify-center gap-2 disabled:opacity-50"
+              className="native-gradient-button h-12 px-5 rounded-xl text-black text-[10px] font-black uppercase tracking-[0.16em] inline-flex items-center justify-center gap-2 shadow-xl shadow-black/10 transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
             >
               <Plus size={14} /> New Service
             </button>

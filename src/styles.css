@@ -164,6 +164,11 @@ body {
             --native-beam-duration: 120s;
         }
 
+        :root.app-mobile-browser.app-idle {
+            --native-accent-duration: 90s;
+            --native-beam-duration: 90s;
+        }
+
         @keyframes native-accent-sync {
             0%, 100% { --native-accent-x: 0%; }
             50% { --native-accent-x: 100%; }
@@ -711,6 +716,24 @@ body {
         :root.app-hidden .native-booking-theme .booking-gradient-card::before,
         :root.app-hidden .native-home-nav::after {
             animation-play-state: paused !important;
+        }
+
+        :root.app-mobile-browser.app-idle .native-ui,
+        :root.app-mobile-browser.app-idle .native-home,
+        :root.app-mobile-browser.app-idle .native-booking-theme,
+        :root.app-mobile-browser.app-idle .native-theme-card-preview,
+        :root.app-mobile-browser.app-idle .native-feature-card::before,
+        :root.app-mobile-browser.app-idle .native-feature-card::after,
+        :root.app-mobile-browser.app-idle .native-ui .native-stat-card::before,
+        :root.app-mobile-browser.app-idle .native-ui .native-stat-card::after,
+        :root.app-mobile-browser.app-idle .native-booking-theme .booking-gradient-card::before,
+        :root.app-mobile-browser.app-idle .native-home-nav::after {
+            animation-play-state: paused !important;
+        }
+
+        :root.app-mobile-browser.app-idle .native-feature-card::before,
+        :root.app-mobile-browser.app-idle .native-ui .native-stat-card::before {
+            opacity: 0 !important;
         }
 
         .native-feature-hero-card {

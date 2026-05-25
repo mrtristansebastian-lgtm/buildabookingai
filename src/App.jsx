@@ -988,6 +988,7 @@ const authRedirectStateStorageKey = 'build-a-booking-auth-return-state';
 const authRedirectStartedStorageKey = 'build-a-booking-auth-started';
 const googleCalendarRedirectStorageKey = 'build-a-booking-google-calendar-auth';
 const editorDraftStoragePrefix = 'build-a-booking-editor-draft-v2';
+const bookingsCacheStoragePrefix = 'build-a-booking-bookings-cache-v1';
 const workspaceTabIds = ['overview', 'bookings', 'business', 'communications', 'editor', 'services', 'finance', 'clients', 'staff', 'profile'];
 const workspaceTabAliases = {
   schedule: 'business',
@@ -1055,6 +1056,26 @@ const writeEditorDraft = (ownerId, payload = {}) => {
 
 const clearEditorDraft = (ownerId) => {
   safeLocalRemove(getEditorDraftKey(ownerId));
+};
+
+const getBookingsCacheKey = (ownerId = 'guest') => (
+  `${bookingsCacheStoragePrefix}-${String(ownerId || 'guest').replace(/[^a-zA-Z0-9_-]/g, '-')}`
+);
+
+const readBookingsCache = (ownerId) => {
+  const cached = safeJsonParse(safeLocalGet(getBookingsCacheKey(ownerId)));
+  if (!cached || typeof cached !== 'object' || !Array.isArray(cached.bookings)) return null;
+  return cached;
+};
+
+const writeBookingsCache = (ownerId, bookings = []) => {
+  if (!ownerId || !Array.isArray(bookings)) return false;
+  const cached = {
+    version: 1,
+    savedAt: Date.now(),
+    bookings: bookings.slice(0, 250)
+  };
+  return safeLocalSet(getBookingsCacheKey(ownerId), JSON.stringify(cached));
 };
 
 const stableSettingsFingerprint = (settings = {}) => {
@@ -1466,13 +1487,18 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
 
                 const root = document.documentElement;
+                const mobileBrowserQuery = window.matchMedia('(max-width: 767px)');
+                const syncRuntimeClass = () => {
+                    root.classList.toggle('app-mobile-browser', !isNativeAppRuntime && mobileBrowserQuery.matches);
+                };
+                syncRuntimeClass();
                 if (isNativeAppRuntime) {
-                    root.classList.remove('app-idle', 'app-hidden');
+                    root.classList.remove('app-idle', 'app-hidden', 'app-mobile-browser');
                     return () => {
-                        root.classList.remove('app-idle', 'app-hidden');
+                        root.classList.remove('app-idle', 'app-hidden', 'app-mobile-browser');
                     };
                 }
-                const idleDelay = window.matchMedia('(max-width: 767px)').matches ? 24000 : 45000;
+                const idleDelay = mobileBrowserQuery.matches ? 12000 : 45000;
                 let idleTimer = 0;
                 let lastActivityAt = 0;
 
@@ -1515,18 +1541,28 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 document.addEventListener('visibilitychange', handleVisibility);
                 window.addEventListener('pagehide', pauseForPageHide);
                 window.addEventListener('pageshow', resetIdle);
+                if (mobileBrowserQuery.addEventListener) {
+                    mobileBrowserQuery.addEventListener('change', syncRuntimeClass);
+                } else {
+                    mobileBrowserQuery.addListener(syncRuntimeClass);
+                }
 
                 handleVisibility();
 
                 return () => {
                     window.clearTimeout(idleTimer);
-                    root.classList.remove('app-idle', 'app-hidden');
+                    root.classList.remove('app-idle', 'app-hidden', 'app-mobile-browser');
                     activityEvents.forEach(eventName => {
                         window.removeEventListener(eventName, resetIdle, passiveOptions);
                     });
                     document.removeEventListener('visibilitychange', handleVisibility);
                     window.removeEventListener('pagehide', pauseForPageHide);
                     window.removeEventListener('pageshow', resetIdle);
+                    if (mobileBrowserQuery.removeEventListener) {
+                        mobileBrowserQuery.removeEventListener('change', syncRuntimeClass);
+                    } else {
+                        mobileBrowserQuery.removeListener(syncRuntimeClass);
+                    }
                 };
             }, [isNativeAppRuntime]);
 
@@ -3227,7 +3263,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     setBookingsReady(true);
                     return undefined;
                 }
-                setBookingsReady(false);
+                const cachedBookings = readBookingsCache(workspaceOwnerId);
+                if (cachedBookings?.bookings?.length) {
+                    setBookings(prev => areJsonEqual(prev, cachedBookings.bookings) ? prev : cachedBookings.bookings);
+                    setBookingsReady(true);
+                } else {
+                    setBookingsReady(false);
+                }
 
                 const handleSyncError = (label) => (error) => {
                     console.error(`${label} sync failed`, error);
@@ -3330,6 +3372,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     const nextBookings = snap.docs
                         .map(doc => ({ id: doc.id, ...doc.data() }))
                         .sort((a, b) => getTimestampValue(b.timestamp) - getTimestampValue(a.timestamp));
+                    writeBookingsCache(workspaceOwnerId, nextBookings);
                     setBookings(prev => areJsonEqual(prev, nextBookings) ? prev : nextBookings);
                     setBookingsReady(true);
                 }, (error) => {

@@ -1038,7 +1038,9 @@ const readEditorDraft = (ownerId) => {
 const writeEditorDraft = (ownerId, payload = {}) => {
   const settingsPayload = payload.settings || {};
   const draft = {
-    version: 2,
+    version: 3,
+    status: payload.status || 'autosaved',
+    name: payload.name || 'Working Draft',
     savedAt: Date.now(),
     ...payload,
     settings: {
@@ -1056,12 +1058,45 @@ const clearEditorDraft = (ownerId) => {
 };
 
 const stableSettingsFingerprint = (settings = {}) => {
-  const { updatedAt, draftAutosavedAt, publishedAt, ...stable } = settings || {};
+  const { updatedAt, draftAutosavedAt, draftSavedAt, draftStatus, draftName, publishedAt, ...stable } = settings || {};
   try {
     return JSON.stringify(stable);
   } catch {
     return '';
   }
+};
+
+const stripEditorDraftFields = (settings = {}) => {
+  const {
+    draftAutosavedAt,
+    draftSavedAt,
+    draftStatus,
+    draftName,
+    ...publishableSettings
+  } = settings || {};
+  return publishableSettings;
+};
+
+const buildEditorDraftPayload = (settings = {}, payload = {}) => {
+  const savedAt = payload.savedAt || Date.now();
+  return {
+    version: 3,
+    status: payload.status || 'autosaved',
+    name: payload.name || settings.draftName || 'Working Draft',
+    route: payload.route || null,
+    editorStudioScene: payload.editorStudioScene || '',
+    savedAt,
+    updatedAt: savedAt,
+    settings: {
+      ...settings,
+      draftStatus: payload.status || 'autosaved',
+      draftName: payload.name || settings.draftName || 'Working Draft',
+      draftAutosavedAt: savedAt,
+      draftSavedAt: savedAt,
+      // Keep live/published timestamps stable while someone is experimenting.
+      updatedAt: settings.updatedAt || 0
+    }
+  };
 };
 
 const buildPublicBookingIdempotencyKey = ({ workspaceSlug, formData = {}, dateKey, date, time, serviceId }) => {
@@ -1342,6 +1377,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const editorDraftLastFingerprintRef = useRef('');
             const editorDraftCloudFingerprintRef = useRef('');
             const editorDraftRecoveredRef = useRef(false);
+            const publishedSettingsSnapshotRef = useRef(null);
+            const cloudEditorDraftRef = useRef(null);
             const themeBatchTimerRef = useRef(0);
             const [toast, setToast] = useState(null);
             const [confirmDialog, setConfirmDialog] = useState(null);
@@ -1598,12 +1635,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 if (publicSlug || !editorDraftOwnerKey) return undefined;
                 const route = { view, activeTab, editorTab };
                 const persistDraft = () => {
-                    writeEditorDraft(editorDraftOwnerKey, {
-                        settings: settingsRef.current || settings,
+                    const draftPayload = buildEditorDraftPayload(settingsRef.current || settings, {
                         route,
                         editorStudioScene,
-                        savedAt: Date.now()
+                        status: 'autosaved',
+                        name: themeTemplateName || 'Working Draft'
                     });
+                    writeEditorDraft(editorDraftOwnerKey, draftPayload);
                 };
                 editorDraftFlushRef.current = persistDraft;
                 const fingerprint = JSON.stringify({
@@ -1617,7 +1655,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 window.clearTimeout(editorDraftSaveTimerRef.current);
                 editorDraftSaveTimerRef.current = window.setTimeout(persistDraft, 400);
                 return undefined;
-            }, [activeTab, editorDraftOwnerKey, editorStudioScene, editorTab, publicSlug, settings, view]);
+            }, [activeTab, editorDraftOwnerKey, editorStudioScene, editorTab, publicSlug, settings, themeTemplateName, view]);
 
             useEffect(() => {
                 if (publicSlug || !isFirebaseConfigured || !db || !workspaceOwnerId || !canManageWorkspace || activeTab !== 'editor') return undefined;
@@ -1626,23 +1664,24 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 window.clearTimeout(editorDraftCloudTimerRef.current);
                 editorDraftCloudTimerRef.current = window.setTimeout(async () => {
                     try {
-                        const nextSettings = {
-                            ...(settingsRef.current || settings),
-                            draftAutosavedAt: Date.now(),
-                            updatedAt: Date.now()
-                        };
+                        const draftPayload = buildEditorDraftPayload(settingsRef.current || settings, {
+                            route: { view, activeTab, editorTab },
+                            editorStudioScene,
+                            status: 'autosaved',
+                            name: themeTemplateName || 'Working Draft'
+                        });
                         await FirebaseSDK.setDoc(
-                            FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'settings'),
-                            nextSettings,
+                            FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'editorDraft'),
+                            draftPayload,
                             { merge: true }
                         );
-                        editorDraftCloudFingerprintRef.current = stableSettingsFingerprint(nextSettings);
+                        editorDraftCloudFingerprintRef.current = stableSettingsFingerprint(draftPayload.settings);
                     } catch (error) {
                         console.warn('Editor cloud draft sync paused.', error);
                     }
                 }, 7000);
                 return undefined;
-            }, [activeTab, canManageWorkspace, publicSlug, settings, workspaceOwnerId]);
+            }, [activeTab, canManageWorkspace, editorStudioScene, editorTab, publicSlug, settings, themeTemplateName, view, workspaceOwnerId]);
 
             useEffect(() => {
                 const flushLocalDraft = () => {
@@ -3194,25 +3233,59 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     console.error(`${label} sync failed`, error);
                 };
                 const settingsRef = FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'settings');
+                const applyWorkspaceSettings = (baseSettings = {}) => {
+                    let data = { ...baseSettings };
+                    if(data.fontFamily === 'sans') data.fontFamily = 'inter';
+                    if(data.fontFamily === 'serif') data.fontFamily = 'playfair';
+                    if(data.fontFamily === 'mono') data.fontFamily = 'space-mono';
+                    if(data.fontFamily === 'display') data.fontFamily = 'syne';
+
+                    const publishedUpdatedAt = Math.max(getTimestampValue(data.updatedAt), getTimestampValue(data.publishedAt));
+                    const cloudDraft = cloudEditorDraftRef.current;
+                    const cloudDraftAt = getTimestampValue(cloudDraft?.savedAt || cloudDraft?.updatedAt);
+                    let recoveredDraft = null;
+
+                    if (cloudDraft?.settings && cloudDraftAt > publishedUpdatedAt) {
+                        recoveredDraft = cloudDraft;
+                        data = { ...data, ...cloudDraft.settings };
+                    }
+
+                    const localDraft = readEditorDraft(workspaceOwnerId);
+                    const localDraftAt = getTimestampValue(localDraft?.savedAt);
+                    if (localDraft?.settings && localDraftAt > Math.max(publishedUpdatedAt, cloudDraftAt)) {
+                        recoveredDraft = localDraft;
+                        data = { ...data, ...localDraft.settings };
+                    }
+
+                    if (recoveredDraft?.route?.activeTab) {
+                        saveWorkspaceRoute(recoveredDraft.route);
+                    }
+                    if (recoveredDraft?.editorStudioScene) {
+                        setEditorStudioScene(recoveredDraft.editorStudioScene);
+                    }
+                    if (recoveredDraft && !editorDraftRecoveredRef.current) {
+                        editorDraftRecoveredRef.current = true;
+                        showToast('Recovered your latest editor draft.');
+                    }
+
+                    setSettings(prev => mergeStateIfChanged(prev, data));
+                };
+
                 const unsubSettings = FirebaseSDK.onSnapshot(settingsRef, (docSnap) => { 
                     if (docSnap.exists()) {
-                        let data = { ...docSnap.data() };
-                        if(data.fontFamily === 'sans') data.fontFamily = 'inter';
-                        if(data.fontFamily === 'serif') data.fontFamily = 'playfair';
-                        if(data.fontFamily === 'mono') data.fontFamily = 'space-mono';
-                        if(data.fontFamily === 'display') data.fontFamily = 'syne';
-                        const localDraft = readEditorDraft(workspaceOwnerId);
-                        const remoteUpdatedAt = Math.max(getTimestampValue(data.updatedAt), getTimestampValue(data.draftAutosavedAt), getTimestampValue(data.publishedAt));
-                        if (localDraft?.settings && Number(localDraft.savedAt || 0) > remoteUpdatedAt) {
-                            data = { ...data, ...localDraft.settings };
-                            if (!editorDraftRecoveredRef.current) {
-                                editorDraftRecoveredRef.current = true;
-                                showToast('Recovered your latest editor draft on this device.');
-                            }
-                        }
-                        setSettings(prev => mergeStateIfChanged(prev, data));
+                        const data = { ...docSnap.data() };
+                        publishedSettingsSnapshotRef.current = data;
+                        applyWorkspaceSettings(data);
                     }
                 }, handleSyncError('Settings'));
+
+                const editorDraftRef = FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'editorDraft');
+                const unsubEditorDraft = FirebaseSDK.onSnapshot(editorDraftRef, (docSnap) => {
+                    cloudEditorDraftRef.current = docSnap.exists() ? docSnap.data() : null;
+                    if (cloudEditorDraftRef.current?.settings) {
+                        applyWorkspaceSettings(publishedSettingsSnapshotRef.current || settingsRef.current || {});
+                    }
+                }, handleSyncError('Editor draft'));
                 
                 const staffRef = FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'staff');
                 const unsubStaff = FirebaseSDK.onSnapshot(staffRef, (docSnap) => { 
@@ -3263,7 +3336,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     handleSyncError('Booking')(error);
                     setBookingsReady(true);
                 });
-                return () => { unsubSettings(); unsubStaff(); unsubComms(); unsubClients(); unsubBookings(); };
+                return () => { unsubSettings(); unsubEditorDraft(); unsubStaff(); unsubComms(); unsubClients(); unsubBookings(); };
             }, [user, workspaceOwnerId, isWorkspaceOwner, publicSlug, personalDisplayName, personalProfile.email, personalProfile.mobile, personalProfile.photoURL]);
 
             const publishSettings = async (nextSettings = settings, successMessage = "Booking page published!", options = {}) => {
@@ -3279,10 +3352,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 if (!silent) showToast("Publishing updates...");
                 try {
                     const publicSlug = buildBookingSlug(nextSettings.slug || nextSettings.brandName);
+                    const publishableSettings = stripEditorDraftFields(nextSettings);
                     const settingsToPublish = {
-                        ...nextSettings,
+                        ...publishableSettings,
                         slug: publicSlug,
-                        publishedAt: nextSettings.publishedAt || Date.now(),
+                        publishedAt: Date.now(),
                         updatedAt: Date.now()
                     };
                     if (publicSlug !== settings.slug) {
@@ -3296,6 +3370,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         ownerEmail: user?.email || '',
                         workspaceName: publicSettingsToPublish.brandName || 'Build A Booking Workspace'
                     });
+                    await FirebaseSDK.deleteDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'editorDraft')).catch((draftError) => {
+                        console.warn('Could not clear cloud editor draft after publish.', draftError);
+                    });
+                    cloudEditorDraftRef.current = null;
+                    editorDraftCloudFingerprintRef.current = stableSettingsFingerprint(settingsToPublish);
                     clearEditorDraft(workspaceOwnerId || editorDraftOwnerKey);
                     if (!silent) showToast(successMessage);
                     return true;
@@ -3313,8 +3392,19 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const saveSettingsDraft = async (nextSettings = settings, successMessage = "Editor draft saved.") => {
                 const draftSettings = {
                     ...nextSettings,
-                    updatedAt: Date.now()
+                    draftStatus: 'saved',
+                    draftName: themeTemplateName || nextSettings.draftName || 'Working Draft',
+                    draftSavedAt: Date.now(),
+                    draftAutosavedAt: Date.now(),
+                    updatedAt: nextSettings.updatedAt || 0
                 };
+                const draftPayload = buildEditorDraftPayload(draftSettings, {
+                    route: { view, activeTab, editorTab },
+                    editorStudioScene,
+                    status: 'saved',
+                    name: draftSettings.draftName
+                });
+                writeEditorDraft(workspaceOwnerId || editorDraftOwnerKey, draftPayload);
                 if (!user || !workspaceOwnerId || !isFirebaseConfigured) {
                     setSettings(draftSettings);
                     showToast(successMessage);
@@ -3326,12 +3416,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }
                 try {
                     await FirebaseSDK.setDoc(
-                        FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'settings'),
-                        draftSettings,
+                        FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'editorDraft'),
+                        draftPayload,
                         { merge: true }
                     );
+                    cloudEditorDraftRef.current = draftPayload;
+                    editorDraftCloudFingerprintRef.current = stableSettingsFingerprint(draftPayload.settings);
                     setSettings(prev => ({ ...prev, ...draftSettings }));
-                    clearEditorDraft(workspaceOwnerId || editorDraftOwnerKey);
                     showToast(successMessage);
                     return true;
                 } catch (err) {
@@ -7164,6 +7255,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                             </div>
                             <div className="editor-publish-footer p-2.5 sm:p-5 md:p-8 border-t border-neutral-50 flex-shrink-0 bg-white">
+                                <p className="mb-2 sm:mb-3 text-center text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-400">
+                                    Drafts stay private. Publish updates the live booking page.
+                                </p>
                                 <div className="grid grid-cols-2 sm:grid-cols-[0.72fr_1fr] gap-2 sm:gap-3">
                                     <button
                                         type="button"

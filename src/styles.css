@@ -7991,8 +7991,22 @@ body {
         .support-desk-shell:not(.fixed) {
             display: flex !important;
             flex-direction: column !important;
+            width: min(100%, 82rem) !important;
+            margin-inline: auto !important;
             height: clamp(34rem, calc(100dvh - 12rem), 50rem) !important;
             max-height: calc(100dvh - 2rem) !important;
+        }
+
+        .native-ui.dashboard-sidebar-is-collapsed .support-desk-shell:not(.fixed) {
+            width: min(100%, calc(100vw - 7rem)) !important;
+            max-width: none !important;
+            height: clamp(36rem, calc(100dvh - 9rem), 54rem) !important;
+        }
+
+        .native-ui.dashboard-sidebar-is-collapsed .support-page-shell,
+        .native-ui.dashboard-sidebar-is-collapsed .dashboard-page-header:has(+ .support-page-shell) {
+            max-width: none !important;
+            width: min(100%, calc(100vw - 7rem)) !important;
         }
 
         .support-desk-shell .support-command-bar {
@@ -8051,9 +8065,11 @@ body {
         }
 
         .support-desk-shell .support-mail-tab:hover {
-            transform: translateY(-1px);
-            border-color: rgba(15, 23, 42, 0.14) !important;
+            transform: none;
+            background: rgba(15, 23, 42, 0.035) !important;
+            border-color: rgba(15, 23, 42, 0.1) !important;
             color: #111827 !important;
+            box-shadow: none;
         }
 
         .support-desk-shell .support-mail-tab.is-active {
@@ -8140,7 +8156,11 @@ body {
 
         .support-desk-shell .support-thread-row:hover,
         .client-chat-shell .client-thread-row:hover {
-            background: rgba(255, 255, 255, 0.72) !important;
+            background: rgba(15, 23, 42, 0.035) !important;
+        }
+
+        .support-load-previous:hover {
+            background: rgba(15, 23, 42, 0.035) !important;
         }
 
         .support-desk-shell .support-thread-row.is-active,
@@ -8416,6 +8436,7 @@ body {
         .native-ui.dashboard-dark .support-desk-shell .support-mail-tab:hover {
             color: #ffffff !important;
             border-color: rgba(255, 255, 255, 0.16) !important;
+            background: rgba(255, 255, 255, 0.055) !important;
         }
 
         .native-ui.dashboard-dark .support-desk-shell .support-mail-tab.is-active {
@@ -8449,13 +8470,29 @@ body {
         }
 
         .native-ui.dashboard-dark .support-desk-shell .support-thread-row:hover,
-        .client-portal-shell.dashboard-dark .client-thread-row:hover,
+        .client-portal-shell.dashboard-dark .client-thread-row:hover {
+            background: rgba(255, 255, 255, 0.055) !important;
+            color: #f8fafc !important;
+        }
+
         .native-ui.dashboard-dark .support-desk-shell .support-thread-row.is-active,
         .client-portal-shell.dashboard-dark .client-thread-row.is-active {
             background:
                 linear-gradient(90deg, rgba(57, 255, 20, 0.08), rgba(20, 167, 255, 0.065), rgba(255, 79, 216, 0.045)),
                 #15171c !important;
             color: #f8fafc !important;
+        }
+
+        .native-ui.dashboard-dark .support-load-previous,
+        .client-portal-shell.dashboard-dark .support-load-previous {
+            background: #17191f !important;
+            border-color: rgba(255, 255, 255, 0.11) !important;
+            color: #cbd5e1 !important;
+        }
+
+        .native-ui.dashboard-dark .support-load-previous:hover,
+        .client-portal-shell.dashboard-dark .support-load-previous:hover {
+            background: rgba(255, 255, 255, 0.055) !important;
         }
 
         .native-ui.dashboard-dark .support-desk-shell .support-chat-canvas,

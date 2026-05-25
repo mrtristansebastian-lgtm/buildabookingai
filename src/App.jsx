@@ -5167,7 +5167,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             return (
                 <div
-                    className={`flex h-screen overflow-hidden font-sans relative native-ui ${dashboardThemeMode === 'dark' ? 'dashboard-dark' : 'dashboard-light'}`}
+                    className={`flex h-screen overflow-hidden font-sans relative native-ui ${dashboardThemeMode === 'dark' ? 'dashboard-dark' : 'dashboard-light'} ${sidebarCollapsed ? 'dashboard-sidebar-is-collapsed' : ''}`}
                 >
                 {/* Global Toast */}
                 {toast && (
@@ -6039,7 +6039,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                     {activeTab === 'communications' && (
                         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#F6F7F9]">
-                            <header className="dashboard-page-header mb-4 md:mb-6 max-w-7xl">
+                            <header className="dashboard-page-header mb-4 md:mb-6 max-w-[88rem] mx-auto">
                                 <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                                   <div className="max-w-4xl">
                                     <h2 className="text-4xl md:text-4xl font-bold tracking-tight text-black">Support Inbox</h2>
@@ -6055,7 +6055,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 </div>
                             </header>
 
-                            <div className="max-w-7xl">
+                            <div className="support-page-shell max-w-[88rem] mx-auto">
                                 <Suspense fallback={<LazySectionFallback label="Loading client inbox" />}>
                                     <WorkspaceInbox
                                         appId={appId}

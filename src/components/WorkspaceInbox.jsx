@@ -18,6 +18,18 @@ const statusStyles = {
   declined: 'bg-red-50 text-red-600 border-red-100'
 };
 
+const LIVE_MESSAGE_LIMIT = 20;
+
+const formatPresenceTime = (value) => {
+  const ms = timestampValue(value);
+  if (!ms) return '';
+  const diff = Math.max(0, Date.now() - ms);
+  if (diff < 60_000) return 'just now';
+  if (diff < 60 * 60_000) return `${Math.max(1, Math.round(diff / 60_000))}m ago`;
+  if (diff < 24 * 60 * 60_000) return `${Math.max(1, Math.round(diff / (60 * 60_000)))}h ago`;
+  return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
+
 export function WorkspaceInbox({
   appId,
   db,
@@ -33,6 +45,10 @@ export function WorkspaceInbox({
 }) {
   const [threads, setThreads] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [olderMessages, setOlderMessages] = useState([]);
+  const [oldestMessageCursor, setOldestMessageCursor] = useState(null);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [threadsReady, setThreadsReady] = useState(false);
   const [activeThreadId, setActiveThreadId] = useState('');
   const [threadQuery, setThreadQuery] = useState('');
@@ -144,7 +160,7 @@ export function WorkspaceInbox({
     () => activeThread?.isExample ? exampleBooking : bookings.find(booking => booking.id === activeThread?.bookingId) || null,
     [activeThread?.bookingId, activeThread?.isExample, bookings, exampleBooking]
   );
-  const visibleMessages = activeThread?.isExample ? exampleMessages : messages;
+  const visibleMessages = activeThread?.isExample ? exampleMessages : [...olderMessages, ...messages];
   const activeStaff = useMemo(() => {
     const emailKey = notificationEmailKey(user?.email || '');
     return staffList.find(staff => notificationEmailKey(staff.email || '') === emailKey || staff.uid === user?.uid) || staffList[0] || null;
@@ -215,15 +231,24 @@ export function WorkspaceInbox({
   useEffect(() => {
     if (!db || !activeThread?.id || activeThread?.isExample) {
       setMessages([]);
+      setOlderMessages([]);
+      setOldestMessageCursor(null);
+      setHasOlderMessages(false);
       return undefined;
     }
+    setOlderMessages([]);
+    setOldestMessageCursor(null);
+    setHasOlderMessages(false);
     const messagesQuery = FirebaseSDK.query(
       FirebaseSDK.collection(db, 'artifacts', appId, 'clientThreads', activeThread.id, 'messages'),
-      FirebaseSDK.orderBy('createdAt', 'asc'),
-      FirebaseSDK.limit(100)
+      FirebaseSDK.orderBy('createdAt', 'desc'),
+      FirebaseSDK.limit(LIVE_MESSAGE_LIMIT)
     );
     const unsub = FirebaseSDK.onSnapshot(messagesQuery, (snap) => {
-      setMessages(snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })));
+      const docs = snap.docs;
+      setMessages(docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })).reverse());
+      setOldestMessageCursor(docs[docs.length - 1] || null);
+      setHasOlderMessages(docs.length === LIVE_MESSAGE_LIMIT);
       if (Number(activeThread.ownerUnread || 0) > 0) {
         FirebaseSDK.updateDoc(
           FirebaseSDK.doc(db, 'artifacts', appId, 'clientThreads', activeThread.id),
@@ -233,6 +258,33 @@ export function WorkspaceInbox({
     }, (error) => console.error('Workspace messages sync failed', error));
     return () => unsub();
   }, [activeThread?.id, appId, db]);
+
+  const loadPreviousMessages = async () => {
+    if (!db || !activeThread?.id || activeThread?.isExample || !oldestMessageCursor || loadingOlderMessages) return;
+    setLoadingOlderMessages(true);
+    try {
+      const olderQuery = FirebaseSDK.query(
+        FirebaseSDK.collection(db, 'artifacts', appId, 'clientThreads', activeThread.id, 'messages'),
+        FirebaseSDK.orderBy('createdAt', 'desc'),
+        FirebaseSDK.startAfter(oldestMessageCursor),
+        FirebaseSDK.limit(LIVE_MESSAGE_LIMIT)
+      );
+      const snap = await FirebaseSDK.getDocs(olderQuery);
+      const docs = snap.docs;
+      const older = docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })).reverse();
+      setOlderMessages(current => {
+        const seen = new Set(current.map(message => message.id));
+        return [...older.filter(message => !seen.has(message.id)), ...current];
+      });
+      if (docs.length) setOldestMessageCursor(docs[docs.length - 1]);
+      setHasOlderMessages(docs.length === LIVE_MESSAGE_LIMIT);
+    } catch (error) {
+      console.error('Loading previous workspace messages failed', error);
+      showToast?.('Could not load older messages. Try again.');
+    } finally {
+      setLoadingOlderMessages(false);
+    }
+  };
 
   const sendMessage = async (text = draft, extra = {}) => {
     const cleanText = String(text || '').trim();
@@ -453,6 +505,14 @@ export function WorkspaceInbox({
     if (bookingStatus === 'waitlist') return { label: 'Confirm Waitlist', disabled: false, className: 'native-gradient-button' };
     return { label: 'Confirm', disabled: false, className: 'native-gradient-button' };
   })();
+  const clientPresenceLabel = (() => {
+    if (!activeThread) return 'No active chat';
+    if (activeThread.isExample) return 'Live preview';
+    if (activeThread.clientOnline) return 'Live now';
+    const lastSeen = formatPresenceTime(activeThread.clientLastSeenAt || activeThread.clientLastSeenMs);
+    if (lastSeen) return `Last seen ${lastSeen}`;
+    return 'Live status unavailable';
+  })();
 
   const matchesSupportFilter = (thread, filter = supportFilter) => {
     if (filter === 'unread') return Number(thread.ownerUnread || 0) > 0;
@@ -600,8 +660,8 @@ export function WorkspaceInbox({
                     <p className="text-xs md:text-sm text-neutral-500 truncate">
                       {assignedStaff ? `Assigned to ${assignedStaff.name}` : activeThread.clientEmail || 'Active support thread'}
                     </p>
-                    <p className="mt-1 hidden md:flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">
-                      <span className="w-2 h-2 rounded-full native-gradient-line" /> Realtime synced
+                    <p className="support-presence-label mt-1 hidden md:block text-[9px] font-bold uppercase tracking-widest text-neutral-400">
+                      {clientPresenceLabel}
                     </p>
                   </div>
                 </div>
@@ -644,6 +704,18 @@ export function WorkspaceInbox({
               )}
 
               <div className="support-chat-canvas flex-1 overflow-y-auto p-3 md:p-6 bg-[#F7F7F5] space-y-3">
+                {!activeThread?.isExample && hasOlderMessages && (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={loadPreviousMessages}
+                      disabled={loadingOlderMessages}
+                      className="support-load-previous rounded-full border border-neutral-200 bg-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-neutral-500 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
+                    >
+                      {loadingOlderMessages ? 'Loading...' : 'Load previous messages'}
+                    </button>
+                  </div>
+                )}
                 {visibleMessages.map(message => {
                   const mine = message.senderRole === 'owner';
                   const proposal = getMessageProposal(message);

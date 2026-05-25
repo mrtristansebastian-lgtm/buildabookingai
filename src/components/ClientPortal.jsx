@@ -52,6 +52,8 @@ const statusStyles = {
   declined: 'bg-red-50 text-red-600 border-red-100'
 };
 
+const LIVE_MESSAGE_LIMIT = 20;
+
 const navItems = [
   { id: 'chats', label: 'Chats', icon: MessageCircle },
   { id: 'bookings', label: 'My Bookings', icon: BookOpen },
@@ -65,6 +67,10 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
   const [threads, setThreads] = useState([]);
   const [fallbackThreads, setFallbackThreads] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [olderMessages, setOlderMessages] = useState([]);
+  const [oldestMessageCursor, setOldestMessageCursor] = useState(null);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [activeThreadId, setActiveThreadId] = useState('');
   const [messageDraft, setMessageDraft] = useState('');
   const [threadSearch, setThreadSearch] = useState('');
@@ -281,7 +287,7 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
     () => bookingSource.find(booking => booking.id === activeThread?.bookingId) || bookingSource[0] || null,
     [activeThread?.bookingId, bookingSource]
   );
-  const visibleMessages = activeThread?.isExample ? exampleMessages : messages;
+  const visibleMessages = activeThread?.isExample ? exampleMessages : [...olderMessages, ...messages];
   const chatBrandLogo = activeThread?.workspaceLogo || activeBooking?.workspaceLogo || '';
   const chatStaffName = activeThread?.staffName || activeBooking?.staffName || '';
   const chatStaffPhoto = activeThread?.staffPhotoURL || activeBooking?.staffPhotoURL || '';
@@ -324,16 +330,25 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
   useEffect(() => {
     if (!db || !activeThread?.id || activeThread?.isExample) {
       setMessages([]);
+      setOlderMessages([]);
+      setOldestMessageCursor(null);
+      setHasOlderMessages(false);
       return undefined;
     }
+    setOlderMessages([]);
+    setOldestMessageCursor(null);
+    setHasOlderMessages(false);
 
     const messagesQuery = FirebaseSDK.query(
       FirebaseSDK.collection(db, 'artifacts', appId, 'clientThreads', activeThread.id, 'messages'),
-      FirebaseSDK.orderBy('createdAt', 'asc'),
-      FirebaseSDK.limit(100)
+      FirebaseSDK.orderBy('createdAt', 'desc'),
+      FirebaseSDK.limit(LIVE_MESSAGE_LIMIT)
     );
     const unsubMessages = FirebaseSDK.onSnapshot(messagesQuery, (snap) => {
-      setMessages(snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })));
+      const docs = snap.docs;
+      setMessages(docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })).reverse());
+      setOldestMessageCursor(docs[docs.length - 1] || null);
+      setHasOlderMessages(docs.length === LIVE_MESSAGE_LIMIT);
       if (Number(activeThread.clientUnread || 0) > 0) {
         FirebaseSDK.updateDoc(
           FirebaseSDK.doc(db, 'artifacts', appId, 'clientThreads', activeThread.id),
@@ -343,6 +358,32 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
     }, (error) => console.error('Client messages sync failed', error));
     return () => unsubMessages();
   }, [activeThread?.id, appId, db]);
+
+  const loadPreviousMessages = async () => {
+    if (!db || !activeThread?.id || activeThread?.isExample || !oldestMessageCursor || loadingOlderMessages) return;
+    setLoadingOlderMessages(true);
+    try {
+      const olderQuery = FirebaseSDK.query(
+        FirebaseSDK.collection(db, 'artifacts', appId, 'clientThreads', activeThread.id, 'messages'),
+        FirebaseSDK.orderBy('createdAt', 'desc'),
+        FirebaseSDK.startAfter(oldestMessageCursor),
+        FirebaseSDK.limit(LIVE_MESSAGE_LIMIT)
+      );
+      const snap = await FirebaseSDK.getDocs(olderQuery);
+      const docs = snap.docs;
+      const older = docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })).reverse();
+      setOlderMessages(current => {
+        const seen = new Set(current.map(message => message.id));
+        return [...older.filter(message => !seen.has(message.id)), ...current];
+      });
+      if (docs.length) setOldestMessageCursor(docs[docs.length - 1]);
+      setHasOlderMessages(docs.length === LIVE_MESSAGE_LIMIT);
+    } catch (error) {
+      console.error('Loading previous client messages failed', error);
+    } finally {
+      setLoadingOlderMessages(false);
+    }
+  };
 
   const sendThreadMessage = async ({ text, kind = 'message', bookingId = '', proposedReschedule = null, rescheduleStatus = '' }) => {
     const cleanText = String(text || '').trim();
@@ -675,8 +716,8 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
               <div className="min-w-0">
                 <h2 className="text-lg md:text-xl font-bold text-black truncate">{activeThread.workspaceName || 'Booking chat'}</h2>
                 <p className="text-xs text-neutral-400 truncate">{chatStaffName ? `${chatStaffName} is helping you` : activeBooking ? `${activeBooking.date} / ${activeBooking.time}` : 'Active support thread'}</p>
-                <p className="mt-1 hidden md:flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">
-                  <span className="w-2 h-2 rounded-full native-gradient-line" /> Live booking thread
+                <p className="mt-1 hidden md:block text-[9px] font-bold uppercase tracking-widest text-neutral-400">
+                  {activeThread.isExample ? 'Preview chat' : 'Open booking chat'}
                 </p>
               </div>
             </div>
@@ -712,6 +753,18 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
           )}
 
           <div className="client-chat-canvas flex-1 overflow-y-auto p-4 md:p-6 bg-[#F7F7F5] space-y-3">
+            {!activeThread?.isExample && hasOlderMessages && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={loadPreviousMessages}
+                  disabled={loadingOlderMessages}
+                  className="support-load-previous rounded-full border border-neutral-200 bg-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-neutral-500 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
+                >
+                  {loadingOlderMessages ? 'Loading...' : 'Load previous messages'}
+                </button>
+              </div>
+            )}
             {visibleMessages.map(message => {
               const mine = message.senderRole === 'client';
               const proposal = getMessageProposal(message);

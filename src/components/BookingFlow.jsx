@@ -6,6 +6,15 @@ import { formatServiceDuration, formatServicePrice, normalizeServiceList } from 
 
 const alignments = ['left', 'center', 'right'];
 const visualStyles = ['minimal', 'outline', 'solid'];
+const displayLooks = {
+    services: ['cards', 'menu', 'gallery', 'compact', 'luxury'],
+    calendar: ['studio', 'classic', 'editorial', 'compact', 'glow'],
+    time: ['pill', 'blocks', 'minimal', 'luxury', 'compact'],
+    faq: ['accordion', 'cards', 'minimal', 'numbered', 'split'],
+    venue: ['mosaic', 'editorial', 'filmstrip', 'postcard', 'minimal'],
+    maps: ['button', 'card', 'footer', 'dock', 'none'],
+    social: ['icons', 'labels', 'dock', 'minimal', 'solid']
+};
 const clampNumber = (value, min, max, fallback) => {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return fallback;
@@ -19,6 +28,7 @@ const getOptionalLetterSpacing = (value, min, max) => {
 
 const getAlign = (value) => alignments.includes(value) ? value : 'left';
 const getVisualStyle = (value, fallback = 'minimal') => visualStyles.includes(value) ? value : fallback;
+const getDisplayLook = (group, value, fallback) => displayLooks[group]?.includes(value) ? value : fallback;
 const getBlockMargins = (align) => ({
     marginLeft: align === 'left' ? 0 : 'auto',
     marginRight: align === 'right' ? 0 : 'auto'
@@ -185,6 +195,13 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             const actionButtonStyle = getVisualStyle(settings.actionButtonStyle, 'solid');
             const faqStyle = getVisualStyle(settings.faqStyle, 'minimal');
             const socialIconStyle = getVisualStyle(settings.socialIconStyle, 'outline');
+            const serviceDisplayStyle = getDisplayLook('services', settings.serviceDisplayStyle, 'cards');
+            const calendarDisplayStyle = getDisplayLook('calendar', settings.calendarDisplayStyle, 'studio');
+            const timeDisplayStyle = getDisplayLook('time', settings.timeDisplayStyle, 'pill');
+            const faqDisplayStyle = getDisplayLook('faq', settings.faqDisplayStyle, 'accordion');
+            const venueGalleryStyle = getDisplayLook('venue', settings.venueGalleryStyle, 'mosaic');
+            const mapDisplayStyle = getDisplayLook('maps', settings.mapDisplayStyle, 'card');
+            const socialDisplayStyle = getDisplayLook('social', settings.socialDisplayStyle, 'icons');
             const faqItems = (settings.features?.faqEnabled && Array.isArray(settings.features?.faqs))
                 ? settings.features.faqs.filter(faq => faq?.q?.trim() && faq?.a?.trim())
                 : [];
@@ -217,6 +234,10 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             const venuePhotos = Array.isArray(settings.venuePhotos)
                 ? settings.venuePhotos.filter(Boolean).slice(0, 8)
                 : [];
+            const venueLocation = (settings.features?.location || settings.address || '').trim();
+            const venueMapHref = venueLocation
+                ? (/^https?:\/\//i.test(venueLocation) ? venueLocation : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueLocation)}`)
+                : '';
             const manualPaymentOptions = useMemo(() => (
                 Array.isArray(settings.manualPaymentOptions)
                     ? settings.manualPaymentOptions.filter(option => option?.enabled !== false)
@@ -513,14 +534,14 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                         </div>
                         
                         <div className="relative w-full overflow-hidden h-[130px] md:h-[150px]">
-                            <div className={`flex gap-3 md:gap-4 overflow-x-auto h-[180px] md:h-[200px] pt-4 px-2 snap-x ${isPreview ? 'cursor-pointer' : ''} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`} onClick={() => isPreview && onInspect('calendar')}>
+                            <div className={`booking-calendar-look booking-calendar-${calendarDisplayStyle} flex gap-3 md:gap-4 overflow-x-auto h-[180px] md:h-[200px] pt-4 px-2 snap-x ${isPreview ? 'cursor-pointer' : ''} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`} onClick={() => isPreview && onInspect('calendar')}>
                                 {dates.map((d, i) => {
                                 const isActive = selectedDateIdx === i;
                                 const nativeDateClass = nativeAccent && isActive
                                     ? (dateStyle === 'solid' ? nativeAccentButtonClass : `${nativeAccentCardClass} ${nativeAccentBorderClass}`)
                                     : '';
                                 return (
-                                    <button key={i} onClick={() => setSelectedDateIdx(i)} className={`appearance-none outline-none focus:outline-none snap-center flex-shrink-0 w-16 h-[96px] md:w-20 md:h-[112px] flex flex-col items-center justify-center gap-1.5 transition-all duration-500 relative ${isActive ? 'shadow-xl scale-105 z-10' : 'opacity-60 hover:opacity-100'} ${nativeDateClass}`} style={getDateSlotStyle(isActive)}>
+                                    <button key={i} aria-pressed={isActive} onClick={() => setSelectedDateIdx(i)} className={`appearance-none outline-none focus:outline-none snap-center flex-shrink-0 w-16 h-[96px] md:w-20 md:h-[112px] flex flex-col items-center justify-center gap-1.5 transition-all duration-500 relative ${isActive ? 'shadow-xl scale-105 z-10' : 'opacity-60 hover:opacity-100'} ${nativeDateClass}`} style={getDateSlotStyle(isActive)}>
                                         <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] transition-all`}>{d.dayName}</span>
                                         <span className={`text-3xl md:text-4xl font-bold tracking-tighter transition-all`}>{d.dayNum}</span>
                                         {dateStyle === 'minimal' && isActive && <div className={`absolute -bottom-3 w-10 h-[2px] rounded-full ${nativeAccentFillClass}`} style={{ backgroundColor: settings.primaryColor }} />}
@@ -551,7 +572,7 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                                 <div className="py-8 text-center text-sm font-bold tracking-widest uppercase opacity-20">Fully Booked</div>
                             )
                         ) : (
-                            <div className={`grid grid-cols-3 gap-3 md:gap-4 ${isPreview ? 'cursor-pointer' : ''}`} onClick={() => isPreview && onInspect('time')}>
+                            <div className={`booking-time-look booking-time-${timeDisplayStyle} grid grid-cols-3 gap-3 md:gap-4 ${isPreview ? 'cursor-pointer' : ''}`} onClick={() => isPreview && onInspect('time')}>
                                 {availableTimesForActiveDate.map((t) => {
                                 const isActive = selectedTime === t;
                                 const nativeTimeClass = nativeAccent && isActive
@@ -578,7 +599,7 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                                         What would you like to book?
                                     </h4>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3" onClick={() => isPreview && onInspect('services')}>
+                                <div className={`booking-services-grid booking-services-${serviceDisplayStyle} grid grid-cols-1 md:grid-cols-2 gap-3`} onClick={() => isPreview && onInspect('services')}>
                                     {activeServices.map(service => {
                                         const isActive = selectedService?.id === service.id;
                                         const price = formatServicePrice(service);
@@ -646,7 +667,7 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                                 </div>
                                 )}
                                 {faqItems.length > 0 && (
-                                <div className={`pt-2 ${inspectClass}`} data-preview-section="faq" onClick={() => isPreview && onInspect('faq')}>
+                                <div className={`booking-faq-section booking-faq-${faqDisplayStyle} pt-2 ${inspectClass}`} data-preview-section="faq" onClick={() => isPreview && onInspect('faq')}>
                                     <h3 className="text-[9px] font-bold uppercase tracking-[0.4em] mb-5 opacity-40" style={{ color: settings.bodyColor }}>Questions</h3>
                                     <div className="space-y-3">
                                         {faqItems.map((faq, i) => (
@@ -871,40 +892,71 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                             {settings.features?.socialProof && (
                                 <p className="mt-6 text-[10px] font-bold uppercase tracking-widest opacity-40" style={{ color: settings.bodyColor }}><Flame size={12} className="inline mr-1 -mt-0.5"/> 4 People secured slots this week</p>
                             )}
-                            {venuePhotos.length > 0 && (
+                            {(venuePhotos.length > 0 || (venueMapHref && mapDisplayStyle !== 'none')) && (
                                 <section
-                                    className={`booking-venue-gallery mt-8 ${inspectClass}`}
+                                    className={`booking-venue-gallery booking-venue-${venueGalleryStyle} mt-8 ${inspectClass}`}
                                     data-preview-section="venue-gallery"
-                                    onClick={() => isPreview && onInspect('introduction')}
+                                    onClick={() => isPreview && onInspect('venue')}
                                     style={{
                                         borderColor: `${settings.headingColor || '#000000'}18`,
                                         backgroundColor: `${settings.headingColor || '#000000'}04`
                                     }}
                                 >
                                     <div className="booking-venue-gallery-header">
-                                        <span className="booking-venue-gallery-kicker" style={{ color: settings.bodyColor }}>
-                                            <Images size={13} /> Venue Gallery
-                                        </span>
-                                        <span className="booking-venue-gallery-count" style={{ color: settings.headingColor }}>
-                                            {venuePhotos.length} {venuePhotos.length === 1 ? 'photo' : 'photos'}
-                                        </span>
+                                        <div>
+                                            <span className="booking-venue-gallery-kicker" style={{ color: settings.bodyColor }}>
+                                                <Images size={13} /> {settings.venueTitle || 'Inside the space'}
+                                            </span>
+                                            <p className="booking-venue-gallery-intro" style={{ color: settings.bodyColor }}>
+                                                {settings.venueIntro || 'See the place before you book.'}
+                                            </p>
+                                        </div>
+                                        {venuePhotos.length > 0 && (
+                                            <span className="booking-venue-gallery-count" style={{ color: settings.headingColor }}>
+                                                {venuePhotos.length} {venuePhotos.length === 1 ? 'photo' : 'photos'}
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className={`booking-venue-gallery-grid ${venuePhotos.length === 1 ? 'is-single' : ''}`}>
-                                        {venuePhotos.map((photo, index) => (
-                                            <figure key={`${photo}-${index}`} className={`booking-venue-photo ${index === 0 ? 'is-featured' : ''}`}>
-                                                <img src={photo} alt={`Venue view ${index + 1}`} loading="lazy" />
-                                                {index === 0 && (
-                                                    <figcaption style={{ color: settings.headingColor, backgroundColor: `${settings.backgroundColor || '#ffffff'}E8` }}>
-                                                        Step inside
-                                                    </figcaption>
-                                                )}
-                                            </figure>
-                                        ))}
-                                    </div>
+                                    {venuePhotos.length > 0 && (
+                                        <div className={`booking-venue-gallery-grid ${venuePhotos.length === 1 ? 'is-single' : ''}`}>
+                                            {venuePhotos.map((photo, index) => (
+                                                <figure key={`${photo}-${index}`} className={`booking-venue-photo ${index === 0 ? 'is-featured' : ''}`}>
+                                                    <img src={photo} alt={`Venue view ${index + 1}`} loading="lazy" />
+                                                    {index === 0 && (
+                                                        <figcaption style={{ color: settings.headingColor, backgroundColor: `${settings.backgroundColor || '#ffffff'}E8` }}>
+                                                            Step inside
+                                                        </figcaption>
+                                                    )}
+                                                </figure>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {venueMapHref && mapDisplayStyle !== 'none' && (
+                                        <a
+                                            href={venueMapHref}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={`booking-map-link booking-map-${mapDisplayStyle}`}
+                                            onClick={(event) => {
+                                                if (isPreview) {
+                                                    event.preventDefault();
+                                                    onInspect('venue');
+                                                }
+                                            }}
+                                            style={{
+                                                color: settings.headingColor,
+                                                borderColor: `${settings.headingColor || '#000000'}18`,
+                                                backgroundColor: `${settings.headingColor || '#000000'}06`
+                                            }}
+                                        >
+                                            <span><MapPin size={15} /> Open directions</span>
+                                            <ArrowRight size={14} />
+                                        </a>
+                                    )}
                                 </section>
                             )}
                             {socialLinks.length > 0 && (
-                                <div className={`mt-8 flex flex-wrap items-center justify-center gap-3 ${inspectClass}`} data-preview-section="social" onClick={() => isPreview && onInspect('social')}>
+                                <div className={`booking-social-links booking-social-${socialDisplayStyle} mt-8 flex flex-wrap items-center justify-center gap-3 ${inspectClass}`} data-preview-section="social" onClick={() => isPreview && onInspect('social')}>
                                     {socialLinks.map(link => {
                                         const IconCmp = link.icon;
                                         return (

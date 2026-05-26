@@ -128,6 +128,58 @@ const visualStyleOptions = [
   { id: 'solid', label: 'Solid' }
 ];
 
+const editorInterfaceLooks = {
+  services: [
+    { id: 'cards', label: 'Signature Cards', note: 'Image, price, and detail led service cards.' },
+    { id: 'menu', label: 'Clean Menu', note: 'Compact list for quick service selection.' },
+    { id: 'gallery', label: 'Gallery Lead', note: 'Visual-first cards for beauty, tattoos, and venues.' },
+    { id: 'compact', label: 'Fast List', note: 'Dense rows for high-volume service menus.' },
+    { id: 'luxury', label: 'Editorial', note: 'More premium spacing and quiet details.' }
+  ],
+  calendar: [
+    { id: 'studio', label: 'Studio Strip', note: 'Clean horizontal booking dates.' },
+    { id: 'classic', label: 'Classic Calendar', note: 'Familiar day cards with soft separation.' },
+    { id: 'editorial', label: 'Editorial Dates', note: 'Large type and minimal controls.' },
+    { id: 'compact', label: 'Compact Board', note: 'Smaller cards for busy schedules.' },
+    { id: 'glow', label: 'Glow Select', note: 'More visible selected-day accent.' }
+  ],
+  time: [
+    { id: 'pill', label: 'Soft Pills', note: 'Friendly rounded bookable times.' },
+    { id: 'blocks', label: 'Time Blocks', note: 'Structured tiles for sessions and classes.' },
+    { id: 'minimal', label: 'Line List', note: 'Quiet text-led choices.' },
+    { id: 'luxury', label: 'Luxury Slots', note: 'Premium spacing and subtle border work.' },
+    { id: 'compact', label: 'Quick Slots', note: 'Dense rows for many available times.' }
+  ],
+  faq: [
+    { id: 'accordion', label: 'Accordion', note: 'Classic expandable questions.' },
+    { id: 'cards', label: 'Answer Cards', note: 'Soft boxed answers with extra clarity.' },
+    { id: 'minimal', label: 'Minimal Lines', note: 'Clean dividers and quiet type.' },
+    { id: 'numbered', label: 'Numbered Help', note: 'Guided FAQ for policies and prep.' },
+    { id: 'split', label: 'Split Guide', note: 'Question and answer feel more editorial.' }
+  ],
+  venue: [
+    { id: 'mosaic', label: 'Mosaic', note: 'A polished gallery wall with a hero photo.' },
+    { id: 'editorial', label: 'Editorial', note: 'Large first image and magazine-style captions.' },
+    { id: 'filmstrip', label: 'Filmstrip', note: 'Horizontal scroll for mobile-friendly browsing.' },
+    { id: 'postcard', label: 'Postcard', note: 'Warm framed venue highlights.' },
+    { id: 'minimal', label: 'Minimal Grid', note: 'Simple, clean image tiles.' }
+  ],
+  maps: [
+    { id: 'button', label: 'Map Button', note: 'A single directions button.' },
+    { id: 'card', label: 'Address Card', note: 'Shows address and directions together.' },
+    { id: 'footer', label: 'Footer Link', note: 'Quiet link below the booking action.' },
+    { id: 'dock', label: 'Map Dock', note: 'Compact icon-style location control.' },
+    { id: 'none', label: 'Hidden', note: 'Keep maps off the booking page.' }
+  ],
+  social: [
+    { id: 'icons', label: 'Icon Row', note: 'Clean round social icons.' },
+    { id: 'labels', label: 'Icon Labels', note: 'Social buttons with names.' },
+    { id: 'dock', label: 'Footer Dock', note: 'Compact app-like social footer.' },
+    { id: 'minimal', label: 'Text Links', note: 'Quiet links for refined pages.' },
+    { id: 'solid', label: 'Solid Chips', note: 'More visible branded social buttons.' }
+  ]
+};
+
 const themeTemplateKeys = [
   'primaryColor', 'headingColor', 'bodyColor', 'backgroundColor',
   'slotBgColor', 'slotTextColor', 'dateBgColor', 'dateTextColor',
@@ -137,8 +189,10 @@ const themeTemplateKeys = [
   'brandNameSize', 'brandNameFontFamily', 'taglineSize', 'taglineFontFamily',
   'welcomeSize', 'welcomeFontFamily', 'headingLetterSpacing', 'subtextLetterSpacing',
   'buttonStyle', 'availabilityStyle', 'dateStyle', 'timeSlotStyle', 'actionButtonStyle',
-  'faqStyle', 'faqBgColor', 'faqBorderColor', 'faqTextColor', 'faqAnswerColor', 'faqFontFamily',
-  'socialIconStyle', 'socialIconBgColor', 'socialIconColor', 'socialIconTextColor'
+  'calendarDisplayStyle', 'timeDisplayStyle', 'serviceDisplayStyle',
+  'faqStyle', 'faqDisplayStyle', 'faqBgColor', 'faqBorderColor', 'faqTextColor', 'faqAnswerColor', 'faqFontFamily',
+  'venueGalleryStyle', 'venueTitle', 'venueIntro', 'mapDisplayStyle',
+  'socialIconStyle', 'socialDisplayStyle', 'socialIconBgColor', 'socialIconColor', 'socialIconTextColor'
 ];
 
 const pickThemeTemplateSettings = (source = {}) => (
@@ -862,6 +916,40 @@ function StyleSegmentedControl({ value, onChange, label = 'Style' }) {
               className={`h-10 rounded-md text-[9px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-white hover:text-black'}`}
             >
               {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function InterfaceLookGrid({ value, onChange, looks = [], label = 'Display look' }) {
+  const activeValue = value || looks[0]?.id;
+
+  return (
+    <div className="cinema-look-picker">
+      <div className="cinema-look-picker-head">
+        <span>{label}</span>
+        <small>{looks.length} looks</small>
+      </div>
+      <div className="cinema-look-grid">
+        {looks.map((look) => {
+          const isActive = activeValue === look.id;
+          return (
+            <button
+              key={look.id}
+              type="button"
+              onClick={() => onChange(look.id)}
+              className={isActive ? 'is-active' : ''}
+            >
+              <i aria-hidden="true">
+                <b />
+                <b />
+                <b />
+              </i>
+              <span>{look.label}</span>
+              <small>{look.note}</small>
             </button>
           );
         })}
@@ -1601,8 +1689,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 taglineSize: 9, taglineFontFamily: '',
                 welcomeSize: 20, welcomeFontFamily: '',
                 buttonStyle: 'pill', availabilityStyle: 'solid', dateStyle: 'solid', timeSlotStyle: 'solid', actionButtonStyle: 'solid',
-                faqStyle: 'minimal', faqBgColor: 'transparent', faqBorderColor: '#00000020', faqTextColor: '', faqAnswerColor: '', faqFontFamily: '',
-                socialIconStyle: 'outline', socialIconBgColor: 'transparent', socialIconColor: '', socialIconTextColor: '',
+                calendarDisplayStyle: 'studio', timeDisplayStyle: 'pill', serviceDisplayStyle: 'cards',
+                faqStyle: 'minimal', faqDisplayStyle: 'accordion', faqBgColor: 'transparent', faqBorderColor: '#00000020', faqTextColor: '', faqAnswerColor: '', faqFontFamily: '',
+                venueGalleryStyle: 'mosaic', venueTitle: 'Inside the space', venueIntro: 'See the place before you book.', mapDisplayStyle: 'card',
+                socialIconStyle: 'outline', socialDisplayStyle: 'icons', socialIconBgColor: 'transparent', socialIconColor: '', socialIconTextColor: '',
                 dateLabel: 'Which day are you looking to book ?', timeLabel: 'Lets see what time works', buttonText: 'Book Now', confirmButtonText: 'Confirm Booking', 
                 detailsHeading: 'Your Details', detailsSubHeading: 'Secure Your Slot', successHeading: 'Booking Confirmed!', 
                 availableTimes: ['09:00', '10:30', '12:00', '14:30', '16:00', '17:30'],
@@ -3837,6 +3927,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 faq: 'faq',
                 form: 'form',
                 buttons: 'action',
+                venue: 'venue-gallery',
                 social: 'social'
             };
             const editorRoomScenes = [
@@ -3849,7 +3940,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 { id: 'faq', number: '07', icon: HelpCircle, title: 'FAQ Setup' },
                 { id: 'form', number: '08', icon: FileText, title: 'Client Form' },
                 { id: 'buttons', number: '09', icon: SlidersHorizontal, title: 'Action Buttons' },
-                { id: 'social', number: '10', icon: Globe, title: 'Social & Maps' }
+                { id: 'venue', number: '10', icon: Images, title: 'Venue & Maps' },
+                { id: 'social', number: '11', icon: Globe, title: 'Social Media' }
             ];
             const roomTabMap = {
                 introduction: 'identity',
@@ -3861,6 +3953,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 faq: 'features',
                 form: 'features',
                 buttons: 'visuals',
+                venue: 'features',
                 social: 'features'
             };
             const focusEditorPreviewRoom = (roomId) => {
@@ -3932,6 +4025,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     features: 'faq',
                     form: 'form',
                     social: 'social',
+                    venue: 'venue',
                     action: 'buttons',
                     buttons: 'buttons',
                     copy: 'introduction',
@@ -7186,7 +7280,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 faq: 'FAQ setup',
                                                 form: 'Client form',
                                                 buttons: 'Action buttons',
-                                                social: 'Social & maps'
+                                                venue: 'Venue & maps',
+                                                social: 'Social media'
                                             }[scene.id],
                                             prompt: {
                                                 introduction: 'Name the page and write the first words clients see. Type here or directly on the mockup.',
@@ -7198,7 +7293,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 faq: 'Add helpful questions and tune how the FAQ block feels.',
                                                 form: 'Choose the client details your business needs before booking.',
                                                 buttons: 'Tune the final booking button so the action feels clear and branded.',
-                                                social: 'Add social links and maps so clients can keep moving after booking.'
+                                                venue: 'Show the venue, directions, and location details after the booking action.',
+                                                social: 'Add social links so clients can keep following after booking.'
                                             }[scene.id]
                                         }));
                                         const activeSceneId = editorStudioModal || 'introduction';
@@ -7302,13 +7398,20 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                 </div>
                                                             )}
 
-                                                            {activeScene.id === 'faq' && <div className="cinema-feature-preview">{[['FAQ', settings.features?.faqEnabled], ['Questions', (settings.features?.faqs || []).length > 0], ['Styled', settings.faqStyle || 'minimal']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
-                                                            {activeScene.id === 'social' && <div className="cinema-feature-preview">{[['Instagram', settings.socials?.instagram], ['TikTok', settings.socials?.tiktok], ['Facebook', settings.socials?.facebook], ['Website', settings.socials?.website], ['Maps', settings.features?.location]].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
+                                                            {activeScene.id === 'faq' && <div className="cinema-feature-preview">{[['FAQ', settings.features?.faqEnabled], ['Questions', (settings.features?.faqs || []).length > 0], ['Look', settings.faqDisplayStyle || settings.faqStyle || 'minimal']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
+                                                            {activeScene.id === 'venue' && <div className="cinema-feature-preview">{[['Gallery', Array.isArray(settings.venuePhotos) && settings.venuePhotos.length > 0], ['Maps', settings.features?.location], ['Look', settings.venueGalleryStyle || 'mosaic'], ['Directions', settings.mapDisplayStyle !== 'none']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
+                                                            {activeScene.id === 'social' && <div className="cinema-feature-preview">{[['Instagram', settings.socials?.instagram], ['TikTok', settings.socials?.tiktok], ['Facebook', settings.socials?.facebook], ['Website', settings.socials?.website], ['Look', settings.socialDisplayStyle || settings.socialIconStyle || 'icons']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
                                                         </div>
 
                                                         <div className="editor-cinema-control-panel">
                                                             {activeScene.id === 'services' && <>
                                                                 <div className="cinema-control-title"><span>Service menu</span><small>Services are edited in their own studio so pricing, galleries, and staff stay organized.</small></div>
+                                                                <InterfaceLookGrid
+                                                                    label="Services display"
+                                                                    looks={editorInterfaceLooks.services}
+                                                                    value={settings.serviceDisplayStyle || 'cards'}
+                                                                    onChange={(value) => handleSettingChange('serviceDisplayStyle', value)}
+                                                                />
                                                                 <div className="cinema-feature-preview">
                                                                     {workspaceServices.slice(0, 6).map(service => <span key={service.id} className={service.active !== false ? 'is-on' : ''}>{service.name}</span>)}
                                                                     {workspaceServices.length === 0 && <span>Add your first service</span>}
@@ -7413,9 +7516,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                                 <textarea value={settings.welcomeMessage || ''} onChange={(event) => handleSettingChange('welcomeMessage', event.target.value)} placeholder="Choose a time that works for you." />
                                                                             </label>
                                                                         </div>
-                                                                        <details className="cinema-setting-group" open>
+                                                                        <details className="cinema-setting-group cinema-alignment-room" open>
                                                                             <summary><AlignCenter size={15}/> Page alignment</summary>
-                                                                            <div className="cinema-control-title"><span>How should the page line up?</span><small>This controls the page rhythm and logo position.</small></div>
+                                                                            <div className="cinema-control-title"><span>Page rhythm</span><small>Choose how the logo, headline, and booking flow line up.</small></div>
                                                                             <div className="cinema-align-grid">
                                                                                 {[
                                                                                     ['left', AlignLeft],
@@ -7428,35 +7531,47 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                                 ))}
                                                                             </div>
                                                                         </details>
-                                                                        <div className="cinema-display-grid">
-                                                                            <section className="cinema-display-card">
-                                                                                <div className="cinema-display-card-head">
-                                                                                    <strong>Logo display</strong>
-                                                                                    <button type="button" onClick={() => handleLogoDisplayChange('visible', !logoDisplay.visible)} className={logoDisplay.visible ? 'is-active' : ''}>{logoDisplay.visible ? 'Shown' : 'Hidden'}</button>
+                                                                        <div className="cinema-media-display-suite">
+                                                                            <section className="cinema-media-display-card">
+                                                                                <div className="cinema-media-preview is-logo">
+                                                                                    <div className="cinema-logo-size-preview" style={{ width: `${Math.min(96, Math.max(42, logoDisplay.size * 0.52))}px`, height: `${Math.min(96, Math.max(42, logoDisplay.size * 0.52))}px` }}>
+                                                                                        {settings.logo ? <img src={settings.logo} alt="" /> : <span>Logo</span>}
+                                                                                    </div>
                                                                                 </div>
-                                                                                <label className="cinema-range-row">
-                                                                                    <span>Size</span>
-                                                                                    <input type="range" min="48" max="176" value={logoDisplay.size} onChange={(event) => handleLogoDisplayChange('size', Number(event.target.value))} />
-                                                                                    <b>{logoDisplay.size}px</b>
-                                                                                </label>
-                                                                                <p className="cinema-profile-note">Upload or replace the logo in Business Profile.</p>
+                                                                                <div className="cinema-media-display-body">
+                                                                                    <div className="cinema-display-card-head">
+                                                                                        <strong>Logo display</strong>
+                                                                                        <button type="button" onClick={() => handleLogoDisplayChange('visible', !logoDisplay.visible)} className={logoDisplay.visible ? 'is-active' : ''}>{logoDisplay.visible ? 'Shown' : 'Hidden'}</button>
+                                                                                    </div>
+                                                                                    <label className="cinema-range-row">
+                                                                                        <span>Size</span>
+                                                                                        <input type="range" min="48" max="176" value={logoDisplay.size} onChange={(event) => handleLogoDisplayChange('size', Number(event.target.value))} />
+                                                                                        <b>{logoDisplay.size}px</b>
+                                                                                    </label>
+                                                                                    <p className="cinema-profile-note">Logo upload lives in Business Profile.</p>
+                                                                                </div>
                                                                             </section>
-                                                                            <section className="cinema-display-card">
-                                                                                <div className="cinema-display-card-head">
-                                                                                    <strong>Banner display</strong>
-                                                                                    <button type="button" onClick={() => handleBannerDisplayChange('visible', !bannerDisplay.visible)} className={bannerDisplay.visible ? 'is-active' : ''}>{bannerDisplay.visible ? 'Shown' : 'Hidden'}</button>
+                                                                            <section className="cinema-media-display-card">
+                                                                                <div className="cinema-media-preview is-banner">
+                                                                                    {settings.bannerImage ? <img src={settings.bannerImage} alt="" style={{ objectPosition: bannerDisplay.position === 'top' ? 'center top' : bannerDisplay.position === 'bottom' ? 'center bottom' : 'center center' }} /> : <span>Banner</span>}
                                                                                 </div>
-                                                                                <label className="cinema-range-row">
-                                                                                    <span>Height</span>
-                                                                                    <input type="range" min="120" max="360" value={bannerDisplay.height} onChange={(event) => handleBannerDisplayChange('height', Number(event.target.value))} />
-                                                                                    <b>{bannerDisplay.height}px</b>
-                                                                                </label>
-                                                                                <div className="cinema-banner-crop-grid">
-                                                                                    {['top', 'center', 'bottom'].map(position => (
-                                                                                        <button key={position} type="button" onClick={() => handleBannerDisplayChange('position', position)} className={bannerDisplay.position === position ? 'is-active' : ''}>{position}</button>
-                                                                                    ))}
+                                                                                <div className="cinema-media-display-body">
+                                                                                    <div className="cinema-display-card-head">
+                                                                                        <strong>Banner display</strong>
+                                                                                        <button type="button" onClick={() => handleBannerDisplayChange('visible', !bannerDisplay.visible)} className={bannerDisplay.visible ? 'is-active' : ''}>{bannerDisplay.visible ? 'Shown' : 'Hidden'}</button>
+                                                                                    </div>
+                                                                                    <label className="cinema-range-row">
+                                                                                        <span>Height</span>
+                                                                                        <input type="range" min="120" max="360" value={bannerDisplay.height} onChange={(event) => handleBannerDisplayChange('height', Number(event.target.value))} />
+                                                                                        <b>{bannerDisplay.height}px</b>
+                                                                                    </label>
+                                                                                    <div className="cinema-banner-crop-grid" aria-label="Banner crop position">
+                                                                                        {['top', 'center', 'bottom'].map(position => (
+                                                                                            <button key={position} type="button" onClick={() => handleBannerDisplayChange('position', position)} className={bannerDisplay.position === position ? 'is-active' : ''}>{position}</button>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                    <p className="cinema-profile-note">Banner upload lives in Business Profile.</p>
                                                                                 </div>
-                                                                                <p className="cinema-profile-note">Upload or replace the banner in Business Profile.</p>
                                                                             </section>
                                                                         </div>
                                                                     </div>
@@ -7464,6 +7579,16 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                             })()}
 
                                                             {activeScene.id === 'calendar' && <>
+                                                                <InterfaceLookGrid
+                                                                    label="Calendar display"
+                                                                    looks={editorInterfaceLooks.calendar}
+                                                                    value={settings.calendarDisplayStyle || 'studio'}
+                                                                    onChange={(value) => {
+                                                                        handleSettingChange('calendarDisplayStyle', value);
+                                                                        handleSettingChange('dateStyle', ({ studio: 'solid', classic: 'outline', editorial: 'minimal', compact: 'solid', glow: 'outline' }[value]) || 'solid');
+                                                                        handleSettingChange('calendarGlow', value === 'glow');
+                                                                    }}
+                                                                />
                                                                 <VisualEditorGroup title="Calendar frame" note="Date cards, active state, background, and glow."><StyleSegmentedControl value={settings.dateStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => handleSettingChange('dateStyle', value)} label="Calendar Style" /></VisualEditorGroup>
                                                                 <div className="cinema-field-grid">
                                                                     <label>Active color<input type="color" value={settings.dateActiveBgColor?.slice(0, 7) || settings.primaryColor || '#39ff14'} onChange={(event) => handleSettingChange('dateActiveBgColor', event.target.value)} /></label>
@@ -7478,6 +7603,15 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                             </>}
 
                                                             {activeScene.id === 'time' && <>
+                                                                <InterfaceLookGrid
+                                                                    label="Time display"
+                                                                    looks={editorInterfaceLooks.time}
+                                                                    value={settings.timeDisplayStyle || 'pill'}
+                                                                    onChange={(value) => {
+                                                                        handleSettingChange('timeDisplayStyle', value);
+                                                                        handleSettingChange('timeSlotStyle', ({ pill: 'solid', blocks: 'solid', minimal: 'minimal', luxury: 'outline', compact: 'outline' }[value]) || 'solid');
+                                                                    }}
+                                                                />
                                                                 <VisualEditorGroup title="Time slots" note="Bookable time cards only."><StyleSegmentedControl value={settings.timeSlotStyle || settings.availabilityStyle || 'minimal'} onChange={(value) => { handleSettingChange('timeSlotStyle', value); handleSettingChange('availabilityStyle', value); }} label="Time Box Style" /></VisualEditorGroup>
                                                                 <div className="cinema-field-grid">
                                                                     <label>Slot background<input type="color" value={settings.slotBgColor || '#f8fafc'} onChange={(event) => handleSettingChange('slotBgColor', event.target.value)} /></label>
@@ -7508,7 +7642,16 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                                                             {activeScene.id === 'faq' && <>
                                                                 <div className="cinema-toggle-grid"><button type="button" onClick={toggleFaqFeature} className={settings.features?.faqEnabled ? 'is-on' : ''}><span>Show FAQ section</span><i /></button></div>
-                                                                <VisualEditorGroup title="FAQ style" note="Question card shape."><StyleSegmentedControl value={settings.faqStyle || 'minimal'} onChange={(value) => handleSettingChange('faqStyle', value)} label="FAQ Style" /></VisualEditorGroup>
+                                                                <InterfaceLookGrid
+                                                                    label="FAQ display"
+                                                                    looks={editorInterfaceLooks.faq}
+                                                                    value={settings.faqDisplayStyle || settings.faqStyle || 'accordion'}
+                                                                    onChange={(value) => {
+                                                                        handleSettingChange('faqDisplayStyle', value);
+                                                                        handleSettingChange('faqStyle', ({ accordion: 'outline', cards: 'solid', minimal: 'minimal', numbered: 'outline', split: 'solid' }[value]) || 'outline');
+                                                                    }}
+                                                                />
+                                                                <VisualEditorGroup title="FAQ weight" note="Fine tune the question card surface."><StyleSegmentedControl value={settings.faqStyle || 'minimal'} onChange={(value) => handleSettingChange('faqStyle', value)} label="FAQ Weight" /></VisualEditorGroup>
                                                                 <div className="cinema-field-grid"><label>FAQ background<input type="color" value={settings.faqBgColor === 'transparent' ? '#ffffff' : settings.faqBgColor || '#ffffff'} onChange={(event) => handleSettingChange('faqBgColor', event.target.value)} /></label><label>FAQ border<input type="color" value={settings.faqBorderColor || settings.primaryColor || '#39ff14'} onChange={(event) => handleSettingChange('faqBorderColor', event.target.value)} /></label></div>
                                                                 <div className="cinema-faq-editor">
                                                                     <div className="cinema-faq-editor-head">
@@ -7537,6 +7680,31 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                 </div>
                                                             </>}
 
+                                                            {activeScene.id === 'venue' && <div className="cinema-venue-room">
+                                                                <div className="cinema-control-title"><span>Venue & directions</span><small>Gallery, map, and venue copy appear after the booking action.</small></div>
+                                                                <InterfaceLookGrid
+                                                                    label="Gallery display"
+                                                                    looks={editorInterfaceLooks.venue}
+                                                                    value={settings.venueGalleryStyle || 'mosaic'}
+                                                                    onChange={(value) => handleSettingChange('venueGalleryStyle', value)}
+                                                                />
+                                                                <InterfaceLookGrid
+                                                                    label="Maps display"
+                                                                    looks={editorInterfaceLooks.maps}
+                                                                    value={settings.mapDisplayStyle || 'card'}
+                                                                    onChange={(value) => handleSettingChange('mapDisplayStyle', value)}
+                                                                />
+                                                                <div className="cinema-social-fields">
+                                                                    <label><span>Gallery title</span><input value={settings.venueTitle || ''} onChange={(event) => handleSettingChange('venueTitle', event.target.value)} placeholder="Inside the space" /></label>
+                                                                    <label><span>Gallery text</span><input value={settings.venueIntro || ''} onChange={(event) => handleSettingChange('venueIntro', event.target.value)} placeholder="See the place before you book." /></label>
+                                                                    <label className="is-wide"><span>Google Maps / address</span><input value={settings.features?.location || ''} onChange={(event) => handleFeatureChange('location', event.target.value)} placeholder="Business address or maps link" /></label>
+                                                                </div>
+                                                                <div className="cinema-feature-preview">
+                                                                    {(Array.isArray(settings.venuePhotos) ? settings.venuePhotos.slice(0, 5) : []).map((photo, index) => <span key={`${photo}-${index}`} className="is-on">Photo {index + 1}</span>)}
+                                                                    {(!Array.isArray(settings.venuePhotos) || settings.venuePhotos.length === 0) && <span>Upload venue photos in Business Profile</span>}
+                                                                </div>
+                                                            </div>}
+
                                                             {activeScene.id === 'social' && <div className="cinema-social-room">
                                                                 <div className="cinema-toggle-grid cinema-toggle-grid-compact"><button type="button" onClick={() => handleFeatureChange('socialLinks', !settings.features?.socialLinks)} className={settings.features?.socialLinks ? 'is-on' : ''}><span>Show social footer</span><i /></button></div>
                                                                 <section className="cinema-social-card">
@@ -7544,6 +7712,15 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                         <strong>Social footer</strong>
                                                                         <small>Choose how link icons appear below the booking action.</small>
                                                                     </div>
+                                                                    <InterfaceLookGrid
+                                                                        label="Social display"
+                                                                        looks={editorInterfaceLooks.social}
+                                                                        value={settings.socialDisplayStyle || 'icons'}
+                                                                        onChange={(value) => {
+                                                                            handleSettingChange('socialDisplayStyle', value);
+                                                                            handleSettingChange('socialIconStyle', ({ icons: 'outline', labels: 'outline', dock: 'solid', minimal: 'minimal', solid: 'solid' }[value]) || 'outline');
+                                                                        }}
+                                                                    />
                                                                     <StyleSegmentedControl value={settings.socialIconStyle || 'outline'} onChange={(value) => handleSettingChange('socialIconStyle', value)} label="Icon style" />
                                                                 </section>
                                                                 <div className="cinema-social-fields">
@@ -7551,7 +7728,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                     <label><span>TikTok</span><input value={settings.socials?.tiktok || ''} onChange={(event) => handleSocialChange('tiktok', event.target.value)} placeholder="@yourtiktok" /></label>
                                                                     <label><span>Facebook</span><input value={settings.socials?.facebook || ''} onChange={(event) => handleSocialChange('facebook', event.target.value)} placeholder="facebook page" /></label>
                                                                     <label><span>Website</span><input value={settings.socials?.website || ''} onChange={(event) => handleSocialChange('website', event.target.value)} placeholder="https://yourwebsite.com" /></label>
-                                                                    <label className="is-wide"><span>Google Maps / address</span><input value={settings.features?.location || ''} onChange={(event) => handleFeatureChange('location', event.target.value)} placeholder="Business address or maps link" /></label>
                                                                 </div>
                                                             </div>}
                                                         </div>

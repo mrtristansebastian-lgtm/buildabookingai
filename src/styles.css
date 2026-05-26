@@ -8948,3 +8948,102 @@ body {
         .client-portal-shell.dashboard-dark .client-message-bubble :where(*) {
             color: inherit !important;
         }
+
+        .booking-venue-gallery {
+            border: 1px solid;
+            border-radius: 1.6rem;
+            padding: clamp(1rem, 2vw, 1.4rem);
+            overflow: hidden;
+        }
+
+        .booking-venue-gallery-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .booking-venue-gallery-kicker,
+        .booking-venue-gallery-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            opacity: 0.62;
+        }
+
+        .booking-venue-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.7rem;
+        }
+
+        .booking-venue-gallery-grid.is-single {
+            grid-template-columns: 1fr;
+        }
+
+        .booking-venue-photo {
+            position: relative;
+            min-height: 8rem;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 1.2rem;
+            background: #f4f4f5;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        .booking-venue-photo.is-featured {
+            grid-column: span 2;
+            grid-row: span 2;
+            aspect-ratio: auto;
+        }
+
+        .booking-venue-gallery-grid.is-single .booking-venue-photo.is-featured {
+            grid-column: auto;
+            grid-row: auto;
+            aspect-ratio: 16 / 9;
+        }
+
+        .booking-venue-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 700ms ease;
+        }
+
+        .booking-venue-photo:hover img {
+            transform: scale(1.045);
+        }
+
+        .booking-venue-photo figcaption {
+            position: absolute;
+            left: 0.7rem;
+            bottom: 0.7rem;
+            border-radius: 999px;
+            padding: 0.45rem 0.7rem;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+        }
+
+        @media (max-width: 720px) {
+            .booking-venue-gallery-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .booking-venue-photo {
+                min-height: 6.5rem;
+                border-radius: 1rem;
+            }
+
+            .booking-venue-gallery-count {
+                display: none;
+            }
+        }

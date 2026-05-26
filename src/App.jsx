@@ -2,7 +2,7 @@ import { lazy, Suspense, startTransition, useEffect, useMemo, useRef, useState }
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
-  AlignCenter, AlignLeft, AlignRight, ArrowRight, BadgeCheck, Battery, Bell, BookOpen, Briefcase, Calendar, CalendarCheck, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, CreditCard, Eye, EyeOff, FileText, Globe, HelpCircle, History, Instagram, Layers, Layout, Mail, MessageCircle, MessageSquare, Monitor, Moon, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Sun, Tag, Trash2, Type, User, UserPlus, Users, Wifi, X, Zap
+    AlignCenter, AlignLeft, AlignRight, ArrowRight, BadgeCheck, Battery, Bell, BookOpen, Briefcase, Calendar, CalendarCheck, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, CreditCard, Eye, EyeOff, FileText, Globe, HelpCircle, History, ImagePlus, Images, Instagram, Layers, Layout, Mail, MessageCircle, MessageSquare, Monitor, Moon, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Sun, Tag, Trash2, Type, User, UserPlus, Users, Wifi, X, Zap
 } from 'lucide-react';
 import { BuildABookingBrand, BuildABookingMark } from './components/BuildABookingBrand';
 import { EmailNotificationSettings } from './components/EmailNotificationSettings';
@@ -1594,7 +1594,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 serviceIndustry: '',
                 services: [],
                 logoDisplay: { visible: true, alignment: 'left', size: 96 },
-                logo: '', bannerImage: '', address: '', socials: { instagram: '', tiktok: '', facebook: '', website: '' }
+                logo: '', bannerImage: '', venuePhotos: [], address: '', socials: { instagram: '', tiktok: '', facebook: '', website: '' }
             });
 
             useEffect(() => {
@@ -4213,6 +4213,29 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     showToast('Image upload failed');
                 }
             };
+            const handleVenuePhotoUpload = async (files) => {
+                const photoFiles = Array.from(files || []).filter(Boolean).slice(0, 8);
+                if (!photoFiles.length) return;
+                try {
+                    showToast(photoFiles.length > 1 ? 'Uploading venue photos...' : 'Uploading venue photo...');
+                    const uploadedUrls = [];
+                    for (const file of photoFiles) {
+                        uploadedUrls.push(await uploadAsset(file, 'venue'));
+                    }
+                    const currentPhotos = Array.isArray(settingsRef.current.venuePhotos) ? settingsRef.current.venuePhotos : [];
+                    const nextPhotos = [...currentPhotos, ...uploadedUrls].filter(Boolean).slice(0, 12);
+                    handleSettingChange('venuePhotos', nextPhotos);
+                    showToast(photoFiles.length > 1 ? 'Venue photos added' : 'Venue photo added');
+                } catch (error) {
+                    console.error(error);
+                    showToast('Venue photo upload failed');
+                }
+            };
+            const removeVenuePhoto = (photoUrl) => {
+                const currentPhotos = Array.isArray(settingsRef.current.venuePhotos) ? settingsRef.current.venuePhotos : [];
+                handleSettingChange('venuePhotos', currentPhotos.filter(photo => photo !== photoUrl));
+                showToast('Venue photo removed');
+            };
             const openDashboard = () => {
                 if (!isFirebaseConfigured || user || guestMode) {
                     setView('dashboard');
@@ -5206,8 +5229,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 {
                     id: 'business',
                     title: 'Business Details',
-                    note: settings.brandName || 'Brand, links, logo, and banner',
-                    icon: Palette,
+                    note: settings.brandName || 'Brand, venue gallery, links, logo, and banner',
+                    icon: Images,
                     meta: settings.slug || 'booking'
                 },
                 {
@@ -5220,6 +5243,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }
             ];
             const activeProfileSectionMeta = profileSections.find(section => section.id === activeProfileSection);
+            const venuePhotos = Array.isArray(settings.venuePhotos) ? settings.venuePhotos.filter(Boolean) : [];
 
             if (loading || publicLoading) return (
                 <div className="h-screen bg-white flex items-center justify-center">
@@ -5949,9 +5973,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 </div>
                             </header>
 
-                            <div className="profile-mobile-hub md:hidden max-w-6xl mb-4">
+                            <div className="profile-mobile-hub max-w-6xl mb-4">
                                 {!activeProfileSection ? (
-                                    <div className="space-y-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                                         {profileSections.map(section => {
                                             const IconCmp = section.icon;
                                             return (
@@ -5996,7 +6020,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             </div>
 
                             <div className="max-w-6xl space-y-8">
-                                <div className={`profile-section profile-section-account ${activeProfileSection === 'account' ? 'block' : 'hidden'} md:block overflow-hidden bg-white rounded-lg border border-neutral-100 shadow-[0_25px_80px_-60px_rgba(0,0,0,0.75)]`}>
+                                <div className={`profile-section profile-section-account ${activeProfileSection === 'account' ? 'block' : 'hidden'} overflow-hidden bg-white rounded-lg border border-neutral-100 shadow-[0_25px_80px_-60px_rgba(0,0,0,0.75)]`}>
                                     <div className="grid grid-cols-1 lg:grid-cols-12">
                                         <div className="lg:col-span-5 bg-black text-white p-6 md:p-8 flex flex-col justify-between gap-10">
                                             <div className="flex items-center gap-4">
@@ -6092,7 +6116,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     </div>
                                 </div>
 
-                                <div className={`profile-section profile-section-account ${activeProfileSection === 'account' ? 'grid' : 'hidden'} md:grid grid-cols-1 lg:grid-cols-12 gap-5`}>
+                                <div className={`profile-section profile-section-account ${activeProfileSection === 'account' ? 'grid' : 'hidden'} grid-cols-1 lg:grid-cols-12 gap-5`}>
                                     <section className="lg:col-span-7 bg-white rounded-lg border border-neutral-100 p-5 md:p-7 shadow-[0_22px_70px_-60px_rgba(15,23,42,0.5)]">
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
                                             <div className="flex items-start gap-4">
@@ -6137,7 +6161,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     </section>
                                 </div>
 
-                                <section className={`profile-section profile-section-billing ${activeProfileSection === 'billing' ? 'block' : 'hidden'} md:block bg-white rounded-lg border border-neutral-100 p-5 md:p-7 shadow-[0_22px_70px_-60px_rgba(15,23,42,0.5)]`}>
+                                <section className={`profile-section profile-section-billing ${activeProfileSection === 'billing' ? 'block' : 'hidden'} bg-white rounded-lg border border-neutral-100 p-5 md:p-7 shadow-[0_22px_70px_-60px_rgba(15,23,42,0.5)]`}>
                                     <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
                                         <div className="flex items-start gap-4">
                                             <div className="w-12 h-12 rounded-lg bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0">
@@ -6160,7 +6184,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     </div>
                                 </section>
 
-                                <div data-tour="profile-business-info" className={`profile-section profile-section-business ${activeProfileSection === 'business' ? 'block' : 'hidden'} md:block bg-white p-5 sm:p-6 md:p-10 rounded-lg border border-neutral-100 shadow-[0_25px_80px_-65px_rgba(0,0,0,0.75)]`}>
+                                <div data-tour="profile-business-info" className={`profile-section profile-section-business ${activeProfileSection === 'business' ? 'block' : 'hidden'} bg-white p-5 sm:p-6 md:p-10 rounded-lg border border-neutral-100 shadow-[0_25px_80px_-65px_rgba(0,0,0,0.75)]`}>
                                     <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
                                         <div>
                                             <p className="text-[10px] font-bold uppercase tracking-[0.45em] text-neutral-300 mb-3">Business Profile</p>
@@ -6219,6 +6243,58 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-neutral-50">
+                                            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5">
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-[0.5em] opacity-40 block text-black">Venue Gallery</label>
+                                                    <p className="text-xs text-neutral-400 font-medium mt-2 max-w-xl">Show clients the space after they submit their request, just before social links and map details.</p>
+                                                </div>
+                                                <label className="inline-flex h-12 px-5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-neutral-800 transition-colors items-center justify-center gap-2 shrink-0">
+                                                    <ImagePlus size={14} /> Upload Venue Photos
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        multiple
+                                                        className="hidden"
+                                                        onChange={(event) => {
+                                                            handleVenuePhotoUpload(event.target.files);
+                                                            event.target.value = '';
+                                                        }}
+                                                    />
+                                                </label>
+                                            </div>
+                                            {venuePhotos.length > 0 ? (
+                                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                                    {venuePhotos.map((photo, index) => (
+                                                        <div key={`${photo}-${index}`} className={`${index === 0 ? 'lg:col-span-2 lg:row-span-2' : ''} group relative overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50 aspect-[4/3] shadow-inner`}>
+                                                            <img src={photo} alt={`Venue photo ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                                            <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2">
+                                                                <span className="rounded-full bg-white/90 px-2.5 py-1 text-[8px] font-bold uppercase tracking-widest text-black shadow-sm">Photo {index + 1}</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeVenuePhoto(photo)}
+                                                                    className="w-8 h-8 rounded-full bg-black/80 text-white flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    aria-label={`Remove venue photo ${index + 1}`}
+                                                                >
+                                                                    <Trash2 size={13} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/70 p-6 flex flex-col sm:flex-row sm:items-center gap-4 text-neutral-400">
+                                                    <div className="w-12 h-12 rounded-xl bg-white border border-neutral-100 flex items-center justify-center text-black shrink-0">
+                                                        <Images size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-black">No venue photos yet</p>
+                                                        <p className="text-xs font-medium mt-1">Upload a few polished photos of the venue, studio, workspace, or service environment.</p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-neutral-50">

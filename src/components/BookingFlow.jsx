@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Bell, Briefcase, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Flame, Globe, Instagram, Mail, MapPin } from 'lucide-react';
+import { ArrowRight, Bell, Briefcase, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Flame, Globe, Images, Instagram, Mail, MapPin } from 'lucide-react';
 import { getFontFamily } from '../data/fonts';
 import { getLocalDateStr } from '../utils/dates';
 import { formatServiceDuration, formatServicePrice, normalizeServiceList } from '../utils/services';
@@ -212,6 +212,9 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                     icon: Globe
                 }
             ].filter(Boolean) : [];
+            const venuePhotos = Array.isArray(settings.venuePhotos)
+                ? settings.venuePhotos.filter(Boolean).slice(0, 8)
+                : [];
 
             const handleAction = async () => {
                 if (isPreview) { onInspect('buttons'); return; }
@@ -771,6 +774,38 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                             </button>
                             {settings.features?.socialProof && (
                                 <p className="mt-6 text-[10px] font-bold uppercase tracking-widest opacity-40" style={{ color: settings.bodyColor }}><Flame size={12} className="inline mr-1 -mt-0.5"/> 4 People secured slots this week</p>
+                            )}
+                            {venuePhotos.length > 0 && (
+                                <section
+                                    className={`booking-venue-gallery mt-8 ${inspectClass}`}
+                                    data-preview-section="venue-gallery"
+                                    onClick={() => isPreview && onInspect('identity')}
+                                    style={{
+                                        borderColor: `${settings.headingColor || '#000000'}18`,
+                                        backgroundColor: `${settings.headingColor || '#000000'}04`
+                                    }}
+                                >
+                                    <div className="booking-venue-gallery-header">
+                                        <span className="booking-venue-gallery-kicker" style={{ color: settings.bodyColor }}>
+                                            <Images size={13} /> Venue Gallery
+                                        </span>
+                                        <span className="booking-venue-gallery-count" style={{ color: settings.headingColor }}>
+                                            {venuePhotos.length} {venuePhotos.length === 1 ? 'photo' : 'photos'}
+                                        </span>
+                                    </div>
+                                    <div className={`booking-venue-gallery-grid ${venuePhotos.length === 1 ? 'is-single' : ''}`}>
+                                        {venuePhotos.map((photo, index) => (
+                                            <figure key={`${photo}-${index}`} className={`booking-venue-photo ${index === 0 ? 'is-featured' : ''}`}>
+                                                <img src={photo} alt={`Venue view ${index + 1}`} loading="lazy" />
+                                                {index === 0 && (
+                                                    <figcaption style={{ color: settings.headingColor, backgroundColor: `${settings.backgroundColor || '#ffffff'}E8` }}>
+                                                        Step inside
+                                                    </figcaption>
+                                                )}
+                                            </figure>
+                                        ))}
+                                    </div>
+                                </section>
                             )}
                             {socialLinks.length > 0 && (
                                 <div className={`mt-8 flex flex-wrap items-center justify-center gap-3 ${inspectClass}`} data-preview-section="social" onClick={() => isPreview && onInspect('social')}>

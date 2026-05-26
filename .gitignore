@@ -5,3 +5,5 @@ dist/
 .env.local
 vite-dev.*.log
 *.log
+_local_backups/
+.local-dev-logs/

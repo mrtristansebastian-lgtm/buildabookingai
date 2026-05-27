@@ -695,6 +695,7 @@ export function WorkspaceInbox({
                 value={threadQuery}
                 onChange={(event) => setThreadQuery(event.target.value)}
                 placeholder="Search client, email, message"
+                aria-label="Search support threads"
                 className="w-full h-11 md:h-12 rounded-lg bg-white border border-neutral-200 pl-11 pr-4 text-sm font-bold outline-none focus:border-black transition-colors"
               />
             </div>
@@ -772,7 +773,7 @@ export function WorkspaceInbox({
             <>
               <div className="support-chat-header support-conversation-bar p-3 md:p-5 xl:p-6 border-b border-neutral-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white">
                 <div className="flex items-center gap-3 min-w-0">
-                  <button type="button" onClick={() => setMobileChatOpen(false)} className="xl:hidden w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0">
+                  <button type="button" aria-label="Back to support inbox" onClick={() => setMobileChatOpen(false)} className="xl:hidden w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0">
                     <ArrowLeft size={18} />
                   </button>
                   <div className={`w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden font-bold ${getThreadAvatar(activeThread) ? 'bg-neutral-100 border border-neutral-100 text-black' : 'native-gradient-icon'}`}>
@@ -789,7 +790,7 @@ export function WorkspaceInbox({
                   </div>
                 </div>
                 <div className="support-chat-actions flex items-center gap-2 shrink-0 w-full overflow-x-auto pb-1">
-                  <button type="button" onClick={() => setChatFullscreen(value => !value)} className="hidden md:flex h-10 w-10 rounded-lg border border-neutral-200 bg-white items-center justify-center text-black hover:border-black transition-colors">
+                  <button type="button" aria-label={chatFullscreen ? 'Exit full screen chat' : 'Open full screen chat'} title={chatFullscreen ? 'Exit full screen' : 'Full screen'} onClick={() => setChatFullscreen(value => !value)} className="hidden md:flex h-10 w-10 rounded-lg border border-neutral-200 bg-white items-center justify-center text-black hover:border-black transition-colors">
                     {chatFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
                   </button>
                   <button onClick={() => setActiveTab?.('bookings')} className="h-10 px-3 rounded-lg border border-neutral-200 bg-white text-[9px] font-bold uppercase tracking-widest hover:border-black transition-colors flex items-center justify-center gap-2 shrink-0">
@@ -898,10 +899,11 @@ export function WorkspaceInbox({
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     placeholder="Reply to client..."
+                    aria-label="Reply to client"
                     rows={2}
                     className="flex-1 resize-none rounded-lg bg-white border border-neutral-200 px-4 py-3 text-sm font-medium outline-none focus:border-black transition-colors"
                   />
-                  <button onClick={() => sendMessage()} disabled={!draft.trim() || sending} className="h-12 w-12 rounded-lg native-gradient-button flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed">
+                  <button type="button" aria-label="Send reply" onClick={() => sendMessage()} disabled={!draft.trim() || sending} className="h-12 w-12 rounded-lg native-gradient-button flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed">
                     <Send size={17} />
                   </button>
                 </div>

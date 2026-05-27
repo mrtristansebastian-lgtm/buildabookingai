@@ -1022,9 +1022,9 @@ import { getLocalDateStr } from '../utils/dates';
                                         </div>
                                         <div className="schedule-calendar-toolbar flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
                                             <div className="schedule-month-switcher flex items-center gap-2 bg-neutral-50 p-1.5 rounded-lg border border-neutral-100 w-full sm:w-fit shadow-sm">
-                                                <button onClick={() => moveCalendarWindow(-1)} className="w-10 h-10 rounded-md bg-white border border-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-200 transition-colors flex items-center justify-center shrink-0"><ChevronLeft size={18}/></button>
+                                                <button type="button" aria-label="Show previous calendar window" title="Previous" onClick={() => moveCalendarWindow(-1)} className="w-10 h-10 rounded-md bg-white border border-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-200 transition-colors flex items-center justify-center shrink-0"><ChevronLeft size={18}/></button>
                                                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] min-w-0 sm:min-w-[158px] flex-1 text-center text-black">{calendarWindowLabel}</span>
-                                                <button onClick={() => moveCalendarWindow(1)} className="w-10 h-10 rounded-md bg-white border border-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-200 transition-colors flex items-center justify-center shrink-0"><ChevronRight size={18}/></button>
+                                                <button type="button" aria-label="Show next calendar window" title="Next" onClick={() => moveCalendarWindow(1)} className="w-10 h-10 rounded-md bg-white border border-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-200 transition-colors flex items-center justify-center shrink-0"><ChevronRight size={18}/></button>
                                             </div>
                                             <button
                                                 type="button"

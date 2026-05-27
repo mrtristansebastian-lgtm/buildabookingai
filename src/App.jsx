@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
-    AlignCenter, AlignLeft, AlignRight, ArrowRight, BadgeCheck, Battery, Bell, BookOpen, Briefcase, Calendar, CalendarCheck, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, CreditCard, Crop, Eye, EyeOff, FileText, Globe, HelpCircle, History, ImagePlus, Images, Instagram, Layers, Layout, Mail, MessageCircle, MessageSquare, Monitor, Moon, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Sun, Tag, Trash2, Type, User, UserPlus, Users, Wifi, X, Zap
+    AlignCenter, AlignLeft, AlignRight, ArrowRight, Battery, Bell, BookOpen, Briefcase, Calendar, CalendarCheck, Camera, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, CreditCard, Crop, Eye, FileText, Globe, HelpCircle, History, ImagePlus, Images, Instagram, Layers, Layout, Mail, MessageCircle, MessageSquare, Monitor, Moon, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Sun, Tag, Trash2, Type, User, Users, Wifi, X, Zap
 } from 'lucide-react';
 import { BuildABookingBrand, BuildABookingMark } from './components/BuildABookingBrand';
 import { EmailNotificationSettings } from './components/EmailNotificationSettings';
@@ -12,7 +12,6 @@ import { NotificationCenter } from './components/NotificationCenter';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { ProButton } from './components/ProButton';
 import { FONT_OPTIONS, getFontFamily } from './data/fonts';
-import { PRESET_THEMES, generateThemeCollection } from './data/themes';
 import * as FirebaseSDK from './services/firebase';
 import { appId, auth, db, functions, initialAuthToken, isFirebaseConfigured, storage } from './services/firebase';
 import { createDefaultEmailConfig, sendClientEmail } from './services/email';
@@ -244,8 +243,6 @@ const logoAlignmentOptions = [
   { id: 'right', label: 'Right', icon: AlignRight }
 ];
 
-const textAlignmentOptions = logoAlignmentOptions;
-
 const legalPages = {
   privacy: {
     eyebrow: 'Privacy',
@@ -333,92 +330,6 @@ const editorInterfaceLooks = {
   ]
 };
 
-const themeTemplateKeys = [
-  'primaryColor', 'headingColor', 'bodyColor', 'backgroundColor',
-  'slotBgColor', 'slotTextColor', 'dateBgColor', 'dateTextColor',
-  'dateActiveBgColor', 'dateActiveTextColor', 'buttonTextColor',
-  'fontFamily', 'nativeAccent',
-  'headingFontFamily', 'bodyFontFamily', 'buttonFontFamily', 'slotFontFamily', 'dateFontFamily',
-  'brandNameSize', 'brandNameFontFamily', 'taglineSize', 'taglineFontFamily',
-  'welcomeSize', 'welcomeFontFamily', 'headingLetterSpacing', 'subtextLetterSpacing',
-  'buttonStyle', 'availabilityStyle', 'dateStyle', 'timeSlotStyle', 'actionButtonStyle',
-  'calendarDisplayStyle', 'timeDisplayStyle', 'serviceDisplayStyle', 'serviceBorderStyle',
-  'faqStyle', 'faqDisplayStyle', 'faqBgColor', 'faqBorderColor', 'faqTextColor', 'faqAnswerColor', 'faqFontFamily',
-  'venueGalleryStyle', 'venueTitle', 'venueIntro', 'mapDisplayStyle',
-  'socialIconStyle', 'socialDisplayStyle', 'socialIconBgColor', 'socialIconColor', 'socialIconTextColor'
-];
-
-const pickThemeTemplateSettings = (source = {}) => (
-  themeTemplateKeys.reduce((template, key) => {
-    if (source[key] !== undefined) template[key] = source[key];
-    return template;
-  }, {})
-);
-
-const nativeStarterTheme = PRESET_THEMES.find(theme => theme.id === 'build-a-booking-native') || PRESET_THEMES[0];
-const mobileWebEditorThemes = [
-  nativeStarterTheme,
-  {
-    ...nativeStarterTheme,
-    id: 'mobile-web-modern-light',
-    name: 'Modern Light',
-    primaryColor: '#050505',
-    backgroundColor: '#FFFFFF',
-    headingColor: '#050505',
-    bodyColor: '#616672',
-    slotBgColor: '#F5F6F8',
-    slotTextColor: '#050505',
-    dateBgColor: '#F7F7F8',
-    dateTextColor: '#7A808A',
-    dateActiveBgColor: '#050505',
-    dateActiveTextColor: '#FFFFFF',
-    buttonTextColor: '#FFFFFF',
-    buttonStyle: 'pill',
-    fontFamily: 'plus-jakarta',
-    availabilityStyle: 'solid',
-    dateStyle: 'solid',
-    timeSlotStyle: 'solid',
-    actionButtonStyle: 'solid',
-    palette: 'neutral',
-    styleTags: ['modern', 'minimal'],
-    industryTags: ['all'],
-    nativeAccent: false
-  },
-  {
-    ...nativeStarterTheme,
-    id: 'mobile-web-modern-dark',
-    name: 'Modern Dark',
-    primaryColor: '#FFFFFF',
-    backgroundColor: '#050505',
-    headingColor: '#FFFFFF',
-    bodyColor: '#A3A7AF',
-    slotBgColor: '#16171A',
-    slotTextColor: '#FFFFFF',
-    dateBgColor: '#111215',
-    dateTextColor: '#A3A7AF',
-    dateActiveBgColor: '#FFFFFF',
-    dateActiveTextColor: '#050505',
-    buttonTextColor: '#050505',
-    buttonStyle: 'pill',
-    fontFamily: 'space-grotesk',
-    availabilityStyle: 'solid',
-    dateStyle: 'solid',
-    timeSlotStyle: 'solid',
-    actionButtonStyle: 'solid',
-    faqBgColor: '#101114',
-    faqBorderColor: '#24262B',
-    faqTextColor: '#FFFFFF',
-    faqAnswerColor: '#B5BAC4',
-    socialIconBgColor: '#111215',
-    socialIconColor: '#FFFFFF',
-    socialIconTextColor: '#050505',
-    palette: 'neutral',
-    styleTags: ['modern', 'night'],
-    industryTags: ['all'],
-    nativeAccent: false
-  }
-];
-
 const defaultFaqItems = [
   { q: 'How do I know my booking is confirmed?', a: 'You will see a confirmation on this page and receive a message when the business approves your request.' },
   { q: 'Can I join a waitlist if the day is full?', a: 'Yes. If waitlist is enabled, you can leave your details and the business can contact you when a slot opens.' }
@@ -426,10 +337,6 @@ const defaultFaqItems = [
 
 const themePaletteLabel = (paletteId) => (
   THEME_FILTER_GROUPS.find(group => group.id === 'palette')?.filters.find(filter => filter.id === paletteId)?.name || 'brand'
-);
-
-const themeStyleLabel = (styleId) => (
-  THEME_FILTER_GROUPS.find(group => group.id === 'style')?.filters.find(filter => filter.id === styleId)?.name || 'Modern'
 );
 
 const fontStylePresets = [
@@ -1243,60 +1150,6 @@ const getBannerDisplay = (settings = {}) => {
   };
 };
 
-const identityTextControls = [
-  {
-    id: 'brandName',
-    label: 'Business Name',
-    hint: 'Main booking page heading.',
-    fieldKey: 'brandName',
-    sizeKey: 'brandNameSize',
-    fontKey: 'brandNameFontFamily',
-    fallbackFontKey: 'headingFontFamily',
-    fallbackSize: 76,
-    min: 36,
-    max: 120,
-    step: 2,
-    multiline: false,
-    preview: 'Studio Noir'
-  },
-  {
-    id: 'tagline',
-    label: 'Eyebrow / Tagline',
-    hint: 'Small line above the title.',
-    fieldKey: 'tagline',
-    sizeKey: 'taglineSize',
-    fontKey: 'taglineFontFamily',
-    fallbackFontKey: 'bodyFontFamily',
-    fallbackSize: 9,
-    min: 8,
-    max: 22,
-    step: 1,
-    multiline: false,
-    preview: 'Atelier 7B / Private'
-  },
-  {
-    id: 'welcome',
-    label: 'Welcome Text',
-    hint: 'Intro copy under the heading.',
-    fieldKey: 'welcomeMessage',
-    sizeKey: 'welcomeSize',
-    fontKey: 'welcomeFontFamily',
-    fallbackFontKey: 'bodyFontFamily',
-    fallbackSize: 20,
-    min: 13,
-    max: 32,
-    step: 1,
-    multiline: true,
-    preview: 'Reserve your private session.'
-  }
-];
-
-const getIdentityTextSettings = (settings = {}, config) => {
-  const size = clampNumber(settings[config.sizeKey], config.min, config.max, config.fallbackSize);
-  const font = settings[config.fontKey] || settings[config.fallbackFontKey] || settings.fontFamily || 'inter';
-  return { size, font };
-};
-
 const getSpacingControlValue = (settings = {}, key) => {
   const value = settings[key];
   if (value === '' || value === null || value === undefined) return 0;
@@ -1381,189 +1234,6 @@ function LetterSpacingControl({ settings, onChange }) {
             </div>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-function AlignmentButtonGroup({ value, onChange, label = 'Alignment' }) {
-  return (
-    <div>
-      <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 mb-2">{label}</p>
-      <div className="grid grid-cols-3 gap-1.5 rounded-lg bg-neutral-100 p-1">
-        {textAlignmentOptions.map(option => {
-          const IconCmp = option.icon;
-          const isActive = value === option.id;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => onChange(option.id)}
-              className={`h-10 rounded-md flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-white hover:text-black'}`}
-              aria-label={`${label} ${option.label}`}
-            >
-              <IconCmp size={14} />
-              <span className="hidden xl:inline">{option.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function FontDropdown({ value, onChange, fallbackLabel = 'Theme Default' }) {
-  return (
-    <div className="relative">
-      <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 mb-2">Font</p>
-      <select
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full h-11 rounded-lg bg-neutral-50 border border-neutral-100 px-3 pr-9 text-[10px] font-bold uppercase tracking-widest text-black outline-none appearance-none cursor-pointer focus:bg-white focus:border-neutral-200 transition-all"
-        style={{ fontFamily: getFontFamily(value || '') }}
-      >
-        <option value="">{fallbackLabel}</option>
-        {FONT_OPTIONS.map(font => (
-          <option key={font.id} value={font.id} style={{ fontFamily: font.family }}>
-            {font.name} ({font.category})
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={14} className="absolute right-3 bottom-3.5 pointer-events-none text-neutral-400" />
-    </div>
-  );
-}
-
-function LogoDisplayControls({ settings, onChange, className = '' }) {
-  const logoDisplay = getLogoDisplay(settings);
-  return (
-    <div className={`space-y-5 ${className}`}>
-      <div className="flex flex-col gap-4">
-        <div>
-          <p className="text-sm font-bold text-black">Booking Page Logo</p>
-          <p className="text-xs text-neutral-400 leading-relaxed max-w-sm">Control logo visibility, position, and size above the page heading.</p>
-        </div>
-        <div className="grid grid-cols-2 rounded-lg bg-neutral-100 p-1 w-full">
-          {[
-            { value: true, label: 'Shown', icon: Eye },
-            { value: false, label: 'Hidden', icon: EyeOff }
-          ].map(option => {
-            const IconCmp = option.icon;
-            const isActive = logoDisplay.visible === option.value;
-            return (
-              <button
-                key={option.label}
-                type="button"
-                onClick={() => onChange('visible', option.value)}
-                className={`h-10 rounded-md flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-all ${isActive ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-white hover:text-black'}`}
-              >
-                <IconCmp size={14} />
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-neutral-100 bg-white p-4 shadow-sm">
-        <div className="h-20 rounded-lg bg-neutral-50 border border-neutral-100 px-4 flex items-center mb-5" style={{ justifyContent: logoDisplay.alignment === 'center' ? 'center' : logoDisplay.alignment === 'right' ? 'flex-end' : 'flex-start' }}>
-          <div className="rounded-lg bg-black text-white flex items-center justify-center font-bold text-xs shadow-xl" style={{ width: Math.max(34, logoDisplay.size * 0.32), height: Math.max(34, logoDisplay.size * 0.32) }}>
-            LOGO
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5">
-          <AlignmentButtonGroup value={logoDisplay.alignment} onChange={(value) => onChange('alignment', value)} label="Position" />
-
-          <div>
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Size</p>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-neutral-100 px-2 py-1 rounded-md">{logoDisplay.size}px</span>
-            </div>
-            <input
-              type="range"
-              min="48"
-              max="176"
-              step="4"
-              value={logoDisplay.size}
-              onChange={(event) => onChange('size', Number(event.target.value))}
-              className="w-full accent-black"
-            />
-            <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-neutral-300 mt-1">
-              <span>Small</span>
-              <span>Large</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function IdentityTextControl({ settings, config, onChange }) {
-  const appearance = getIdentityTextSettings(settings, config);
-  const masterAlignment = getLogoDisplay(settings).alignment;
-  const value = settings[config.fieldKey] || '';
-  const inputStyle = {
-    textAlign: masterAlignment,
-    fontFamily: getFontFamily(appearance.font),
-    fontSize: `${config.id === 'brandName' ? Math.min(28, Math.max(18, appearance.size * 0.32)) : Math.min(18, Math.max(12, appearance.size))}px`
-  };
-
-  return (
-    <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-4 md:p-5 space-y-5 shadow-inner">
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-bold text-black">{config.label}</p>
-          <p className="text-xs text-neutral-400 leading-relaxed">{config.hint}</p>
-        </div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-black bg-white border border-neutral-100 px-2 py-1 rounded-md shrink-0">{appearance.size}px</span>
-      </div>
-
-      {config.multiline ? (
-        <textarea
-          value={value}
-          onChange={(event) => onChange(config.fieldKey, event.target.value)}
-          className="w-full min-h-[118px] rounded-lg bg-white border border-neutral-100 px-5 py-4 text-black outline-none focus:border-neutral-200 resize-none transition-all"
-          style={inputStyle}
-          placeholder={config.preview}
-        />
-      ) : (
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onChange(config.fieldKey, event.target.value)}
-          className={`w-full rounded-lg bg-white border border-neutral-100 px-5 py-4 text-black outline-none focus:border-neutral-200 transition-all ${config.id === 'tagline' ? 'uppercase tracking-[0.35em] font-bold' : 'font-bold tracking-tight'}`}
-          style={inputStyle}
-          placeholder={config.preview}
-        />
-      )}
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div>
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Size</p>
-          </div>
-          <input
-            type="range"
-            min={config.min}
-            max={config.max}
-            step={config.step}
-            value={appearance.size}
-            onChange={(event) => onChange(config.sizeKey, Number(event.target.value))}
-            className="w-full accent-black"
-          />
-          <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-neutral-300 mt-1">
-            <span>{config.min}px</span>
-            <span>{config.max}px</span>
-          </div>
-        </div>
-
-        <FontDropdown value={settings[config.fontKey] || ''} onChange={(value) => onChange(config.fontKey, value)} />
-      </div>
-
-      <div className="rounded-lg bg-white border border-neutral-100 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-        Uses logo position: <span className="text-black">{masterAlignment}</span>
       </div>
     </div>
   );
@@ -1662,33 +1332,6 @@ function VisualEditorGroup({ title, note, children }) {
       </div>
       {children}
     </section>
-  );
-}
-
-function ColorFontControl({ settings, item, onChange }) {
-  const colorValue = settings[item.key] || item.fallback || (item.key.toLowerCase().includes('bg') ? 'transparent' : '#000000');
-  return (
-    <div className="flex flex-col bg-neutral-50 p-4 rounded-lg group relative border border-neutral-100/50 hover:border-neutral-200 transition-all">
-      <div className="flex items-center gap-4 w-full">
-        <label className="cursor-pointer flex-shrink-0">
-          <div className="w-12 h-12 rounded-[1rem] shadow-sm border border-black/5 hover:scale-110 transition-transform overflow-hidden relative" style={{ backgroundColor: colorValue }}>
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 backdrop-blur-sm">
-              <Pipette size={16} className="text-white drop-shadow-md" />
-            </div>
-          </div>
-          <input type="color" className="sr-only" value={colorValue === 'transparent' ? '#ffffff' : colorValue} onChange={(event) => onChange(item.key, event.target.value)} />
-        </label>
-        <div className="flex-1 min-w-0">
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-1 truncate">{item.label}</p>
-          <input type="text" value={colorValue} onChange={(event) => onChange(item.key, event.target.value)} className="w-full bg-transparent text-sm font-mono font-bold uppercase outline-none text-black" />
-        </div>
-      </div>
-      {item.fontKey && (
-        <div className="mt-4 pt-3 border-t border-neutral-200/50 w-full">
-          <FontDropdown value={settings[item.fontKey] || ''} onChange={(value) => onChange(item.fontKey, value)} />
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -2128,18 +1771,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [editorTab, setEditorTab] = useState(initialWorkspaceRoute.editorTab);
             const [editorStudioModal, setEditorStudioModal] = useState(null);
             const editorStudioAudioRef = useRef(null);
-            const editorStudioPresentationRef = useRef([]);
             const [editorStudioScene, setEditorStudioScene] = useState('introduction');
-            const [editorStudioSoundEnabled, setEditorStudioSoundEnabled] = useState(true);
-            const [editorStudioPresenting, setEditorStudioPresenting] = useState(false);
+            const editorStudioSoundEnabled = true;
             const [themeFilters, setThemeFilters] = useState({ palette: '', industry: '', style: 'all-styles' });
-            const [themeDisplayLimit, setThemeDisplayLimit] = useState(60);
-            const [themeBatchLoading, setThemeBatchLoading] = useState(false);
-            const [themeTemplateName, setThemeTemplateName] = useState('');
+            const themeTemplateName = '';
             const [detectedThemePalette, setDetectedThemePalette] = useState('');
             const [detectedThemeStyle, setDetectedThemeStyle] = useState('');
-            const [customThemeColor, setCustomThemeColor] = useState('#755CFF');
-            const [customThemePaletteOpen, setCustomThemePaletteOpen] = useState(false);
+            const customThemeColor = '#755CFF';
             const [paletteDetecting, setPaletteDetecting] = useState(false);
             const [device, setDevice] = useState('desktop'); 
             const [previewKey, setPreviewKey] = useState(0); 
@@ -2182,7 +1820,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [accountDeleteText, setAccountDeleteText] = useState('');
             const containerRef = useRef(null);
             const editorContentRef = useRef(null);
-            const themePaletteRailRef = useRef(null);
             const imageCropCommitRef = useRef(null);
             const scaleRef = useRef(1);
             const compactViewportRef = useRef(false);
@@ -2196,7 +1833,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const publishedSettingsSnapshotRef = useRef(null);
             const cloudEditorDraftRef = useRef(null);
             const guestDemoSeededRef = useRef(false);
-            const themeBatchTimerRef = useRef(0);
             const [toast, setToast] = useState(null);
             const [confirmDialog, setConfirmDialog] = useState(null);
             const [runningLateDialog, setRunningLateDialog] = useState(null);
@@ -2217,7 +1853,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             useEffect(() => () => window.clearTimeout(toastTimerRef.current), []);
             useEffect(() => () => window.clearTimeout(editorDraftSaveTimerRef.current), []);
             useEffect(() => () => window.clearTimeout(editorDraftCloudTimerRef.current), []);
-            useEffect(() => () => window.clearTimeout(themeBatchTimerRef.current), []);
             useEffect(() => {
                 safeLocalSet('build-a-booking-dashboard-theme', dashboardThemeMode);
             }, [dashboardThemeMode]);
@@ -2390,7 +2025,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [staffList, setStaffList] = useState([{id: 'owner', name: 'Admin', color: '#39FF14'}]);
             const [accountProfileOverride, setAccountProfileOverride] = useState({});
             const [communications, setCommunications] = useState(createDefaultCommunications);
-            const bookingPageUrl = useMemo(() => `${window.location.origin}/book/${settings.slug || 'studio'}`, [settings.slug]);
             const referralUrl = useMemo(() => `${window.location.origin}/ref/${user?.uid?.substring(0,6) || '10X'}`, [user?.uid]);
             const workspaceOwnerId = activeWorkspaceOwnerId || user?.uid || '';
             const isGuestWorkspace = Boolean(guestMode && !user && !publicSlug);
@@ -2727,18 +2361,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 source: 'example',
                 isExample: true
             }), [exampleBooking]);
-            const workspaceMetrics = useMemo(() => {
-                const confirmed = visibleBookings.filter(b => b.status === 'confirmed').length;
-                const pending = visibleBookings.filter(b => b.status === 'pending' || b.status === 'waitlist').length;
-                const conversion = visibleBookings.length ? Math.round((confirmed / visibleBookings.length) * 100) : 0;
-                return {
-                    requests: visibleBookings.length,
-                    confirmed,
-                    pending,
-                    conversion
-                };
-            }, [visibleBookings]);
-
             const bookingDesk = useMemo(() => {
                 const today = new Date();
                 const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -3460,118 +3082,33 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 { id: 'staff', icon: Users, label: 'Team' },
                 { id: 'profile', icon: User, label: 'Profile' }
             ];
-            const normalizedComms = normalizeCommunications(communications);
             const collectsClientPhone = settings.features?.collectClientPhone !== false;
             const collectsClientEmail = settings.features?.collectClientEmail !== false;
             const collectsClientNotes = Boolean(settings.features?.collectClientNotes);
             const emailUpdatesEnabled = settings.features?.emailUpdates !== false;
             const isMobileEditorRuntime = isMobileRuntime || isCompactEditorViewport;
-            const isMobileWebEditorRuntime = !isNativeAppRuntime && isMobileEditorRuntime;
-
             const themeGenerationInputs = useMemo(() => ({
                 industry: themeFilters.industry || '',
                 palette: themeFilters.palette || 'all',
                 style: themeFilters.style || 'all-styles',
                 detectedPalette: detectedThemePalette,
-                detectedStyle: detectedThemeStyle,
-                customColor: customThemeColor
-            }), [themeFilters.industry, themeFilters.palette, themeFilters.style, detectedThemePalette, detectedThemeStyle, customThemeColor]);
+                detectedStyle: detectedThemeStyle
+            }), [themeFilters.industry, themeFilters.palette, themeFilters.style, detectedThemePalette, detectedThemeStyle]);
 
-            const industryThemeFilterGroup = useMemo(() => (
-                THEME_FILTER_GROUPS.find(group => group.id === 'industry') || THEME_FILTER_GROUPS[0]
-            ), []);
             const paletteThemeFilterGroup = useMemo(() => (
                 THEME_FILTER_GROUPS.find(group => group.id === 'palette') || THEME_FILTER_GROUPS[0]
             ), []);
-            const styleThemeFilterGroup = useMemo(() => (
-                THEME_FILTER_GROUPS.find(group => group.id === 'style') || THEME_FILTER_GROUPS[0]
-            ), []);
-            const activeThemeFilterId = `${themeGenerationInputs.industry}-${themeGenerationInputs.palette}-${themeGenerationInputs.style}-${themeGenerationInputs.detectedPalette || 'none'}-${themeGenerationInputs.detectedStyle || 'none'}`;
-            const shouldRunThemeEngine = activeTab === 'editor' && editorTab === 'themes';
-
-            const visibleThemes = useMemo(() => {
-                if (!shouldRunThemeEngine) return [];
-                if (!isMobileWebEditorRuntime && !themeGenerationInputs.industry) return [];
-                return isMobileWebEditorRuntime ? mobileWebEditorThemes : generateThemeCollection(themeGenerationInputs);
-            }, [isMobileWebEditorRuntime, shouldRunThemeEngine, themeGenerationInputs]);
-
-            const industryFilterOptions = useMemo(() => (
-                industryThemeFilterGroup.filters.filter(filter => filter.id !== 'all-industries')
-            ), [industryThemeFilterGroup]);
             const paletteFilterOptions = useMemo(() => (
                 paletteThemeFilterGroup.filters.filter(filter => !['dark', 'earth'].includes(filter.id))
             ), [paletteThemeFilterGroup]);
-            const styleFilterOptions = useMemo(() => (
-                styleThemeFilterGroup.filters
-            ), [styleThemeFilterGroup]);
-            const selectedIndustryFilter = industryThemeFilterGroup.filters.find(filter => filter.id === themeGenerationInputs.industry) || null;
             const selectedPaletteFilter = paletteThemeFilterGroup.filters.find(filter => filter.id === themeGenerationInputs.palette) || paletteThemeFilterGroup.filters[0];
-            const selectedStyleFilter = styleThemeFilterGroup.filters.find(filter => filter.id === themeGenerationInputs.style) || styleThemeFilterGroup.filters[0];
-            const selectedIndustryName = selectedIndustryFilter?.name || 'Choose an industry';
-            const selectedIndustryDescriptor = selectedIndustryFilter?.name ? selectedIndustryFilter.name.toLowerCase() : 'your industry';
             const selectedPaletteName = themeGenerationInputs.palette === 'custom' ? 'Custom' : selectedPaletteFilter.name;
-            const selectedPaletteHint = themeGenerationInputs.palette === 'custom' ? 'Picked By You' : selectedPaletteFilter.hint;
             const selectedPalettePhrase = themeGenerationInputs.palette === 'custom'
                 ? 'your custom color'
                 : selectedPaletteFilter.id === 'all'
                     ? 'a full color range'
                     : `${selectedPaletteFilter.name.toLowerCase()} colors`;
-            const brandSignalPhrase = detectedThemePalette
-                ? `${themePaletteLabel(detectedThemePalette)} brand signal`
-                : 'your uploaded brand media';
-            const themeBriefSupportText = !themeGenerationInputs.industry
-                ? 'Choose the business type first. The engine stays quiet until it knows the world your clients are booking into.'
-                : `Now it builds ${selectedPalettePhrase}, then tunes fonts, surfaces, buttons, and booking rhythm for ${selectedIndustryDescriptor}.`;
-            const themeBriefResultLabel = !themeGenerationInputs.industry
-                ? 'Select an industry to generate custom theme directions'
-                : themeGenerationInputs.palette === 'custom'
-                    ? `${selectedIndustryDescriptor} consultant picks from your custom color`
-                    : selectedPaletteFilter.id === 'all'
-                    ? `${selectedIndustryDescriptor} consultant picks across the full palette`
-                    : `${selectedIndustryDescriptor} consultant picks in ${selectedPaletteName}`;
-
-            const visibleThemeCards = useMemo(() => (
-                visibleThemes.slice(0, themeDisplayLimit)
-            ), [visibleThemes, themeDisplayLimit]);
-            const savedThemeTemplates = useMemo(() => (
-                Array.isArray(settings.themeTemplates) ? settings.themeTemplates : []
-            ), [settings.themeTemplates]);
-            const currentThemeMatch = useMemo(() => (
-                visibleThemes.find(theme => (
-                    Boolean(settings.nativeAccent) === Boolean(theme.nativeAccent) &&
-                    normalizeHexColor(settings.primaryColor, '#000000') === normalizeHexColor(theme.primaryColor, '#000000') &&
-                    normalizeHexColor(settings.backgroundColor, '#ffffff') === normalizeHexColor(theme.backgroundColor, '#ffffff') &&
-                    (settings.fontFamily || 'inter') === (theme.fontFamily || 'inter')
-                )) || PRESET_THEMES.find(theme => (
-                    Boolean(settings.nativeAccent) === Boolean(theme.nativeAccent) &&
-                    normalizeHexColor(settings.primaryColor, '#000000') === normalizeHexColor(theme.primaryColor, '#000000') &&
-                    normalizeHexColor(settings.backgroundColor, '#ffffff') === normalizeHexColor(theme.backgroundColor, '#ffffff') &&
-                    (settings.fontFamily || 'inter') === (theme.fontFamily || 'inter')
-                ))
-            ), [settings.backgroundColor, settings.fontFamily, settings.nativeAccent, settings.primaryColor, visibleThemes]);
-            const suggestedThemeTemplateName = currentThemeMatch?.name
-                ? `${currentThemeMatch.name} Template`
-                : `${settings.brandName || 'Custom'} Theme`;
-
-            const hasMoreThemes = !isMobileWebEditorRuntime && themeDisplayLimit < visibleThemes.length;
-            const nextThemeBatchSize = isMobileEditorRuntime ? 8 : 48;
             const shouldMountEditorPreview = activeTab === 'editor' && !isPortraitMobileRuntime;
-
-            useEffect(() => {
-                window.clearTimeout(themeBatchTimerRef.current);
-                setThemeBatchLoading(false);
-                setThemeDisplayLimit(isMobileWebEditorRuntime ? mobileWebEditorThemes.length : isMobileEditorRuntime ? 8 : 60);
-            }, [activeThemeFilterId, isMobileEditorRuntime, isMobileWebEditorRuntime]);
-
-            const loadMoreThemes = () => {
-                if (!hasMoreThemes || themeBatchLoading) return;
-                setThemeBatchLoading(true);
-                window.clearTimeout(themeBatchTimerRef.current);
-                themeBatchTimerRef.current = window.setTimeout(() => {
-                    setThemeDisplayLimit(limit => Math.min(visibleThemes.length, limit + nextThemeBatchSize));
-                    setThemeBatchLoading(false);
-                }, isMobileEditorRuntime ? 140 : 70);
-            };
 
             const setThemeFilterValue = (groupId, filterId) => {
                 startTransition(() => {
@@ -3626,11 +3163,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     palette: detected.palette
                 }));
                 showToast(`${themePaletteLabel(detected.palette)} palette detected from your brand media.`);
-            };
-
-            const scrollThemePaletteRail = (direction) => {
-                if (!themePaletteRailRef.current) return;
-                themePaletteRailRef.current.scrollBy({ left: direction * 312, behavior: 'smooth' });
             };
 
             const isMobileEditorViewport = (container = containerRef.current) => {
@@ -4589,94 +4121,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 showToast(existingClient ? "Client profile updated" : "Client added");
             };
 
-            const saveComms = async (newComms) => {
-                const normalizedComms = normalizeCommunications(newComms);
-                setCommunications(normalizedComms);
-                if (!user || !workspaceOwnerId || !isFirebaseConfigured) return;
-                if (!canManageWorkspace) {
-                    showToast("Only owners and admins can manage communication settings.");
-                    return;
-                }
-                await FirebaseSDK.setDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'communications'), normalizedComms);
-            };
-
-            const applyTheme = (themeId) => {
-                const theme = visibleThemes.find(t => t.id === themeId) || PRESET_THEMES.find(t => t.id === themeId);
-                if(theme) {
-                    setThemeTemplateName(`${theme.name} Template`);
-                    setEditorStudioScene('themes');
-                    playEditorStudioSound('complete');
-                    setSettings(prev => ({
-                        ...prev, 
-                        ...theme,
-                        nativeAccent: Boolean(theme.nativeAccent),
-                        dateStyle: theme.dateStyle || theme.availabilityStyle || prev.dateStyle || 'minimal',
-                        timeSlotStyle: theme.timeSlotStyle || theme.availabilityStyle || prev.timeSlotStyle || 'minimal',
-                        headingFontFamily: theme.headingFontFamily || '',
-                        bodyFontFamily: theme.bodyFontFamily || '',
-                        buttonFontFamily: theme.buttonFontFamily || '',
-                        slotFontFamily: theme.slotFontFamily || '',
-                        dateFontFamily: theme.dateFontFamily || '',
-                        headingLetterSpacing: theme.headingLetterSpacing ?? prev.headingLetterSpacing,
-                        subtextLetterSpacing: theme.subtextLetterSpacing ?? prev.subtextLetterSpacing
-                    }));
-                }
-            };
-
             useEffect(() => {
                 return () => {
-                    editorStudioPresentationRef.current.forEach(timer => window.clearTimeout(timer));
-                    editorStudioPresentationRef.current = [];
                     editorStudioAudioRef.current?.close?.();
                 };
             }, []);
-
-            const applySavedThemeTemplate = (template) => {
-                const templateSettings = template?.settings || pickThemeTemplateSettings(template);
-                if (!templateSettings || !Object.keys(templateSettings).length) return;
-                setSettings(prev => ({
-                    ...prev,
-                    ...templateSettings
-                }));
-                setThemeTemplateName(template.name || 'Saved Theme Template');
-                showToast(`${template.name || 'Theme template'} applied.`);
-            };
-
-            const saveCurrentThemeTemplate = async () => {
-                const cleanName = (themeTemplateName || suggestedThemeTemplateName || 'Custom Theme').trim();
-                const existingTemplates = Array.isArray(settings.themeTemplates) ? settings.themeTemplates : [];
-                const templateSlug = buildBookingSlug(cleanName) || 'theme-template';
-                const existingIndex = existingTemplates.findIndex(template => buildBookingSlug(template.name || '') === templateSlug);
-                const existingTemplate = existingIndex >= 0 ? existingTemplates[existingIndex] : null;
-                const nextTemplate = {
-                    id: existingTemplate?.id || `${templateSlug}-${Date.now()}`,
-                    name: cleanName,
-                    sourceThemeId: currentThemeMatch?.id || '',
-                    industry: themeGenerationInputs.industry,
-                    palette: themeGenerationInputs.palette,
-                    style: themeGenerationInputs.style,
-                    settings: pickThemeTemplateSettings(settings),
-                    createdAt: existingTemplate?.createdAt || Date.now(),
-                    updatedAt: Date.now()
-                };
-                const nextTemplates = existingIndex >= 0
-                    ? existingTemplates.map((template, index) => index === existingIndex ? nextTemplate : template)
-                    : [nextTemplate, ...existingTemplates].slice(0, 12);
-                const nextSettings = {
-                    ...settings,
-                    themeTemplates: nextTemplates
-                };
-                const saved = await saveSettingsDraft(nextSettings, `${cleanName} saved as a theme template.`);
-                if (saved) setThemeTemplateName('');
-            };
-
-            const deleteThemeTemplate = async (templateId) => {
-                const nextTemplates = savedThemeTemplates.filter(template => template.id !== templateId);
-                await saveSettingsDraft({
-                    ...settings,
-                    themeTemplates: nextTemplates
-                }, "Theme template removed.");
-            };
 
             const editorRoomPreviewTargets = {
                 introduction: 'identity',
@@ -4839,34 +4288,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }
             };
 
-            const openEditorStudioModal = (tab, soundType = 'open') => {
-                setEditorTab(tab);
-                setEditorStudioScene(tab);
-                setEditorStudioModal(tab);
-                playEditorStudioSound(soundType);
-            };
-            const startEditorStudioPresentation = () => {
-                const scenes = editorRoomScenes.map(scene => scene.id);
-                editorStudioPresentationRef.current.forEach(timer => window.clearTimeout(timer));
-                setEditorStudioPresenting(true);
-                setEditorStudioModal(null);
-                scenes.forEach((scene, index) => {
-                    const timer = window.setTimeout(() => {
-                        setEditorStudioScene(scene);
-                        setEditorTab(roomTabMap[scene] || 'identity');
-                        focusEditorPreviewRoom(scene);
-                        setPreviewKey(prev => prev + 1);
-                        playEditorStudioSound(index === scenes.length - 1 ? 'complete' : 'step');
-                        if (index === scenes.length - 1) {
-                            window.setTimeout(() => {
-                                setEditorStudioPresenting(false);
-                                showToast('Booking page assembled in the live preview.');
-                            }, 680);
-                        }
-                    }, index * 900);
-                    editorStudioPresentationRef.current.push(timer);
-                });
-            };
             const handleSettingChange = (key, value) => { setSettings(prev => ({ ...prev, [key]: value })); };
             const getEditorColorDepth = (paletteId, depthInput = settings.editorColorDepths || settings.editorColorDepth || 50) => {
                 if (typeof depthInput === 'object' && depthInput !== null) {
@@ -5273,16 +4694,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 handleSettingChange('venuePhotos', currentPhotos.filter(photo => photo !== photoUrl));
                 await deleteStorageAsset(photoUrl);
                 showToast('Venue photo removed');
-            };
-            const openDashboard = () => {
-                if (!isFirebaseConfigured || user || guestMode) {
-                    setView('dashboard');
-                    return;
-                }
-                setAuthMode('signin');
-                setAuthPersona('owner');
-                setAuthPanelOpen(true);
-                setAuthError('');
             };
             const openSignupOrDashboard = () => {
                 if (!isFirebaseConfigured || user) {
@@ -6227,7 +5638,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-black">{authPersonaCopy.title}</h2>
                                 <p className="text-sm text-neutral-500 mt-2">{authPersonaCopy.body}</p>
                             </div>
-                            <button type="button" onClick={() => { setAuthPanelOpen(false); setAuthError(''); }} className="w-10 h-10 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center hover:text-black transition-colors shrink-0"><X size={16}/></button>
+                            <button type="button" aria-label="Close sign in panel" onClick={() => { setAuthPanelOpen(false); setAuthError(''); }} className="w-10 h-10 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center hover:text-black transition-colors shrink-0"><X size={16}/></button>
                         </div>
                         <div className="grid grid-cols-2 gap-2 rounded-full bg-neutral-100 p-1 mb-4">
                             {[
@@ -6302,7 +5713,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-neutral-400 mb-2">{legalPages[legalPanel].eyebrow}</p>
                                 <h2 className="text-3xl font-bold tracking-tight text-black">{legalPages[legalPanel].title}</h2>
                             </div>
-                            <button type="button" onClick={() => setLegalPanel(null)} className="w-10 h-10 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center hover:text-black transition-colors shrink-0"><X size={16}/></button>
+                            <button type="button" aria-label="Close legal panel" onClick={() => setLegalPanel(null)} className="w-10 h-10 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center hover:text-black transition-colors shrink-0"><X size={16}/></button>
                         </div>
                         <div className="space-y-4">
                             {legalPages[legalPanel].body.map((paragraph) => (
@@ -6343,7 +5754,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 <h2 className="text-2xl font-bold tracking-tight text-black">Update {runningLateDialog.booking?.clientName || 'client'}</h2>
                                 <p className="mt-2 text-sm leading-relaxed text-neutral-500">Send a clean in-app notification and email using your saved communication settings.</p>
                             </div>
-                            <button type="button" onClick={() => setRunningLateDialog(null)} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black transition-colors">
+                            <button type="button" aria-label="Close late update" onClick={() => setRunningLateDialog(null)} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black transition-colors">
                                 <X size={16} />
                             </button>
                         </div>
@@ -6396,7 +5807,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     This removes the signed-in account profile from Build A Booking. Type DELETE to confirm.
                                 </p>
                             </div>
-                            <button type="button" onClick={() => { setAccountDeleteOpen(false); setAccountDeleteText(''); }} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black transition-colors">
+                            <button type="button" aria-label="Close account deletion" onClick={() => { setAccountDeleteOpen(false); setAccountDeleteText(''); }} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black transition-colors">
                                 <X size={16} />
                             </button>
                         </div>
@@ -6765,7 +6176,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
                 </div>
 
-                <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="desktop-sidebar-toggle hidden md:flex fixed bottom-6 left-6 md:bottom-10 md:left-10 z-[100] w-12 h-12 bg-white border border-neutral-100 rounded-full shadow-2xl items-center justify-center text-neutral-400 hover:text-black transition-all hover:scale-110">
+                <button
+                    type="button"
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    aria-label={sidebarCollapsed ? 'Expand owner navigation' : 'Collapse owner navigation'}
+                    title={sidebarCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+                    className="desktop-sidebar-toggle hidden md:flex fixed bottom-6 left-6 md:bottom-10 md:left-10 z-[100] w-12 h-12 bg-white border border-neutral-100 rounded-full shadow-2xl items-center justify-center text-neutral-400 hover:text-black transition-all hover:scale-110"
+                >
                     {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
                 </button>
 
@@ -7736,6 +7153,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                     value={clientSearch}
                                                     onChange={(event) => setClientSearch(event.target.value)}
                                                     placeholder="Search name, phone, label"
+                                                    aria-label="Search clients"
                                                     className="w-full h-10 md:h-12 bg-neutral-50 border border-neutral-100 rounded-lg pl-11 pr-4 text-sm font-bold outline-none text-black focus:bg-white focus:border-black transition-colors"
                                                 />
                                             </div>
@@ -8056,11 +7474,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     </div>
                                     <span className="inline-flex w-fit text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-neutral-100 px-3 py-1.5 rounded-md">{displayStaffList.length} Active</span>
                                 </div>
-                                <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-2">
+                                <div className="team-roster-rail flex gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-2">
                                     <button
                                         type="button"
                                         onClick={() => { setTeamPanelMode('add'); setSelectedStaffFileId(null); }}
-                                        className={`min-w-[92px] md:min-w-[110px] rounded-2xl border p-3 md:p-4 flex flex-col items-center gap-3 transition-all ${teamPanelMode === 'add' ? 'bg-black text-white border-black shadow-xl shadow-black/10' : 'bg-white border-neutral-200 text-black hover:border-black'}`}
+                                        className={`team-roster-card min-w-[92px] md:min-w-[110px] rounded-2xl border p-3 md:p-4 flex flex-col items-center gap-3 transition-all ${teamPanelMode === 'add' ? 'bg-black text-white border-black shadow-xl shadow-black/10' : 'bg-white border-neutral-200 text-black hover:border-black'}`}
                                     >
                                         <span className={`w-14 h-14 rounded-full flex items-center justify-center ${teamPanelMode === 'add' ? 'bg-white text-black' : 'bg-neutral-100 text-black'}`}><Plus size={22}/></span>
                                         <span className="text-[9px] font-bold uppercase tracking-widest">Add</span>
@@ -8073,7 +7491,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 key={staff.id}
                                                 type="button"
                                                 onClick={() => { setSelectedStaffFileId(staff.id); setTeamPanelMode('file'); }}
-                                                className={`min-w-[112px] md:min-w-[132px] rounded-2xl border p-3 md:p-4 flex flex-col items-center gap-3 transition-all ${isSelected ? 'bg-black text-white border-black shadow-xl shadow-black/10' : 'bg-white border-neutral-200 text-black hover:border-black hover:shadow-lg'}`}
+                                                className={`team-roster-card min-w-[112px] md:min-w-[132px] rounded-2xl border p-3 md:p-4 flex flex-col items-center gap-3 transition-all ${isSelected ? 'bg-black text-white border-black shadow-xl shadow-black/10' : 'bg-white border-neutral-200 text-black hover:border-black hover:shadow-lg'}`}
                                             >
                                                 {renderStaffAvatar(staff)}
                                                 <span className="w-full text-center">
@@ -8094,7 +7512,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 <h3 className="text-2xl font-bold tracking-tight text-black">Add Teammate</h3>
                                                 <p className="text-sm text-neutral-500">Grant workspace access by email. Existing Google accounts are detected automatically.</p>
                                             </div>
-                                            <button type="button" onClick={() => setTeamPanelMode('roster')} className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0"><X size={16}/></button>
+                                            <button type="button" aria-label="Close teammate form" onClick={() => setTeamPanelMode('roster')} className="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center shrink-0"><X size={16}/></button>
                                         </div>
                                         <form onSubmit={async (e) => {
                                             e.preventDefault();
@@ -8693,7 +8111,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         )}
                         </div>
 
-                        <button onClick={() => setEditorCollapsed(!editorCollapsed)} className="desktop-editor-panel-toggle hidden md:flex fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[100] w-12 h-12 bg-white border border-neutral-100 rounded-full shadow-2xl items-center justify-center text-neutral-400 hover:text-black transition-all hover:scale-110">
+                        <button
+                            type="button"
+                            onClick={() => setEditorCollapsed(!editorCollapsed)}
+                            aria-label={editorCollapsed ? 'Expand editor controls' : 'Collapse editor controls'}
+                            title={editorCollapsed ? 'Expand editor controls' : 'Collapse editor controls'}
+                            className="desktop-editor-panel-toggle hidden md:flex fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[100] w-12 h-12 bg-white border border-neutral-100 rounded-full shadow-2xl items-center justify-center text-neutral-400 hover:text-black transition-all hover:scale-110"
+                        >
                             {editorCollapsed ? <PanelRightOpen size={20} /> : <PanelRightClose size={20} />}
                         </button>
 
@@ -8709,7 +8133,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     <Share2 size={15}/>
                                     Home Screen
                                 </button>
-                                <button onClick={() => setPreviewKey(prev => prev + 1)} className="mobile-editor-refresh-action p-3 rounded-full bg-white text-neutral-400 hover:text-black shadow-lg border border-white/80 transition-all hidden md:block"><RefreshCw size={16}/></button>
+                                <button type="button" aria-label="Refresh booking preview" onClick={() => setPreviewKey(prev => prev + 1)} className="mobile-editor-refresh-action p-3 rounded-full bg-white text-neutral-400 hover:text-black shadow-lg border border-white/80 transition-all hidden md:block"><RefreshCw size={16}/></button>
                             </div>
                         </div>
 
@@ -8861,6 +8285,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             value={bookingSearch}
                                             onChange={(event) => setBookingSearch(event.target.value)}
                                             placeholder="Search client, phone, email, note"
+                                            aria-label="Search bookings"
                                             className="w-full h-12 rounded-lg bg-white border border-neutral-200 pl-11 pr-4 text-sm font-bold text-black outline-none focus:border-black transition-colors"
                                         />
                                     </label>
@@ -8976,6 +8401,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 hidden md:inline">Assigned</span>
                                                             <select
+                                                                aria-label={`Assign staff for ${b.clientName}`}
                                                                 value={b.staffId || ''}
                                                                 onChange={(e) => updateBooking(b.id, { staffId: e.target.value })}
                                                                 className="h-10 min-w-[160px] bg-white text-sm font-bold px-3 rounded-lg outline-none border border-neutral-200 focus:border-black transition-colors"
@@ -9054,12 +8480,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                     <button onClick={() => approveBooking(b)} className="h-10 px-3 rounded-lg bg-[#39FF14] text-black flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:brightness-95 transition-all">
                                                                         <Check size={15} strokeWidth={3} /> Approve
                                                                     </button>
-                                                                    <button onClick={() => updateBooking(b.id, { status: 'declined' })} className="h-10 w-10 rounded-lg bg-white border border-neutral-200 flex items-center justify-center text-red-500 hover:bg-red-50 transition-all">
+                                                                    <button type="button" aria-label={`Deny booking for ${b.clientName}`} onClick={() => updateBooking(b.id, { status: 'declined' })} className="h-10 w-10 rounded-lg bg-white border border-neutral-200 flex items-center justify-center text-red-500 hover:bg-red-50 transition-all">
                                                                         <X size={16} strokeWidth={3} />
                                                                     </button>
                                                                 </>
                                                             )}
-                                                            <button onClick={() => setConfirmDialog({
+                                                            <button type="button" aria-label={`Remove booking for ${b.clientName}`} onClick={() => setConfirmDialog({
                                                                 eyebrow: 'Booking Record',
                                                                 title: 'Remove this booking?',
                                                                 body: 'This deletes the record from your workspace. Client profiles and other bookings stay untouched.',
@@ -9086,7 +8512,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             <h3 className="text-2xl font-bold tracking-tight text-black">Choose booking dates</h3>
                                             <p className="text-sm text-neutral-500 mt-2">Show only bookings inside this date range.</p>
                                         </div>
-                                        <button type="button" onClick={() => setBookingRangeDialogOpen(false)} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black">
+                                        <button type="button" aria-label="Close date range picker" onClick={() => setBookingRangeDialogOpen(false)} className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black">
                                             <X size={16} />
                                         </button>
                                     </div>

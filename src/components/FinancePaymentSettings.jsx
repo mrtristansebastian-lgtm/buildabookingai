@@ -1040,10 +1040,12 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search client, gateway, booking, reference"
+                aria-label="Search finance records"
                 className="h-12 w-full rounded-2xl border border-neutral-200 bg-white pl-11 pr-4 text-sm font-bold text-black outline-none focus:border-black transition-colors placeholder:text-neutral-300"
               />
             </div>
             <select
+              aria-label="Filter finance records by status"
               value={deskStatusFilter}
               onChange={(event) => setDeskStatusFilter(event.target.value)}
               className="h-12 rounded-2xl border border-neutral-200 bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-black outline-none focus:border-black"
@@ -1056,6 +1058,7 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
               <option value="eft">Manual EFT</option>
             </select>
             <select
+              aria-label="Sort finance records"
               value={deskSort}
               onChange={(event) => setDeskSort(event.target.value)}
               className="h-12 rounded-2xl border border-neutral-200 bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-black outline-none focus:border-black"

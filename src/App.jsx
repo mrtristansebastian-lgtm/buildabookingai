@@ -1527,7 +1527,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [googleCalendarSyncing, setGoogleCalendarSyncing] = useState(false);
             const [keepLoggedIn, setKeepLoggedIn] = useState(() => safeLocalGet(rememberLoginStorageKey) !== 'false');
             const [authRedirectPending, setAuthRedirectPending] = useState(() => (
-                Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey) || getGoogleAuthIntent())
+                Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey))
             ));
             const [guestMode, setGuestMode] = useState(() => {
                 return safeLocalGet(guestModeStorageKey) === 'true';
@@ -3350,7 +3350,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             await applyAuthPersistence(keepLoggedIn);
                             const googleAuthIntent = getGoogleAuthIntent();
                             const redirectWasStarted = Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey));
-                            if (redirectWasStarted || googleAuthIntent) setAuthRedirectPending(true);
+                            if (redirectWasStarted) setAuthRedirectPending(true);
                             if (!publicSlug) {
                                 let redirectResult = null;
                                 redirectResult = await FirebaseSDK.getRedirectResult(auth).catch((error) => {
@@ -3387,8 +3387,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         setAuthRedirectPending(false);
                                     }
                                 } else if (googleAuthIntent && !auth.currentUser) {
-                                    await startGoogleRedirect(googleAuthIntent);
-                                    return;
+                                    clearGoogleAuthIntentUrl();
+                                    setAuthRedirectPending(false);
                                 } else if (googleAuthIntent && auth.currentUser) {
                                     clearGoogleAuthIntentUrl();
                                 }
@@ -3414,7 +3414,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         if (!u) {
                             setWorkspaceAccess([]);
                             setActiveWorkspaceOwnerId('');
-                            const redirectStillStarting = Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey) || getGoogleAuthIntent());
+                            const redirectStillStarting = Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey));
                             setAuthRedirectPending(redirectStillStarting);
                             return;
                         }
@@ -4707,11 +4707,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         await startGoogleRedirect(returnRoute);
                         return;
                     }
+                    clearAuthReturnState();
+                    clearGoogleAuthIntentUrl();
+                    safeSessionRemove(googleCalendarRedirectStorageKey);
+                    setAuthRedirectPending(false);
+                    await applyAuthPersistence(keepLoggedIn);
                     const provider = createGoogleProvider();
                     await FirebaseSDK.signInWithPopup(auth, provider);
-                    applyAuthPersistence(keepLoggedIn).catch((persistenceError) => {
-                        console.error('Auth persistence could not be updated after Google sign-in.', persistenceError);
-                    });
                     setGuestMode(false);
                     setClientGuestMode(false);
                     safeLocalRemove(guestModeStorageKey);
@@ -4720,7 +4722,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     showToast('Signed in with Google');
                 } catch (error) {
                     console.error(error);
-                    if (['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/web-storage-unsupported'].includes(error?.code)) {
+                    if (['auth/popup-blocked', 'auth/cancelled-popup-request', 'auth/web-storage-unsupported', 'auth/operation-not-supported-in-this-environment'].includes(error?.code)) {
                         try {
                             await startGoogleRedirect(getAuthReturnRouteForPersona());
                             return;

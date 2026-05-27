@@ -1467,6 +1467,16 @@ const clearGoogleAuthIntentUrl = () => {
   window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
 };
 
+const hasFreshAuthRedirectStart = () => {
+  const startedAt = Number(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey) || 0);
+  if (!startedAt) return false;
+  if (Date.now() - startedAt <= 10 * 60 * 1000) return true;
+  clearAuthReturnState();
+  clearGoogleAuthIntentUrl();
+  safeSessionRemove(googleCalendarRedirectStorageKey);
+  return false;
+};
+
 const writeGoogleAuthIntentUrl = (route = {}) => {
   if (typeof window === 'undefined') return;
   const normalized = normalizeWorkspaceRoute(route, { view: 'dashboard', activeTab: 'overview', editorTab: 'themes' });
@@ -1527,7 +1537,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [googleCalendarSyncing, setGoogleCalendarSyncing] = useState(false);
             const [keepLoggedIn, setKeepLoggedIn] = useState(() => safeLocalGet(rememberLoginStorageKey) !== 'false');
             const [authRedirectPending, setAuthRedirectPending] = useState(() => (
-                Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey))
+                hasFreshAuthRedirectStart()
             ));
             const [guestMode, setGuestMode] = useState(() => {
                 return safeLocalGet(guestModeStorageKey) === 'true';
@@ -3349,7 +3359,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         if (isFirebaseConfigured) {
                             await applyAuthPersistence(keepLoggedIn);
                             const googleAuthIntent = getGoogleAuthIntent();
-                            const redirectWasStarted = Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey));
+                            const redirectWasStarted = hasFreshAuthRedirectStart();
                             if (redirectWasStarted) setAuthRedirectPending(true);
                             if (!publicSlug) {
                                 let redirectResult = null;
@@ -3414,7 +3424,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         if (!u) {
                             setWorkspaceAccess([]);
                             setActiveWorkspaceOwnerId('');
-                            const redirectStillStarting = Boolean(safeSessionGet(authRedirectStartedStorageKey) || safeLocalGet(authRedirectStartedStorageKey));
+                            const redirectStillStarting = hasFreshAuthRedirectStart();
                             setAuthRedirectPending(redirectStillStarting);
                             return;
                         }
@@ -4685,7 +4695,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             };
             const handleGoogleAuth = async () => {
                 if (!isFirebaseConfigured) {
-                    setView('dashboard');
+                    setAuthError('Google sign-in is not connected in this build. Rebuild with the Firebase config and deploy again.');
+                    showToast('Google sign-in is not connected yet.');
                     return;
                 }
                 setAuthError('');
@@ -4734,6 +4745,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     }
                     const message = error?.code === 'auth/operation-not-allowed'
                         ? 'Google sign-in is not enabled yet. Enable Google under Firebase Authentication > Sign-in method.'
+                        : error?.code === 'auth/unauthorized-domain'
+                            ? 'This domain is not allowed for Google sign-in. Add build-a-booking.web.app in Firebase Authentication authorized domains.'
+                            : error?.code === 'auth/invalid-api-key'
+                                ? 'This build has an invalid Firebase API key. Check the Firebase config and redeploy.'
                         : error?.code === 'auth/popup-closed-by-user'
                             ? 'Google sign-in was closed before it finished.'
                             : error.message || 'Could not sign in with Google.';

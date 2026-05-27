@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Bell, Calendar, Check, Clock, Maximize2, MessageCircle, Minimize2, RefreshCw, Search, Send, Users, X } from 'lucide-react';
 import * as FirebaseSDK from '../services/firebase';
 import { makeClientNotification, notificationEmailKey, NOTIFICATION_TYPES } from '../services/notifications';
@@ -19,6 +19,27 @@ const statusStyles = {
 };
 
 const LIVE_MESSAGE_LIMIT = 20;
+
+const velvetDemoFallbackScripts = {};
+
+const buildVelvetDemoScript = ({ clientName = 'Client', serviceName = 'appointment', note = '', status = 'pending' }, scriptSource = velvetDemoFallbackScripts) => {
+  const direct = scriptSource[clientName];
+  if (direct) return direct;
+  const cleanNote = String(note || '').replace(/\s+/g, ' ').trim();
+  const topicMatch = cleanNote.match(/Chat:\s*(.*?)(?:\s+Added from|\s+Notes:|$)/i);
+  const topic = (topicMatch?.[1] || cleanNote || `Question about my ${serviceName} booking.`).trim();
+  return {
+    preview: topic,
+    messages: [
+      `Hi Velvet Fade, I am checking in about my ${serviceName} booking.`,
+      topic,
+      `Absolutely. We have that noted for your ${serviceName}, and the team will prep the chair around it.`,
+      status === 'waitlist'
+        ? 'Thanks. Please keep me posted if the chair opens.'
+        : 'Perfect, thank you. See you at the shop.'
+    ]
+  };
+};
 
 const formatPresenceTime = (value) => {
   const ms = timestampValue(value);
@@ -59,17 +80,18 @@ export function WorkspaceInbox({
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [chatFullscreen, setChatFullscreen] = useState(false);
   const [actionDialog, setActionDialog] = useState(null);
+  const [guestChatScripts, setGuestChatScripts] = useState(velvetDemoFallbackScripts);
 
   const exampleThread = useMemo(() => ({
     id: 'example-support-thread',
-    clientName: 'Maya Nkosi',
-    clientEmail: 'maya.nkosi@example.com',
-    clientPhotoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
-    workspaceName: 'Studio Noir',
-    lastMessage: 'Could I move my blowout to later in the afternoon?',
+    clientName: 'Sipho Mokoena',
+    clientEmail: 'sipho.mokoena@velvetfade.example',
+    clientPhotoURL: '',
+    workspaceName: 'Velvet Fade Studio',
+    lastMessage: 'Can I move my Skin Fade to later on Friday if anything opens?',
     bookingId: 'example-support-booking',
     bookingStatus: 'pending',
-    serviceName: 'Signature Blowout',
+    serviceName: 'Skin Fade',
     ownerUnread: 1,
     clientUnread: 0,
     rescheduleStatus: 'requested',
@@ -78,13 +100,13 @@ export function WorkspaceInbox({
 
   const exampleBooking = useMemo(() => ({
     id: 'example-support-booking',
-    clientName: 'Maya Nkosi',
-    clientEmail: 'maya.nkosi@example.com',
-    clientPhotoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
+    clientName: 'Sipho Mokoena',
+    clientEmail: 'sipho.mokoena@velvetfade.example',
+    clientPhotoURL: '',
     date: 'Thursday, May 28',
-    time: '10:30',
+    time: '17:00',
     status: 'pending',
-    serviceName: 'Signature Blowout',
+    serviceName: 'Skin Fade',
     isExample: true
   }), []);
 
@@ -93,32 +115,38 @@ export function WorkspaceInbox({
       id: 'example-system',
       senderRole: 'system',
       senderName: 'Booking update',
-      text: 'Example Signature Blowout request received for Thursday, May 28 at 10:30.'
+      text: 'Example Skin Fade request received for Thursday, May 28 at 17:00.'
     },
     {
       id: 'example-client',
       senderRole: 'client',
-      senderName: 'Maya Nkosi',
-      text: 'Hey, could I move my blowout to later in the afternoon if anything opens?'
+      senderName: 'Sipho Mokoena',
+      text: 'Hey, could I move my Skin Fade to later on Friday if anything opens?'
     },
     {
       id: 'example-owner',
       senderRole: 'owner',
-      senderName: 'Team',
-      text: 'Absolutely. We can offer 14:30 or place you on the waitlist for 16:00.'
+      senderName: 'Velvet Fade Studio',
+      text: 'Absolutely. We can offer 17:00 or place you on the waitlist for 18:30.'
     }
   ]), []);
 
+  useEffect(() => {
+    if (!isGuestWorkspace) return undefined;
+    let cancelled = false;
+    fetch('/velvet-demo-chats.json')
+      .then((response) => response.ok ? response.json() : {})
+      .then((scripts) => {
+        if (!cancelled && scripts && typeof scripts === 'object') setGuestChatScripts(scripts);
+      })
+      .catch(() => {
+        if (!cancelled) setGuestChatScripts(velvetDemoFallbackScripts);
+      });
+    return () => { cancelled = true; };
+  }, [isGuestWorkspace]);
+
   const guestDemoThreads = useMemo(() => {
     if (!isGuestWorkspace || !Array.isArray(bookings) || bookings.length === 0) return [];
-    const messageCopy = [
-      'Can you add a gloss treatment to my appointment if there is time?',
-      'I paid the deposit now. Please confirm that it reflects on your side.',
-      'Could I move this to a later chair time if anything opens?',
-      'I uploaded reference photos and would love a warmer tone than last time.',
-      'Running 10 minutes late, but I am on my way.',
-      'Can I join the waitlist for Saturday morning?'
-    ];
     const seenClients = new Set();
     return bookings
       .filter((booking) => ['pending', 'confirmed', 'waitlist'].includes(String(booking.status || '').toLowerCase()))
@@ -128,29 +156,38 @@ export function WorkspaceInbox({
         seenClients.add(key);
         return true;
       })
-      .slice(0, 18)
-      .map((booking, index) => ({
-        id: `guest-thread-${booking.id}`,
-        clientName: booking.clientName,
-        clientEmail: booking.clientEmail,
-        clientPhotoURL: booking.clientPhotoURL || booking.avatar,
-        workspaceName: booking.workspaceName || 'Northline Studio',
-        lastMessage: messageCopy[index % messageCopy.length],
-        bookingId: booking.id,
-        bookingStatus: booking.status,
-        serviceName: booking.serviceName,
-        ownerUnread: index % 4 === 0 ? 2 : index % 3 === 0 ? 1 : 0,
-        clientUnread: 0,
-        staffId: booking.staffId || '',
-        rescheduleStatus: index % 5 === 0 ? 'requested' : '',
-        clientOnline: index < 2,
-        clientLastSeenMs: Date.now() - (index + 1) * 38 * 60 * 1000,
-        lastMessageAt: booking.updatedAt || booking.timestamp,
-        updatedAt: booking.updatedAt || booking.timestamp,
-        isExample: true,
-        isGuestDemo: true
-      }));
-  }, [bookings, isGuestWorkspace]);
+      .slice(0, 50)
+      .map((booking, index) => {
+        const script = buildVelvetDemoScript({
+          clientName: booking.clientName,
+          serviceName: booking.serviceName,
+          note: booking.clientNote,
+          status: booking.status
+        }, guestChatScripts);
+        return {
+          id: `guest-thread-${booking.id}`,
+          clientName: booking.clientName,
+          clientEmail: booking.clientEmail,
+          clientPhotoURL: '',
+          workspaceName: booking.workspaceName || 'Velvet Fade Studio',
+          lastMessage: script.preview,
+          chatMessages: script.messages,
+          bookingId: booking.id,
+          bookingStatus: booking.status,
+          serviceName: booking.serviceName,
+          ownerUnread: index % 4 === 0 ? 2 : index % 3 === 0 ? 1 : 0,
+          clientUnread: 0,
+          staffId: booking.staffId || '',
+          rescheduleStatus: index % 5 === 0 ? 'requested' : '',
+          clientOnline: index < 2,
+          clientLastSeenMs: Date.now() - (index + 1) * 38 * 60 * 1000,
+          lastMessageAt: booking.updatedAt || booking.timestamp,
+          updatedAt: booking.updatedAt || booking.timestamp,
+          isExample: true,
+          isGuestDemo: true
+        };
+      });
+  }, [bookings, guestChatScripts, isGuestWorkspace]);
 
   const shouldShowExampleThread = isGuestWorkspace && threadsReady && threads.length === 0 && bookings.length === 0;
   const threadSource = threads.length ? threads : (guestDemoThreads.length ? guestDemoThreads : (shouldShowExampleThread ? [exampleThread] : []));
@@ -223,29 +260,29 @@ export function WorkspaceInbox({
     if (!activeThread?.isExample || activeThread.id === 'example-support-thread') return exampleMessages;
     const clientName = activeThread.clientName || 'Client';
     const serviceName = activeThread.serviceName || linkedBooking?.serviceName || 'appointment';
+    const script = Array.isArray(activeThread.chatMessages) && activeThread.chatMessages.length
+      ? activeThread.chatMessages
+      : buildVelvetDemoScript({
+        clientName,
+        serviceName,
+        note: activeThread.lastMessage,
+        status: activeThread.bookingStatus
+      }, guestChatScripts).messages;
     return [
       {
         id: `${activeThread.id}-system`,
         senderRole: 'system',
         senderName: 'Booking update',
-        text: `${serviceName} request is linked to this support thread. Status: ${activeThread.bookingStatus || 'pending'}.`
+        text: `${serviceName} booking is linked to this support thread. Status: ${activeThread.bookingStatus || 'pending'}.`
       },
-      {
-        id: `${activeThread.id}-client`,
-        senderRole: 'client',
-        senderName: clientName,
-        text: activeThread.lastMessage || 'Hi, can you help with my booking?'
-      },
-      {
-        id: `${activeThread.id}-owner`,
-        senderRole: 'owner',
-        senderName: 'Northline Studio',
-        text: activeThread.rescheduleStatus
-          ? 'Absolutely. We can offer a new time and keep your booking history updated.'
-          : 'Thanks, we have your notes on the booking and the stylist will prep before you arrive.'
-      }
+      ...script.map((text, index) => ({
+        id: `${activeThread.id}-msg-${index}`,
+        senderRole: index === 2 ? 'owner' : 'client',
+        senderName: index === 2 ? 'Velvet Fade Studio' : clientName,
+        text
+      }))
     ];
-  }, [activeThread, exampleMessages, linkedBooking?.serviceName]);
+  }, [activeThread, exampleMessages, guestChatScripts, linkedBooking?.serviceName]);
   const visibleMessages = activeThread?.isExample ? guestDemoMessages : [...olderMessages, ...messages];
   const activeStaff = useMemo(() => {
     const emailKey = notificationEmailKey(user?.email || '');
@@ -640,27 +677,6 @@ export function WorkspaceInbox({
     <>
     <section data-tour="client-inbox" className={`support-inbox-card support-inbox-pro support-desk-shell saas-card overflow-hidden bg-white native-gradient-ring ${chatFullscreen ? 'fixed inset-3 z-[80] flex flex-col rounded-[1.25rem] shadow-2xl' : ''}`}>
       <div className="h-1 native-gradient-line" />
-      <div className={`${chatFullscreen ? 'hidden' : 'p-2 md:p-3'} support-mail-tabs border-b border-neutral-100`}>
-        <div className="support-mail-tabs-track flex items-center gap-2 overflow-x-auto">
-          {supportTabs.map((tab) => {
-            const IconCmp = tab.icon;
-            const active = supportFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => selectSupportFilter(tab.id)}
-                className={`support-mail-tab ${active ? 'is-active' : ''} h-10 rounded-full border px-3 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 shrink-0`}
-              >
-                <IconCmp size={13} />
-                {tab.label}
-                <span className="support-mail-tab-count min-w-5 h-5 rounded-full flex items-center justify-center text-[9px]">{tab.count}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       <div className={`support-workspace-grid grid grid-cols-1 xl:grid-cols-12 ${chatFullscreen ? 'min-h-0 flex-1' : 'min-h-[520px] xl:min-h-[640px]'}`}>
         <aside className={`support-thread-list ${mobileChatOpen ? 'hidden xl:block' : ''} xl:col-span-4 border-b xl:border-b-0 xl:border-r border-neutral-100 bg-neutral-50/45`}>
           <div className="support-thread-search p-3 md:p-4 border-b border-neutral-100 bg-white/70">
@@ -682,6 +698,28 @@ export function WorkspaceInbox({
                 className="w-full h-11 md:h-12 rounded-lg bg-white border border-neutral-200 pl-11 pr-4 text-sm font-bold outline-none focus:border-black transition-colors"
               />
             </div>
+            <div className="support-mail-tabs mt-3">
+              <div className="support-mail-tabs-track flex items-center gap-1.5 overflow-x-auto">
+                {supportTabs.map((tab) => {
+                  const IconCmp = tab.icon;
+                  const active = supportFilter === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => selectSupportFilter(tab.id)}
+                      title={`${tab.label} (${tab.count})`}
+                      aria-label={`${tab.label} threads (${tab.count})`}
+                      className={`support-mail-tab ${active ? 'is-active' : ''} h-9 rounded-xl border px-2.5 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 shrink-0`}
+                    >
+                      <IconCmp size={13} />
+                      <span className="sr-only">{tab.label}</span>
+                      <span className="support-mail-tab-count min-w-5 h-5 rounded-full flex items-center justify-center text-[9px]">{tab.count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
           <div className="max-h-[62vh] xl:max-h-[660px] overflow-y-auto">
             {filteredThreads.length ? filteredThreads.map(thread => {
@@ -697,7 +735,6 @@ export function WorkspaceInbox({
                   }}
                   className={`support-thread-row w-full text-left p-3.5 md:p-5 border-b border-neutral-100 transition-colors relative overflow-hidden ${active ? 'is-active bg-white text-black shadow-sm' : 'bg-transparent hover:bg-white text-black'}`}
                 >
-                  {active && <span className="absolute inset-y-0 left-0 w-1 native-gradient-line" />}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold overflow-hidden ${threadAvatar ? 'bg-white border border-neutral-100 text-black' : active ? 'native-gradient-icon text-black' : 'bg-white border border-neutral-100 text-black'}`}>
@@ -705,7 +742,7 @@ export function WorkspaceInbox({
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold truncate text-black">{thread.clientName || 'Client'}</p>
-                        <p className="text-xs mt-1 truncate text-neutral-500">{thread.isGuestDemo ? 'Showroom support thread' : thread.isExample ? 'Preview support thread' : thread.workspaceName || thread.clientEmail}</p>
+                        <p className="text-xs mt-1 truncate text-neutral-500">{thread.serviceName || thread.clientEmail || thread.workspaceName || 'Client thread'}</p>
                       </div>
                     </div>
                     {Number(thread.ownerUnread || 0) > 0 && <span className="min-w-6 h-6 rounded-full bg-[#39FF14] text-black text-[10px] font-bold flex items-center justify-center">{thread.ownerUnread}</span>}
@@ -715,7 +752,7 @@ export function WorkspaceInbox({
                     <span className={`px-2 py-1 rounded-md border text-[8px] font-bold uppercase tracking-widest ${statusStyles[thread.bookingStatus] || statusStyles.pending}`}>
                       {thread.bookingStatus || 'pending'}
                     </span>
-                    {thread.isExample && <span className="px-2 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-neutral-100 text-neutral-500">{thread.isGuestDemo ? 'Showroom' : 'Example'}</span>}
+                    {thread.isExample && !thread.isGuestDemo && <span className="px-2 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-neutral-100 text-neutral-500">Example</span>}
                     {['requested', 'countered'].includes(thread.rescheduleStatus) && <span className="px-2 py-1 rounded-md bg-violet-50 text-violet-700 text-[8px] font-bold uppercase tracking-widest">Reschedule</span>}
                   </div>
                 </button>
@@ -967,3 +1004,4 @@ export function WorkspaceInbox({
     </>
   );
 }
+

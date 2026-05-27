@@ -605,6 +605,408 @@ body {
             opacity: 0.7;
         }
 
+        .native-feature-book-section {
+            position: relative;
+            overflow: clip;
+            background:
+                linear-gradient(180deg, #ffffff 0%, #fbfcff 38%, #ffffff 100%);
+        }
+
+        .native-feature-book-section::before {
+            content: "";
+            position: absolute;
+            inset: 6rem 0 auto;
+            height: 1px;
+            background-image: var(--native-accent-gradient);
+            background-size: 420% 420%;
+            background-position: var(--native-accent-x) 50%;
+            opacity: 0.42;
+        }
+
+        .native-feature-book {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(17rem, 0.46fr) minmax(0, 0.54fr);
+            gap: 0;
+            align-items: stretch;
+            max-width: 980px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 0.65rem;
+            background: #ffffff;
+            box-shadow: 0 34px 100px -76px rgba(15, 23, 42, 0.62);
+            overflow: hidden;
+        }
+
+        .native-feature-book-cover {
+            position: relative;
+            min-height: min(30rem, calc(100vh - 8rem));
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 0;
+            border: 0;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.88)) padding-box,
+                var(--native-accent-gradient) border-box;
+            background-size: auto, 420% 420%;
+            background-position: 0 0, var(--native-accent-x) 50%;
+            box-shadow: none;
+            padding: clamp(1.35rem, 2.5vw, 2.15rem);
+            overflow: hidden;
+        }
+
+        .native-feature-book-cover::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(115deg, rgba(57,255,20,0.08), transparent 34%),
+                linear-gradient(295deg, rgba(20,167,255,0.1), transparent 35%);
+            pointer-events: none;
+        }
+
+        .native-feature-book-cover > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .native-feature-book-cover p,
+        .native-feature-page > p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 0.66rem;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .native-feature-page > p {
+            grid-column: 1;
+        }
+
+        .native-feature-book-cover h2 {
+            margin: 1rem 0;
+            color: #050505;
+            font-size: clamp(2rem, 4.1vw, 3.9rem);
+            font-weight: 900;
+            letter-spacing: -0.06em;
+            line-height: 0.9;
+            text-wrap: balance;
+        }
+
+        .native-feature-book-cover span {
+            display: block;
+            color: #64748b;
+            font-size: clamp(0.95rem, 1.25vw, 1.05rem);
+            font-weight: 700;
+            line-height: 1.45;
+            max-width: 28rem;
+        }
+
+        .native-feature-book-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            width: fit-content;
+            padding: 0.36rem;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+
+        .native-feature-book-cover .native-feature-book-controls button {
+            width: 2.4rem;
+            height: 2.4rem;
+            min-height: 0;
+            padding: 0;
+            border-radius: 999px;
+            background: #050505;
+            box-shadow: none;
+        }
+
+        .native-feature-book-cover .native-feature-book-controls button:disabled {
+            opacity: 0.28;
+            cursor: default;
+        }
+
+        .native-feature-book-controls span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 3.1rem;
+            max-width: none;
+            color: #050505;
+            font-size: 0.7rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 0.12em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .native-feature-book-cover button,
+        .native-feature-page-finale button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            width: fit-content;
+            min-height: 3rem;
+            border-radius: 999px;
+            background: #050505;
+            color: #ffffff;
+            padding: 0 1.2rem;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            box-shadow: 0 20px 42px -30px rgba(15, 23, 42, 0.62);
+        }
+
+        .native-feature-book-pages {
+            position: relative;
+            min-height: min(30rem, calc(100vh - 8rem));
+            perspective: 1600px;
+            border-left: 1px solid rgba(15, 23, 42, 0.08);
+            background:
+                linear-gradient(90deg, rgba(15,23,42,0.065), rgba(255,255,255,0) 10%),
+                #ffffff;
+        }
+
+        .native-feature-book-pages::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 1.2rem;
+            border-radius: 999px;
+            background:
+                linear-gradient(90deg, rgba(15,23,42,0.12), rgba(15,23,42,0.04), transparent);
+            opacity: 0.5;
+            z-index: 4;
+        }
+
+        .native-feature-page {
+            position: absolute;
+            inset: 0;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 1fr;
+            align-content: center;
+            border-radius: 0;
+            border: 0;
+            background:
+                linear-gradient(135deg, rgba(57,255,20,0.035), transparent 30%),
+                linear-gradient(315deg, rgba(20,167,255,0.055), transparent 36%),
+                linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+            box-shadow: none;
+            padding: clamp(1.55rem, 3vw, 2.6rem);
+            opacity: 0;
+            pointer-events: none;
+            transform-origin: left center;
+            transform: translateX(-0.8rem) rotateY(-78deg) scale(0.98);
+            transition: transform 620ms cubic-bezier(0.2, 0.72, 0.18, 1), opacity 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+            overflow: hidden;
+            backface-visibility: hidden;
+        }
+
+        .native-feature-page::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(15,23,42,0.04), transparent 16%),
+                linear-gradient(180deg, rgba(255,255,255,0), rgba(15,23,42,0.02));
+            opacity: 0.72;
+            pointer-events: none;
+        }
+
+        .native-feature-page::after {
+            content: "";
+            position: absolute;
+            inset: auto 1.15rem 1.15rem auto;
+            width: 42%;
+            height: 42%;
+            border-radius: 999px 0 0 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0), rgba(15,23,42,0.035));
+            opacity: 0.75;
+            pointer-events: none;
+        }
+
+        .native-feature-page:hover {
+            border-color: rgba(15, 23, 42, 0.14);
+            box-shadow: none;
+        }
+
+        .native-feature-book.is-page-0 .native-feature-page:nth-child(1),
+        .native-feature-book.is-page-1 .native-feature-page:nth-child(2),
+        .native-feature-book.is-page-2 .native-feature-page:nth-child(3),
+        .native-feature-book.is-page-3 .native-feature-page:nth-child(4),
+        .native-feature-book.is-page-4 .native-feature-page:nth-child(5),
+        .native-feature-book.is-page-5 .native-feature-page:nth-child(6),
+        .native-feature-book.is-page-6 .native-feature-page:nth-child(7),
+        .native-feature-book.is-page-7 .native-feature-page:nth-child(8),
+        .native-feature-book.is-page-8 .native-feature-page:nth-child(9),
+        .native-feature-book.is-page-9 .native-feature-page:nth-child(10) {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0) rotateY(0deg) scale(1);
+            z-index: 3;
+        }
+
+        .native-feature-book.is-page-1 .native-feature-page:nth-child(1),
+        .native-feature-book.is-page-2 .native-feature-page:nth-child(-n+2),
+        .native-feature-book.is-page-3 .native-feature-page:nth-child(-n+3),
+        .native-feature-book.is-page-4 .native-feature-page:nth-child(-n+4),
+        .native-feature-book.is-page-5 .native-feature-page:nth-child(-n+5),
+        .native-feature-book.is-page-6 .native-feature-page:nth-child(-n+6),
+        .native-feature-book.is-page-7 .native-feature-page:nth-child(-n+7),
+        .native-feature-book.is-page-8 .native-feature-page:nth-child(-n+8),
+        .native-feature-book.is-page-9 .native-feature-page:nth-child(-n+9) {
+            opacity: 0;
+            transform: translateX(0.7rem) rotateY(78deg) scale(0.98);
+            z-index: 1;
+        }
+
+        .native-feature-page > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .native-feature-page > p {
+            width: fit-content;
+            padding: 0.34rem 0.52rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(15,23,42,0.06);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.92);
+        }
+
+        .native-feature-page h3 {
+            margin: 0.65rem 0 0.7rem;
+            color: #050505;
+            font-size: clamp(2.05rem, 4.2vw, 4rem);
+            font-weight: 900;
+            letter-spacing: -0.065em;
+            line-height: 0.88;
+        }
+
+        .native-feature-page strong {
+            display: block;
+            color: #111827;
+            font-size: clamp(0.98rem, 1.35vw, 1.1rem);
+            font-weight: 800;
+            line-height: 1.22;
+            max-width: 24rem;
+        }
+
+        .native-feature-page ul {
+            display: grid;
+            gap: 0.46rem;
+            margin: 1.15rem 0 0;
+            padding: 0;
+            list-style: none;
+            max-width: 25rem;
+            border: 1px solid rgba(15, 23, 42, 0.07);
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.74);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.9),
+                0 18px 48px -44px rgba(15,23,42,0.45);
+            padding: 0.5rem;
+        }
+
+        .native-feature-page li {
+            position: relative;
+            color: #64748b;
+            font-size: 0.84rem;
+            font-weight: 800;
+            line-height: 1.28;
+            padding: 0.62rem 0.68rem 0.62rem 2rem;
+            border-radius: 0.45rem;
+            background: rgba(248, 250, 252, 0.72);
+        }
+
+        .native-feature-page li::before {
+            content: "";
+            position: absolute;
+            left: 0.76rem;
+            top: 50%;
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 999px;
+            background: #050505;
+            box-shadow: 0 0 0 0.24rem rgba(57,255,20,0.18);
+            transform: translateY(-50%);
+        }
+
+        .native-feature-page-finale {
+            background:
+                linear-gradient(135deg, rgba(57,255,20,0.035), transparent 30%),
+                linear-gradient(315deg, rgba(20,167,255,0.055), transparent 36%),
+                linear-gradient(135deg, rgba(57,255,20,0.08), rgba(20,167,255,0.08), rgba(255,255,255,0.95)),
+                #ffffff;
+        }
+
+        .native-feature-page-finale button {
+            margin-top: 1.55rem;
+        }
+
+        @media (max-width: 960px) {
+            .native-feature-book {
+                grid-template-columns: 1fr;
+            }
+
+            .native-feature-book-cover,
+            .native-feature-book-pages {
+                min-height: auto;
+            }
+
+            .native-feature-book-pages {
+                height: min(31rem, 82vh);
+            }
+
+            .native-feature-page {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .native-feature-book-cover {
+                gap: 2rem;
+            }
+
+            .native-feature-book-pages::before {
+                display: none;
+            }
+
+            .native-feature-page ul {
+                grid-column: 1;
+                grid-row: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .native-feature-book-section {
+                padding-top: 3.75rem;
+                padding-bottom: 4rem;
+            }
+
+            .native-feature-book-cover,
+            .native-feature-page {
+                padding: 1.25rem;
+            }
+
+            .native-feature-page h3 {
+                font-size: clamp(2.2rem, 17vw, 4rem);
+            }
+
+            .native-feature-page li {
+                font-size: 0.9rem;
+            }
+        }
+
         .native-feature-wave-list {
             position: relative;
             isolation: isolate;
@@ -758,6 +1160,155 @@ body {
         .native-ui .native-stat-grid .native-stat-card:nth-child(4) { --stat-wave-delay: 4.35s; }
         .native-ui .native-stat-grid .native-stat-card:nth-child(5) { --stat-wave-delay: 5.8s; }
         .native-ui .native-stat-grid .native-stat-card:nth-child(6) { --stat-wave-delay: 7.25s; }
+
+        .native-payment-rail-shell {
+            position: relative;
+            border-radius: 0;
+            border: 0 !important;
+            box-shadow: none;
+        }
+
+        .native-payment-rail-shell::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(57, 255, 20, 0.08), transparent 28%),
+                radial-gradient(circle at 86% 12%, rgba(20, 167, 255, 0.09), transparent 30%);
+        }
+
+        .native-payment-rail-head {
+            position: relative;
+            z-index: 1;
+        }
+
+        .native-payment-marquee {
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            padding: 0.9rem 0;
+            border-top: 1px solid rgba(15, 23, 42, 0.05);
+            background: linear-gradient(180deg, rgba(250, 250, 250, 0.45), rgba(255, 255, 255, 0));
+        }
+
+        .native-payment-marquee::before,
+        .native-payment-marquee::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            z-index: 2;
+            width: min(10rem, 18vw);
+            pointer-events: none;
+        }
+
+        .native-payment-marquee::before {
+            left: 0;
+            background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 22%, rgba(255, 255, 255, 0) 100%);
+        }
+
+        .native-payment-marquee::after {
+            right: 0;
+            background: linear-gradient(270deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 22%, rgba(255, 255, 255, 0) 100%);
+        }
+
+        .native-payment-marquee-track {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            width: max-content;
+            animation: native-payment-marquee 28s linear infinite;
+            will-change: transform;
+        }
+
+        .native-payment-marquee:hover .native-payment-marquee-track {
+            animation-play-state: paused;
+        }
+
+        .native-payment-logo-card {
+            height: 4.1rem;
+            min-width: 12rem;
+            border-radius: 0;
+            border: 0;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.9rem;
+            padding: 0.7rem 1.15rem;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .native-payment-logo-card img {
+            display: block;
+            max-width: 7.3rem;
+            max-height: 1.45rem;
+            object-fit: contain;
+        }
+
+        .native-payment-logo-card span {
+            font-size: 0.56rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            white-space: nowrap;
+        }
+
+        .native-payment-logo-card.has-icon {
+            gap: 0.72rem;
+        }
+
+        .native-payment-icon-mark {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92)) padding-box,
+                var(--native-accent-button-gradient) border-box;
+            border: 1px solid transparent;
+            color: #050505 !important;
+            box-shadow: 0 14px 32px -28px var(--native-accent-glow);
+        }
+
+        .native-payment-icon-mark svg {
+            stroke: currentColor;
+        }
+
+        @keyframes native-payment-marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-50% - 0.425rem)); }
+        }
+
+        @media (max-width: 640px) {
+            .native-payment-logo-card {
+                min-width: 10rem;
+                height: 3.55rem;
+                gap: 0.65rem;
+            }
+
+            .native-payment-logo-card img {
+                max-width: 5.8rem;
+                max-height: 1.15rem;
+            }
+
+            .native-payment-logo-card span {
+                font-size: 0.5rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .native-payment-marquee-track {
+                animation: none !important;
+                transform: none !important;
+            }
+        }
 
         @keyframes native-feature-wall-wave {
             0%, 100% {
@@ -9468,6 +10019,90 @@ body {
             color: #a8b3c7 !important;
         }
 
+        .native-home.native-home-dark .native-feature-book-section {
+            background: linear-gradient(180deg, #101114 0%, #0b0c10 46%, #101114 100%) !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book-cover,
+        .native-home.native-home-dark .native-feature-page {
+            background:
+                linear-gradient(180deg, rgba(18,19,23,0.96), rgba(10,11,14,0.98)) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 30px 96px -78px rgba(0, 0, 0, 0.9) !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book {
+            background: #101114 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book-pages {
+            background:
+                linear-gradient(90deg, rgba(0,0,0,0.24), transparent 10%),
+                #101114 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book-cover h2,
+        .native-home.native-home-dark .native-feature-page h3,
+        .native-home.native-home-dark .native-feature-page strong {
+            color: #f8fafc !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book-cover span,
+        .native-home.native-home-dark .native-feature-page li {
+            color: #a8b3c7 !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book-controls {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book-controls span {
+            color: #f8fafc !important;
+        }
+
+        .native-home.native-home-dark .native-feature-book-cover .native-feature-book-controls button {
+            background: #f8fafc !important;
+            color: #050505 !important;
+        }
+
+        .native-home.native-home-dark .native-feature-page > p,
+        .native-home.native-home-dark .native-feature-page ul,
+        .native-home.native-home-dark .native-feature-page li {
+            background: rgba(255, 255, 255, 0.055) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .native-home.native-home-dark .native-feature-page li::before {
+            background: #f8fafc !important;
+        }
+
+        .native-home.native-home-dark .native-payment-rail-shell {
+            background: #101114 !important;
+            border-color: rgba(255,255,255,0.1) !important;
+            box-shadow: none;
+        }
+
+        .native-home.native-home-dark .native-payment-marquee {
+            background: linear-gradient(180deg, rgba(12, 13, 16, 0.78), rgba(16, 17, 20, 0.94)) !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+
+        .native-home.native-home-dark .native-payment-marquee::before {
+            background: linear-gradient(90deg, #101114, rgba(16, 17, 20, 0));
+        }
+
+        .native-home.native-home-dark .native-payment-marquee::after {
+            background: linear-gradient(270deg, #101114, rgba(16, 17, 20, 0));
+        }
+
+        .native-home.native-home-dark .native-payment-logo-card {
+            background: transparent !important;
+            border-color: transparent !important;
+        }
+
         .native-home.native-home-dark .native-home-theme-toggle,
         .native-home.native-home-dark .bg-neutral-50,
         .native-home.native-home-dark .bg-neutral-100 {
@@ -9656,14 +10291,50 @@ body {
             color: #050505;
         }
 
-        .finance-chart-bar {
+        .finance-gateway-mark.has-logo {
+            background: #ffffff !important;
+            color: #050505 !important;
+            border: 1px solid rgba(15, 23, 42, 0.08) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.78);
+            padding: 0.38rem;
+        }
+
+        .finance-gateway-logo {
+            display: block;
+            width: 100%;
+            max-width: 2.85rem;
+            max-height: 1.2rem;
+            object-fit: contain;
+        }
+
+        .finance-gateway-mark.w-10 .finance-gateway-logo {
+            max-width: 2.45rem;
+            max-height: 1rem;
+        }
+
+        .finance-hero {
+            box-shadow: 0 28px 90px -72px rgba(15, 23, 42, 0.6);
+        }
+
+        .finance-hero-accent {
+            height: 1px;
+            background:
+                linear-gradient(90deg, transparent 0%, rgba(20,184,166,0.45) 18%, rgba(96,165,250,0.58) 50%, rgba(217,70,239,0.42) 82%, transparent 100%);
+        }
+
+        .finance-timeline-chart {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 24px 70px -58px rgba(15,23,42,0.55);
+        }
+
+        .finance-timeline-canvas {
             background-image:
-                linear-gradient(180deg, rgba(255,255,255,0.42), rgba(255,255,255,0.05)),
-                var(--native-accent-button-gradient);
-            background-size: 100% 100%, 420% 420%;
-            background-position: 0 0, var(--native-accent-x) 50%;
-            min-height: 0.5rem;
-            box-shadow: 0 20px 48px -32px var(--native-accent-glow);
+                radial-gradient(circle at top right, rgba(20,184,166,0.09), transparent 34%),
+                linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+        }
+
+        .finance-report-strip > div,
+        .finance-timeline-statbar > div {
+            transition: background 0.18s ease, border-color 0.18s ease;
         }
 
         .finance-metric-card,
@@ -9701,7 +10372,7 @@ body {
                 line-height: 0.95;
             }
 
-            .finance-chart {
+            .finance-timeline-canvas {
                 height: 13rem !important;
             }
 
@@ -9742,6 +10413,9 @@ body {
 
         .native-ui.dashboard-dark .finance-hero,
         .native-ui.dashboard-dark .finance-desk,
+        .native-ui.dashboard-dark .finance-timeline-chart,
+        .native-ui.dashboard-dark .finance-timeline-statbar > div,
+        .native-ui.dashboard-dark .finance-report-strip > div,
         .native-ui.dashboard-dark .finance-metric-card,
         .native-ui.dashboard-dark .finance-gateway-row,
         .native-ui.dashboard-dark .finance-modal-panel,
@@ -9761,9 +10435,14 @@ body {
             border-color: rgba(255,255,255,0.08) !important;
         }
 
-        .native-ui.dashboard-dark .finance-chart {
+        .native-ui.dashboard-dark .finance-timeline-canvas,
+        .native-ui.dashboard-dark .finance-timeline-chart {
             background: #17191d !important;
             border-color: rgba(255,255,255,0.08) !important;
+        }
+
+        .native-ui.dashboard-dark .finance-hero-accent {
+            opacity: 0.7;
         }
 
         .native-ui.dashboard-dark .finance-export-button {
@@ -9772,7 +10451,13 @@ body {
             border-color: rgba(255,255,255,0.12) !important;
         }
 
+        .native-ui.dashboard-dark .finance-gateway-mark.has-logo {
+            background: #f8fafc !important;
+            border-color: rgba(255,255,255,0.14) !important;
+        }
+
         .native-ui.dashboard-dark .finance-studio input,
+        .native-ui.dashboard-dark .finance-studio select,
         .native-ui.dashboard-dark .finance-modal input {
             background: transparent !important;
             color: #f8fafc !important;
@@ -9885,14 +10570,13 @@ body {
         }
 
         .support-desk-shell .support-mail-tabs {
-            background: rgba(255, 255, 255, 0.94) !important;
-            border-color: var(--support-soft-border) !important;
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
+            background: transparent !important;
+            border-color: transparent !important;
         }
 
         .support-desk-shell .support-mail-tabs-track {
             scrollbar-width: none;
+            padding: 0.05rem;
         }
 
         .support-desk-shell .support-mail-tabs-track::-webkit-scrollbar {
@@ -9900,20 +10584,21 @@ body {
         }
 
         .support-desk-shell .support-mail-tab {
-            min-height: 2.55rem;
+            min-width: 3.35rem;
+            min-height: 2.25rem;
             border-color: var(--support-soft-border) !important;
-            background: rgba(255, 255, 255, 0.86) !important;
-            color: #667085 !important;
-            box-shadow: 0 14px 34px -32px rgba(15, 23, 42, 0.55);
+            background: rgba(255, 255, 255, 0.78) !important;
+            color: #7b8798 !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
             transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
         }
 
         .support-desk-shell .support-mail-tab:hover {
             transform: none;
-            background: rgba(15, 23, 42, 0.035) !important;
+            background: rgba(255, 255, 255, 0.96) !important;
             border-color: rgba(15, 23, 42, 0.1) !important;
             color: #111827 !important;
-            box-shadow: none;
+            box-shadow: 0 10px 26px -24px rgba(15, 23, 42, 0.42);
         }
 
         .support-desk-shell .support-mail-tab.is-active {
@@ -9922,7 +10607,7 @@ body {
             background:
                 linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 250, 249, 0.94)) padding-box,
                 var(--native-accent-button-gradient) border-box !important;
-            box-shadow: 0 20px 44px -34px var(--native-accent-glow);
+            box-shadow: 0 18px 40px -34px var(--native-accent-glow), inset 0 1px 0 rgba(255,255,255,0.7);
         }
 
         .support-desk-shell .support-mail-tab-count {
@@ -9962,7 +10647,7 @@ body {
 
         .support-desk-shell .support-thread-list > div:last-child {
             max-height: none !important;
-            height: calc(100% - 6.9rem) !important;
+            height: calc(100% - 9.65rem) !important;
             overflow-y: auto !important;
         }
 
@@ -9994,13 +10679,23 @@ body {
 
         .support-desk-shell .support-thread-row,
         .client-chat-shell .client-thread-row {
-            background: transparent !important;
+            background: rgba(255, 255, 255, 0.88) !important;
             border-color: var(--support-soft-border) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+            transform: translateZ(0);
+            backdrop-filter: blur(0);
+            -webkit-backdrop-filter: blur(0);
         }
 
         .support-desk-shell .support-thread-row:hover,
         .client-chat-shell .client-thread-row:hover {
-            background: rgba(15, 23, 42, 0.035) !important;
+            background: rgba(255, 255, 255, 0.72) !important;
+            border-color: rgba(255, 255, 255, 0.9) !important;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.92),
+                0 18px 44px -34px rgba(15, 23, 42, 0.48) !important;
+            backdrop-filter: blur(18px) saturate(1.18);
+            -webkit-backdrop-filter: blur(18px) saturate(1.18);
         }
 
         .support-load-previous:hover {
@@ -10009,10 +10704,28 @@ body {
 
         .support-desk-shell .support-thread-row.is-active,
         .client-chat-shell .client-thread-row.is-active {
-            background:
-                linear-gradient(90deg, rgba(57, 255, 20, 0.045), rgba(20, 167, 255, 0.04), rgba(255, 79, 216, 0.028)),
-                rgba(255, 255, 255, 0.92) !important;
-            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+            background: rgba(255, 255, 255, 0.96) !important;
+            box-shadow:
+                inset 0 1px 2px rgba(15, 23, 42, 0.075),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.76),
+                0 1px 0 rgba(15, 23, 42, 0.025) !important;
+        }
+
+        .support-desk-shell .support-thread-row.is-active::before,
+        .client-chat-shell .client-thread-row.is-active::before {
+            content: "";
+            position: absolute;
+            inset: 0.55rem;
+            z-index: -1;
+            border-radius: 1.15rem;
+            background: rgba(15, 23, 42, 0.035);
+            box-shadow: inset 0 1px 6px rgba(15, 23, 42, 0.08);
+        }
+
+        .support-desk-shell .support-thread-row.is-active .native-gradient-icon {
+            background: #f5f7f9 !important;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
         }
 
         .support-desk-shell .support-chat-panel,
@@ -10034,31 +10747,69 @@ body {
 
         .support-desk-shell .support-conversation-bar,
         .client-chat-shell .client-conversation-bar {
-            background: rgba(255, 255, 255, 0.94) !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center !important;
+            gap: 1rem !important;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 250, 249, 0.92)) !important;
             border-color: var(--support-soft-border) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            align-items: stretch !important;
-            flex-direction: column !important;
         }
 
         .support-desk-shell .support-conversation-bar > div:first-child,
         .client-chat-shell .client-conversation-bar > div:first-child {
-            width: 100%;
             min-width: 0;
+        }
+
+        .support-desk-shell .support-conversation-bar > div:first-child {
+            align-items: center;
+            padding: 0.35rem;
+            border-radius: 1.35rem;
+        }
+
+        .support-desk-shell .support-conversation-bar > div:first-child > div:nth-child(2),
+        .support-desk-shell .support-conversation-bar > div:first-child > div:first-child:not(button) {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.82),
+                0 18px 38px -34px rgba(15, 23, 42, 0.54);
+        }
+
+        .support-desk-shell .support-conversation-bar h3 {
+            line-height: 1.05 !important;
+        }
+
+        .support-desk-shell .support-presence-label {
+            display: inline-flex !important;
+            width: max-content;
+            max-width: 100%;
+            border-radius: 999px;
+            padding: 0.22rem 0.46rem;
+            background: rgba(15, 23, 42, 0.045);
+            color: #8a94a6 !important;
+            line-height: 1;
         }
 
         .support-desk-shell .support-chat-actions,
         .client-chat-shell .client-chat-actions {
-            align-self: stretch !important;
+            align-self: center !important;
             scrollbar-width: none;
-            width: 100% !important;
+            width: auto !important;
             flex-wrap: nowrap !important;
             overflow-x: auto !important;
-            max-width: 100%;
+            max-width: min(100%, 34rem);
             margin-left: 0 !important;
-            justify-content: flex-start !important;
-            padding-bottom: 0.15rem;
+            justify-content: flex-end !important;
+            padding: 0.35rem !important;
+            border: 1px solid rgba(15, 23, 42, 0.07);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.92),
+                0 18px 46px -38px rgba(15, 23, 42, 0.48);
+            backdrop-filter: blur(18px) saturate(1.18);
+            -webkit-backdrop-filter: blur(18px) saturate(1.18);
         }
 
         .support-desk-shell .support-chat-actions::-webkit-scrollbar,
@@ -10071,18 +10822,21 @@ body {
         .client-chat-shell .client-chat-pane-header button {
             border-radius: 999px !important;
             flex: 0 0 auto !important;
-            min-height: 2.25rem;
-            padding-left: 0.68rem !important;
-            padding-right: 0.68rem !important;
+            min-height: 2rem;
+            height: 2rem !important;
+            padding-left: 0.7rem !important;
+            padding-right: 0.7rem !important;
             gap: 0.36rem !important;
             font-size: 0.48rem !important;
             white-space: nowrap !important;
+            border-color: rgba(15, 23, 42, 0.07) !important;
+            box-shadow: none !important;
         }
 
         .support-desk-shell .support-chat-actions button:first-child {
-            flex-basis: 2.25rem !important;
-            width: 2.25rem !important;
-            min-width: 2.25rem !important;
+            flex-basis: 2rem !important;
+            width: 2rem !important;
+            min-width: 2rem !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
@@ -10100,40 +10854,41 @@ body {
         .support-desk-shell .support-chat-canvas,
         .client-chat-shell .client-chat-canvas {
             background:
-                radial-gradient(circle at 6% 0%, rgba(20, 167, 255, 0.045), transparent 24%),
-                radial-gradient(circle at 92% 24%, rgba(255, 79, 216, 0.035), transparent 24%),
-                linear-gradient(180deg, #fbfbfa 0%, #f5f5f2 100%) !important;
+                linear-gradient(180deg, #fbfbfa 0%, #f7f7f4 100%) !important;
         }
 
         .support-desk-shell .support-message-bubble,
         .client-chat-shell .client-message-bubble {
-            border-radius: 1.05rem !important;
-            box-shadow: 0 18px 48px -42px rgba(15, 23, 42, 0.62) !important;
+            border-radius: 1.18rem !important;
+            box-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.9) inset,
+                0 14px 38px -34px rgba(15, 23, 42, 0.55) !important;
         }
 
         .support-desk-shell .support-message-system,
         .client-chat-shell .client-message-system {
             color: #334155 !important;
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62)) padding-box,
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88)) padding-box,
                 var(--native-accent-button-gradient) border-box !important;
             background-size: auto, 420% 420% !important;
             background-position: 0 0, var(--native-accent-x) 50% !important;
             border: 1px solid transparent !important;
+            box-shadow: 0 20px 52px -44px var(--native-accent-glow) !important;
         }
 
         .support-desk-shell .support-message-owner,
         .client-chat-shell .client-message-client {
-            background: #101114 !important;
+            background: #0d0e11 !important;
             color: #ffffff !important;
             border: 1px solid rgba(15, 23, 42, 0.08) !important;
         }
 
         .support-desk-shell .support-message-client,
         .client-chat-shell .client-message-owner {
-            background: rgba(255, 255, 255, 0.96) !important;
+            background: rgba(255, 255, 255, 0.98) !important;
             color: #050505 !important;
-            border: 1px solid rgba(15, 23, 42, 0.08) !important;
+            border: 1px solid rgba(15, 23, 42, 0.075) !important;
         }
 
         .support-desk-shell .support-chat-composer,
@@ -10200,6 +10955,7 @@ body {
 
             .support-desk-shell .support-chat-header,
             .client-chat-shell .client-chat-pane-header {
+                grid-template-columns: 1fr !important;
                 padding-top: calc(0.75rem + env(safe-area-inset-top)) !important;
                 gap: 0.75rem !important;
             }
@@ -10209,7 +10965,9 @@ body {
                 display: flex !important;
                 flex-wrap: nowrap !important;
                 overflow-x: auto !important;
+                width: 100% !important;
                 max-width: 100%;
+                justify-content: flex-start !important;
             }
 
             .support-desk-shell .support-chat-actions button,
@@ -10277,6 +11035,10 @@ body {
             box-shadow: none;
         }
 
+        .native-ui.dashboard-dark .support-desk-shell .support-mail-tabs {
+            background: transparent !important;
+        }
+
         .native-ui.dashboard-dark .support-desk-shell .support-mail-tab:hover {
             color: #ffffff !important;
             border-color: rgba(255, 255, 255, 0.16) !important;
@@ -10306,6 +11068,7 @@ body {
         .native-ui.dashboard-dark .support-desk-shell .support-rail-count,
         .native-ui.dashboard-dark .support-desk-shell .support-thread-search input,
         .native-ui.dashboard-dark .support-desk-shell .support-chat-meta .rounded-lg,
+        .native-ui.dashboard-dark .support-desk-shell .support-chat-actions,
         .client-portal-shell.dashboard-dark .client-chat-count,
         .client-portal-shell.dashboard-dark .client-chat-search input {
             background: #17191f !important;
@@ -10321,10 +11084,11 @@ body {
 
         .native-ui.dashboard-dark .support-desk-shell .support-thread-row.is-active,
         .client-portal-shell.dashboard-dark .client-thread-row.is-active {
-            background:
-                linear-gradient(90deg, rgba(57, 255, 20, 0.08), rgba(20, 167, 255, 0.065), rgba(255, 79, 216, 0.045)),
-                #15171c !important;
+            background: #15171c !important;
             color: #f8fafc !important;
+            box-shadow:
+                inset 0 1px 5px rgba(0, 0, 0, 0.45),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.04) !important;
         }
 
         .native-ui.dashboard-dark .support-load-previous,
@@ -10366,7 +11130,7 @@ body {
         .client-portal-shell.dashboard-dark .client-message-system {
             color: #dbeafe !important;
             background:
-                linear-gradient(180deg, rgba(18, 24, 32, 0.96), rgba(13, 18, 25, 0.96)) padding-box,
+                linear-gradient(180deg, rgba(18, 24, 32, 0.98), rgba(13, 18, 25, 0.96)) padding-box,
                 var(--native-accent-button-gradient) border-box !important;
             background-size: auto, 420% 420% !important;
             background-position: 0 0, var(--native-accent-x) 50% !important;
@@ -10383,6 +11147,55 @@ body {
         .native-ui.dashboard-dark .support-desk-shell .support-message-bubble :where(*),
         .client-portal-shell.dashboard-dark .client-message-bubble :where(*) {
             color: inherit !important;
+        }
+
+        .support-desk-shell .support-thread-row.is-active,
+        .support-inbox-pro .support-thread-row.is-active {
+            background: rgba(255, 255, 255, 0.96) !important;
+            box-shadow:
+                inset 0 1px 3px rgba(15, 23, 42, 0.09),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.75) !important;
+        }
+
+        .support-desk-shell .support-thread-row:not(.is-active):hover,
+        .support-inbox-pro .support-thread-row:not(.is-active):hover {
+            background: rgba(255, 255, 255, 0.72) !important;
+            border-color: rgba(255, 255, 255, 0.9) !important;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.92),
+                0 18px 44px -34px rgba(15, 23, 42, 0.48) !important;
+            backdrop-filter: blur(18px) saturate(1.18);
+            -webkit-backdrop-filter: blur(18px) saturate(1.18);
+        }
+
+        .support-desk-shell .support-thread-row.is-active::before,
+        .support-inbox-pro .support-thread-row.is-active::before {
+            content: "";
+            position: absolute;
+            inset: 0.55rem;
+            z-index: -1;
+            border-radius: 1.15rem;
+            background: rgba(15, 23, 42, 0.032);
+            box-shadow: inset 0 1px 6px rgba(15, 23, 42, 0.08);
+        }
+
+        .support-desk-shell .support-message-system,
+        .support-inbox-pro .support-message-system {
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 255, 255, 0.9)) padding-box,
+                var(--native-accent-button-gradient) border-box !important;
+            border: 1px solid transparent !important;
+        }
+
+        .native-ui.dashboard-dark .support-desk-shell .support-thread-row.is-active,
+        .native-ui.dashboard-dark .support-inbox-pro .support-thread-row.is-active {
+            background: #15171c !important;
+        }
+
+        .native-ui.dashboard-dark .support-desk-shell .support-thread-row.is-active::before,
+        .native-ui.dashboard-dark .support-inbox-pro .support-thread-row.is-active::before {
+            background: rgba(0, 0, 0, 0.22);
+            box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.45);
         }
 
         .booking-services-grid > button,
@@ -11027,7 +11840,363 @@ body {
             box-shadow: none;
         }
 
+        .editor-preview-frame.is-mobile-preview .booking-services-grid,
+        .booking-flow-public .booking-services-grid {
+            min-width: 0;
+        }
+
+        .editor-preview-frame.is-mobile-preview .animate-in {
+            padding: 1.35rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview header {
+            margin-bottom: 2rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview header h1 {
+            font-size: clamp(2.45rem, 15vw, 4.35rem) !important;
+            line-height: 0.9 !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview header p {
+            font-size: clamp(0.95rem, 4.5vw, 1.15rem) !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview [data-preview-section] h4 {
+            font-size: clamp(1.2rem, 6vw, 1.55rem) !important;
+            line-height: 1.08 !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .flex.flex-col.gap-16 {
+            gap: 2.8rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid > button,
+        .booking-flow-public .booking-services-grid > button {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid > button,
+        .editor-preview-frame.is-mobile-preview .booking-calendar-look > button,
+        .editor-preview-frame.is-mobile-preview .booking-time-look > button {
+            transform: none !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid > button > div,
+        .booking-flow-public .booking-services-grid > button > div {
+            min-width: 0;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid h5,
+        .booking-flow-public .booking-services-grid h5,
+        .editor-preview-frame.is-mobile-preview .booking-faq-section button span,
+        .booking-flow-public .booking-faq-section button span {
+            overflow-wrap: anywhere;
+            hyphens: auto;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid p,
+        .booking-flow-public .booking-services-grid p,
+        .editor-preview-frame.is-mobile-preview .booking-faq-section button > span:last-child,
+        .booking-flow-public .booking-faq-section button > span:last-child {
+            overflow-wrap: anywhere;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid span,
+        .booking-flow-public .booking-services-grid span,
+        .editor-preview-frame.is-mobile-preview .booking-time-look span,
+        .booking-flow-public .booking-time-look span {
+            max-width: 100%;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid > button > div {
+            align-items: flex-start;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) > button > div {
+            flex-direction: column;
+            gap: 0.82rem;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) > button > div > div:first-child {
+            width: 3.2rem !important;
+            height: 3.2rem !important;
+            border-radius: 1rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) > button > div > div:last-child {
+            width: 100%;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) h5 {
+            font-size: 0.96rem !important;
+            line-height: 1.12 !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) p {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.74rem !important;
+            line-height: 1.34 !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) .mt-4 {
+            margin-top: 0.72rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) .rounded-full {
+            padding: 0.28rem 0.48rem !important;
+            font-size: 0.44rem !important;
+            line-height: 1 !important;
+            letter-spacing: 0.08em !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-menu,
+        .editor-preview-frame.is-mobile-preview .booking-services-cards,
+        .editor-preview-frame.is-mobile-preview .booking-services-luxury {
+            grid-template-columns: 1fr !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-gallery {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.7rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-gallery > button {
+            min-height: 12.2rem;
+            padding: 0.9rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-services-compact {
+            grid-template-columns: 1fr !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-calendar-look {
+            gap: 0.55rem !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-calendar-look > button {
+            min-width: 4.75rem !important;
+            width: 4.75rem !important;
+            min-height: 5.55rem !important;
+            height: 5.55rem !important;
+            border-radius: 1rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-calendar-editorial > button {
+            min-width: 5.6rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-calendar-compact {
+            grid-template-columns: repeat(7, minmax(3.7rem, 1fr)) !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-calendar-compact > button {
+            min-width: 3.7rem !important;
+            width: 3.7rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-time-look {
+            gap: 0.55rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-time-pill,
+        .editor-preview-frame.is-mobile-preview .booking-time-luxury {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-time-compact {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-time-look > button {
+            min-width: 0;
+            min-height: 3rem;
+            padding: 0.78rem 0.52rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-time-look > button span {
+            font-size: 0.95rem !important;
+            line-height: 1 !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-faq-cards .space-y-3,
+        .editor-preview-frame.is-mobile-preview .booking-faq-split .space-y-3 {
+            grid-template-columns: 1fr !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-faq-section button {
+            min-width: 0;
+            padding: 0.92rem !important;
+            border-radius: 1rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-faq-section button span {
+            min-width: 0;
+            line-height: 1.22;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-gallery {
+            margin-top: 1.5rem;
+            padding: 0.9rem;
+            border-radius: 1.15rem;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-gallery-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.5rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-editorial .booking-venue-gallery-grid,
+        .editor-preview-frame.is-mobile-preview .booking-venue-gallery-grid.is-single {
+            grid-template-columns: 1fr !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-photo {
+            min-height: 6.2rem;
+            border-radius: 0.85rem;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-photo.is-featured {
+            grid-column: span 2;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-editorial .booking-venue-photo.is-featured,
+        .editor-preview-frame.is-mobile-preview .booking-venue-gallery-grid.is-single .booking-venue-photo.is-featured {
+            grid-column: auto;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-gallery-header,
+        .editor-preview-frame.is-mobile-preview .booking-venue-gallery-header-right {
+            text-align: left;
+            flex-direction: column;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-venue-gallery-title {
+            font-size: 1.28rem;
+            line-height: 1.02;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-social-links {
+            gap: 0.5rem !important;
+        }
+
+        .editor-preview-frame.is-mobile-preview .booking-social-links a {
+            min-width: 0;
+            max-width: 100%;
+        }
+
         @media (max-width: 720px) {
+            .booking-flow-public > div {
+                padding: 1.35rem !important;
+            }
+
+            .booking-flow-public header {
+                margin-bottom: 2rem !important;
+            }
+
+            .booking-flow-public header h1 {
+                font-size: clamp(2.45rem, 15vw, 4.35rem) !important;
+                line-height: 0.9 !important;
+            }
+
+            .booking-flow-public header p {
+                font-size: clamp(0.95rem, 4.5vw, 1.15rem) !important;
+            }
+
+            .booking-flow-public [data-preview-section] h4 {
+                font-size: clamp(1.2rem, 6vw, 1.55rem) !important;
+                line-height: 1.08 !important;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-compact):not(.booking-services-gallery) {
+                grid-template-columns: 1fr !important;
+            }
+
+            .booking-flow-public .booking-services-gallery {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 0.7rem !important;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) > button {
+                padding: 0.92rem !important;
+                transform: none !important;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) > button > div {
+                flex-direction: column;
+                gap: 0.78rem;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) > button > div > div:first-child {
+                width: 3.25rem !important;
+                height: 3.25rem !important;
+                border-radius: 1rem !important;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) h5 {
+                font-size: 0.98rem !important;
+                line-height: 1.12 !important;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) p {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                font-size: 0.76rem !important;
+                line-height: 1.34 !important;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) .mt-4 {
+                margin-top: 0.72rem !important;
+            }
+
+            .booking-flow-public .booking-services-grid:not(.booking-services-menu):not(.booking-services-compact) .rounded-full {
+                padding: 0.28rem 0.48rem !important;
+                font-size: 0.44rem !important;
+                line-height: 1 !important;
+                letter-spacing: 0.08em !important;
+            }
+
+            .booking-flow-public .booking-calendar-look {
+                gap: 0.55rem !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+
+            .booking-flow-public .booking-calendar-look > button {
+                min-width: 4.75rem !important;
+                width: 4.75rem !important;
+                min-height: 5.55rem !important;
+                height: 5.55rem !important;
+                border-radius: 1rem !important;
+            }
+
+            .booking-flow-public .booking-time-look {
+                gap: 0.55rem !important;
+            }
+
+            .booking-flow-public .booking-time-pill,
+            .booking-flow-public .booking-time-luxury {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+
+            .booking-flow-public .booking-time-compact {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+
+            .booking-flow-public .booking-time-look > button {
+                min-width: 0;
+                min-height: 3rem;
+                padding: 0.78rem 0.52rem !important;
+            }
+
             .booking-faq-cards .space-y-3,
             .booking-faq-split .space-y-3 {
                 grid-template-columns: 1fr;

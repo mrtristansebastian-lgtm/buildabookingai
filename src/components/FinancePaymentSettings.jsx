@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -11,13 +11,11 @@ import {
   KeyRound,
   Landmark,
   LockKeyhole,
-  ReceiptText,
   RefreshCw,
   Search,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
-  WalletCards,
   X,
   Zap
 } from 'lucide-react';
@@ -30,6 +28,7 @@ const gatewayCards = [
     name: 'Stripe',
     region: 'International',
     icon: CreditCard,
+    logo: '/payment-logos/stripe.png',
     note: 'Global cards, Apple Pay, Google Pay, and checkout sessions.',
     fields: [
       { key: 'publishableKey', label: 'Publishable key', type: 'text' },
@@ -42,6 +41,7 @@ const gatewayCards = [
     name: 'Payfast',
     region: 'South Africa',
     icon: Zap,
+    logo: '/payment-logos/payfast.png',
     note: 'Fast local checkout for cards, EFT, and popular South African payment flows.',
     fields: [
       { key: 'merchantId', label: 'Merchant ID', type: 'text' },
@@ -50,23 +50,11 @@ const gatewayCards = [
     ]
   },
   {
-    id: 'peach',
-    name: 'Peach Payments',
-    region: 'South Africa',
-    icon: Landmark,
-    note: 'Enterprise-ready checkout for card processing and Peach-hosted flows.',
-    fields: [
-      { key: 'entityId', label: 'Entity ID', type: 'text' },
-      { key: 'accessToken', label: 'Access token', type: 'password' },
-      { key: 'webhookSecret', label: 'Webhook secret', type: 'password' },
-      { key: 'checkoutEndpoint', label: 'Checkout endpoint', type: 'url' }
-    ]
-  },
-  {
     id: 'yoco',
     name: 'Yoco',
     region: 'South Africa',
     icon: CreditCard,
+    logo: '/payment-logos/yoco.webp',
     note: 'Local card checkout with clean hosted payment links.',
     fields: [
       { key: 'publicKey', label: 'Public key', type: 'text' },
@@ -79,6 +67,7 @@ const gatewayCards = [
     name: 'Ozow',
     region: 'South Africa',
     icon: Landmark,
+    logo: '/payment-logos/ozow.png',
     note: 'Instant EFT-style bank payments with signed payment URLs.',
     fields: [
       { key: 'siteCode', label: 'Site code', type: 'text' },
@@ -91,6 +80,7 @@ const gatewayCards = [
     name: 'Paystack',
     region: 'Africa',
     icon: ShieldCheck,
+    logo: '/payment-logos/paystack.png',
     note: 'Reliable card payments with clean initialization and webhooks.',
     fields: [
       { key: 'publicKey', label: 'Public key', type: 'text' },
@@ -129,6 +119,33 @@ const gatewayById = gatewayCards.reduce((acc, gateway) => {
   return acc;
 }, {});
 
+const cardGatewayIds = new Set(['stripe', 'payfast', 'yoco', 'paystack', 'ozow']);
+
+const GatewayLogo = ({ gateway, className = '' }) => {
+  const Icon = gateway?.icon || CreditCard;
+  if (gateway?.logo) {
+    return <img src={gateway.logo} alt="" className={`finance-gateway-logo ${className}`} loading="lazy" />;
+  }
+  return <Icon size={18} />;
+};
+
+const currencyOptions = [
+  { code: 'ZAR', label: 'South African rand', locale: 'en-ZA' },
+  { code: 'USD', label: 'US dollar', locale: 'en-US' },
+  { code: 'GBP', label: 'British pound', locale: 'en-GB' },
+  { code: 'EUR', label: 'Euro', locale: 'en-IE' },
+  { code: 'AUD', label: 'Australian dollar', locale: 'en-AU' },
+  { code: 'CAD', label: 'Canadian dollar', locale: 'en-CA' },
+  { code: 'NGN', label: 'Nigerian naira', locale: 'en-NG' },
+  { code: 'KES', label: 'Kenyan shilling', locale: 'en-KE' },
+  { code: 'BWP', label: 'Botswana pula', locale: 'en-BW' }
+];
+
+const currencyOptionByCode = currencyOptions.reduce((acc, option) => {
+  acc[option.code] = option;
+  return acc;
+}, {});
+
 const emptyDrafts = gatewayCards.reduce((acc, gateway) => {
   acc[gateway.id] = {
     enabled: false,
@@ -142,16 +159,26 @@ const emptyDrafts = gatewayCards.reduce((acc, gateway) => {
 }, {});
 
 const guestDemoGatewaySettings = {
+  stripe: {
+    enabled: true,
+    mode: 'demo',
+    public: {}
+  },
+  payfast: {
+    enabled: true,
+    mode: 'demo',
+    public: {}
+  },
   manual_eft: {
     enabled: true,
     mode: 'demo',
     public: {
-      accountHolder: 'Northline Studio',
+      accountHolder: 'Velvet Fade Studio',
       bankName: 'Demo Bank',
       accountNumber: '000 123 456',
       branchCode: '250655',
       accountType: 'Business Current',
-      instructions: 'Use your booking reference so the salon can match payment quickly.'
+      instructions: 'Use your booking reference so the shop can match payment quickly.'
     }
   },
   cash: {
@@ -165,6 +192,16 @@ const guestDemoGatewaySettings = {
     enabled: true,
     mode: 'demo',
     public: {}
+  },
+  paystack: {
+    enabled: true,
+    mode: 'demo',
+    public: {}
+  },
+  ozow: {
+    enabled: true,
+    mode: 'demo',
+    public: {}
   }
 };
 
@@ -174,12 +211,12 @@ const exampleTransactions = [
     isExample: true,
     gatewayType: 'manual_eft',
     status: 'paid',
-    amountInCents: 65000,
+    amountInCents: 16000,
     currency: 'ZAR',
-    customerName: 'Maya Nkosi',
-    customerEmail: 'maya.nkosi@example.com',
-    description: 'Signature Blowout - manual EFT',
-    bookingId: 'EXAMPLE-1028',
+    customerName: 'Sipho Mokoena',
+    customerEmail: 'sipho.mokoena@velvetfade.example',
+    description: 'Skin Fade - manual EFT',
+    bookingId: 'VELVET-1028',
     updatedAtMs: Date.now() - 1000 * 60 * 45
   },
   {
@@ -187,12 +224,12 @@ const exampleTransactions = [
     isExample: true,
     gatewayType: 'cash',
     status: 'manual_pending',
-    amountInCents: 45000,
+    amountInCents: 22000,
     currency: 'ZAR',
-    customerName: 'Liam Petersen',
-    customerEmail: 'liam.petersen@example.com',
-    description: 'Private training session - cash on arrival',
-    bookingId: 'EXAMPLE-1031',
+    customerName: 'Kabelo Ndlovu',
+    customerEmail: 'kabelo.ndlovu@velvetfade.example',
+    description: 'VIP Fade + Beard - cash on arrival',
+    bookingId: 'VELVET-1031',
     updatedAtMs: Date.now() - 1000 * 60 * 60 * 6
   }
 ];
@@ -219,6 +256,13 @@ const addDays = (date, days) => {
   return next;
 };
 
+const addMonths = (date, months) => {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + months, 1);
+  next.setHours(0, 0, 0, 0);
+  return next;
+};
+
 const dateToMs = (value) => {
   if (!value) return 0;
   if (typeof value === 'number') return value;
@@ -230,14 +274,30 @@ const dateToMs = (value) => {
 
 const formatMoney = (amountInCents = 0, currency = 'ZAR') => {
   const amount = Math.max(0, Math.round(Number(amountInCents) || 0)) / 100;
+  const option = currencyOptionByCode[currency] || currencyOptionByCode.ZAR;
   try {
-    return new Intl.NumberFormat('en-ZA', {
+    return new Intl.NumberFormat(option.locale, {
       style: 'currency',
-      currency,
+      currency: option.code,
       maximumFractionDigits: amount % 1 ? 2 : 0
     }).format(amount);
   } catch {
-    return `${currency} ${amount.toFixed(amount % 1 ? 2 : 0)}`;
+    return `${option.code} ${amount.toFixed(amount % 1 ? 2 : 0)}`;
+  }
+};
+
+const formatCompactMoney = (amountInCents = 0, currency = 'ZAR') => {
+  const amount = Math.max(0, Math.round(Number(amountInCents) || 0)) / 100;
+  const option = currencyOptionByCode[currency] || currencyOptionByCode.ZAR;
+  try {
+    return new Intl.NumberFormat(option.locale, {
+      style: 'currency',
+      currency: option.code,
+      notation: 'compact',
+      maximumFractionDigits: amount >= 1000 ? 1 : 0
+    }).format(amount);
+  } catch {
+    return `${option.code} ${amount >= 1000 ? `${Math.round(amount / 100) / 10}K` : Math.round(amount)}`;
   }
 };
 
@@ -287,6 +347,9 @@ const getBookingAmountInCents = (booking = {}) => {
 
 const getPeriodRange = (period, customRange) => {
   const now = new Date();
+  if (period === 'all') {
+    return { start: new Date(2000, 0, 1), end: new Date(2100, 0, 1), label: 'All time' };
+  }
   if (period === 'day') {
     const start = startOfDay(now);
     return { start, end: addDays(start, 1), label: 'Today' };
@@ -305,43 +368,110 @@ const getPeriodRange = (period, customRange) => {
 };
 
 const buildChartBuckets = (records, period, range) => {
-  if (period === 'day') {
-    const slots = ['06', '09', '12', '15', '18', '21'].map((hour) => ({ label: `${hour}:00`, value: 0 }));
-    records.forEach((record) => {
-      const hour = new Date(record.updatedAtMs || Date.now()).getHours();
-      const index = Math.min(slots.length - 1, Math.max(0, Math.floor((hour - 6) / 3)));
-      slots[index].value += record.status === 'paid' ? record.amountInCents : 0;
-    });
-    return slots;
+  const paidRecords = records
+    .filter((record) => record.status === 'paid' && record.updatedAtMs)
+    .sort((a, b) => a.updatedAtMs - b.updatedAtMs);
+  const dayMs = 86400000;
+  const defaultStart = range?.start || startOfDay(new Date());
+  const defaultEnd = range?.end || addDays(defaultStart, 1);
+  let start = new Date(defaultStart);
+  let end = new Date(defaultEnd);
+  let unit = 'day';
+  let step = 1;
+
+  if (period === 'all' && paidRecords.length) {
+    const first = new Date(paidRecords[0].updatedAtMs);
+    const last = new Date(paidRecords[paidRecords.length - 1].updatedAtMs);
+    const days = Math.max(1, Math.ceil((startOfDay(last).getTime() - startOfDay(first).getTime()) / dayMs) + 1);
+    if (days <= 45) {
+      unit = 'day';
+      start = startOfDay(first);
+      end = addDays(startOfDay(last), 1);
+    } else if (days <= 160) {
+      unit = 'week';
+      start = getWeekStart(first);
+      end = addDays(getWeekStart(last), 7);
+    } else {
+      unit = 'month';
+      start = getMonthStart(first);
+      end = addMonths(getMonthStart(last), 1);
+      const monthSpan = Math.max(1, (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()));
+      step = monthSpan > 36 ? 3 : 1;
+    }
+  } else if (period === 'day') {
+    unit = 'hour';
+    step = 3;
+    start = startOfDay(defaultStart);
+    end = addDays(start, 1);
+  } else if (period === 'week') {
+    unit = 'day';
+    start = getWeekStart(defaultStart);
+    end = addDays(start, 7);
+  } else if (period === 'month') {
+    unit = 'day';
+    start = getMonthStart(defaultStart);
+    end = addMonths(start, 1);
+  } else if (period === 'custom') {
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / dayMs));
+    if (days <= 45) {
+      unit = 'day';
+      start = startOfDay(start);
+    } else if (days <= 180) {
+      unit = 'week';
+      start = getWeekStart(start);
+    } else {
+      unit = 'month';
+      start = getMonthStart(start);
+      const monthSpan = Math.max(1, (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()));
+      step = monthSpan > 36 ? 3 : 1;
+    }
   }
 
-  if (period === 'week') {
-    return Array.from({ length: 7 }, (_, index) => {
-      const day = addDays(range.start, index);
-      const dayStart = day.getTime();
-      const dayEnd = addDays(day, 1).getTime();
-      return {
-        label: day.toLocaleDateString('en-ZA', { weekday: 'short' }),
-        value: records
-          .filter((record) => record.status === 'paid' && record.updatedAtMs >= dayStart && record.updatedAtMs < dayEnd)
-          .reduce((sum, record) => sum + record.amountInCents, 0)
-      };
+  if (end <= start) end = unit === 'month' ? addMonths(start, step) : unit === 'hour' ? new Date(start.getTime() + step * 60 * 60 * 1000) : addDays(start, step);
+
+  const advance = (date) => {
+    if (unit === 'hour') {
+      const next = new Date(date);
+      next.setHours(next.getHours() + step, 0, 0, 0);
+      return next;
+    }
+    if (unit === 'week') return addDays(date, 7 * step);
+    if (unit === 'month') return addMonths(date, step);
+    return addDays(date, step);
+  };
+
+  const formatLabel = (date) => {
+    if (unit === 'hour') return date.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+    if (unit === 'week') return date.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' });
+    if (unit === 'month') {
+      const options = period === 'all' ? { month: 'short', year: '2-digit' } : { month: 'short' };
+      return date.toLocaleDateString('en-ZA', options);
+    }
+    return period === 'week'
+      ? date.toLocaleDateString('en-ZA', { weekday: 'short' })
+      : date.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' });
+  };
+
+  const buckets = [];
+  let cursor = new Date(start);
+  while (cursor < end && buckets.length < 96) {
+    const bucketStart = new Date(cursor);
+    const bucketEnd = advance(bucketStart);
+    const bucketStartMs = bucketStart.getTime();
+    const bucketEndMs = bucketEnd.getTime();
+    const bucketRecords = paidRecords.filter((record) => record.updatedAtMs >= bucketStartMs && record.updatedAtMs < bucketEndMs);
+    buckets.push({
+      label: formatLabel(bucketStart),
+      rangeLabel: `${bucketStart.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(bucketEndMs - 1).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+      value: bucketRecords.reduce((sum, record) => sum + record.amountInCents, 0),
+      count: bucketRecords.length,
+      startMs: bucketStartMs,
+      endMs: bucketEndMs
     });
+    cursor = bucketEnd;
   }
 
-  const totalDays = Math.max(1, Math.ceil((range.end.getTime() - range.start.getTime()) / 86400000));
-  const bucketCount = period === 'custom' ? Math.min(8, Math.max(3, Math.ceil(totalDays / 7))) : 5;
-  const bucketSize = Math.ceil(totalDays / bucketCount);
-  return Array.from({ length: bucketCount }, (_, index) => {
-    const bucketStart = addDays(range.start, index * bucketSize);
-    const bucketEnd = addDays(bucketStart, bucketSize);
-    return {
-      label: bucketStart.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' }),
-      value: records
-        .filter((record) => record.status === 'paid' && record.updatedAtMs >= bucketStart.getTime() && record.updatedAtMs < bucketEnd.getTime())
-        .reduce((sum, record) => sum + record.amountInCents, 0)
-    };
-  });
+  return buckets.length ? buckets : [{ label: 'No data', rangeLabel: 'No paid records', value: 0, count: 0, startMs: start.getTime(), endMs: end.getTime() }];
 };
 
 const Toggle = ({ checked, onChange }) => (
@@ -368,6 +498,116 @@ const StatusPill = ({ status }) => {
   return <span className={`rounded-full border px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${tone}`}>{label}</span>;
 };
 
+const FinanceTimelineChart = ({ buckets = [], currency = 'ZAR' }) => {
+  const safeBuckets = buckets.length ? buckets : [{ label: 'No data', rangeLabel: 'No paid records', value: 0, count: 0 }];
+  const chartWidth = 920;
+  const chartHeight = 340;
+  const padding = { top: 22, right: 28, bottom: 48, left: 78 };
+  const plotWidth = chartWidth - padding.left - padding.right;
+  const plotHeight = chartHeight - padding.top - padding.bottom;
+  const maxValue = Math.max(...safeBuckets.map((bucket) => Number(bucket.value || 0)), 1);
+  const totalValue = safeBuckets.reduce((sum, bucket) => sum + Number(bucket.value || 0), 0);
+  const averageValue = Math.round(totalValue / Math.max(1, safeBuckets.length));
+  const peakBucket = safeBuckets.reduce((peak, bucket) => (bucket.value || 0) > (peak.value || 0) ? bucket : peak, safeBuckets[0]);
+  const paidBuckets = safeBuckets.filter((bucket) => Number(bucket.value || 0) > 0);
+  const latestBucket = paidBuckets[paidBuckets.length - 1] || safeBuckets[safeBuckets.length - 1] || safeBuckets[0];
+  const previousBucket = paidBuckets[paidBuckets.length - 2] || { value: 0 };
+  const trendValue = Number(latestBucket.value || 0) - Number(previousBucket.value || 0);
+  const labelEvery = Math.max(1, Math.ceil(safeBuckets.length / 8));
+  const points = safeBuckets.map((bucket, index) => {
+    const x = padding.left + (safeBuckets.length === 1 ? plotWidth / 2 : (index / (safeBuckets.length - 1)) * plotWidth);
+    const y = padding.top + plotHeight - ((Number(bucket.value || 0) / maxValue) * plotHeight);
+    return { ...bucket, x, y };
+  });
+  const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+  const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${(padding.top + plotHeight).toFixed(2)} L ${points[0].x.toFixed(2)} ${(padding.top + plotHeight).toFixed(2)} Z`;
+  const yTicks = Array.from({ length: 5 }, (_, index) => Math.round((maxValue / 4) * index)).reverse();
+  const trendLabel = trendValue === 0 ? 'Flat' : `${trendValue > 0 ? '+' : '-'}${formatMoney(Math.abs(trendValue), currency)}`;
+  const trendTone = trendValue >= 0 ? 'text-emerald-600' : 'text-rose-600';
+  const statItems = [
+    ['Revenue', formatMoney(totalValue, currency), 'Paid in range'],
+    ['Average', formatMoney(averageValue, currency), 'Per bucket'],
+    ['Peak', formatMoney(peakBucket.value || 0, currency), peakBucket.label],
+    ['Latest paid', formatMoney(latestBucket.value || 0, currency), latestBucket.label]
+  ];
+
+  return (
+    <div className="finance-timeline-chart rounded-[1.35rem] border border-neutral-100 bg-white p-3 md:p-4">
+      <div className="finance-timeline-statbar grid grid-cols-2 xl:grid-cols-4 gap-px overflow-hidden rounded-2xl border border-neutral-100 bg-neutral-100 mb-4">
+        {statItems.map(([label, value, caption]) => (
+          <div key={label} className="bg-white px-4 py-3">
+            <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400">{label}</p>
+            <p className="mt-1 text-lg md:text-xl font-black tracking-tight text-black truncate">{value}</p>
+            <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-neutral-300 truncate">{caption}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="finance-timeline-canvas h-[20rem] rounded-[1.15rem] border border-neutral-100 bg-[#FBFCFE] overflow-hidden">
+        <svg className="h-full w-full" viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="Paid earnings over time">
+          <defs>
+            <linearGradient id="financeTimelineArea" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.01" />
+            </linearGradient>
+            <linearGradient id="financeTimelineLine" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#111827" />
+              <stop offset="48%" stopColor="#14b8a6" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
+          </defs>
+
+          {yTicks.map((tick) => {
+            const y = padding.top + plotHeight - ((tick / maxValue) * plotHeight);
+            return (
+              <g key={tick}>
+                <line x1={padding.left} x2={chartWidth - padding.right} y1={y} y2={y} stroke="#e8edf4" strokeDasharray="4 10" />
+                <text x={padding.left - 12} y={y + 4} textAnchor="end" fontSize="16" fontWeight="800" fill="#94a3b8">
+                  {formatCompactMoney(tick, currency)}
+                </text>
+              </g>
+            );
+          })}
+
+          <path d={areaPath} fill="url(#financeTimelineArea)" />
+          <path d={linePath} fill="none" stroke="url(#financeTimelineLine)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+
+          {points.map((point, index) => {
+            const showLabel = index === 0 || index === points.length - 1 || index % labelEvery === 0;
+            const isPeak = point.startMs === peakBucket.startMs && point.value === peakBucket.value;
+            const hasValue = Number(point.value || 0) > 0;
+            return (
+              <g key={`${point.label}-${point.startMs || index}`}>
+                {hasValue && (
+                  <circle cx={point.x} cy={point.y} r={isPeak ? 6 : 3.8} fill={isPeak ? '#050505' : '#ffffff'} stroke={isPeak ? '#050505' : '#0f766e'} strokeWidth={isPeak ? 2 : 3}>
+                    <title>{`${point.rangeLabel || point.label}: ${formatMoney(point.value || 0, currency)} from ${point.count || 0} paid booking${point.count === 1 ? '' : 's'}`}</title>
+                  </circle>
+                )}
+                {showLabel && (
+                  <text
+                    x={point.x}
+                    y={chartHeight - 17}
+                    textAnchor={index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle'}
+                    fontSize="15"
+                    fontWeight="900"
+                    fill="#94a3b8"
+                  >
+                    {point.label}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">{safeBuckets.length} time buckets · paid revenue only</p>
+        <p className={`text-[10px] font-black uppercase tracking-widest ${trendTone}`}>Latest paid movement {trendLabel}</p>
+      </div>
+    </div>
+  );
+};
 export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = false, canManageWorkspace, showToast, bookings = [], onMarkBookingPaid }) => {
   const [saved, setSaved] = useState({});
   const [drafts, setDrafts] = useState(emptyDrafts);
@@ -376,11 +616,14 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
   const [selectedGatewayId, setSelectedGatewayId] = useState('stripe');
   const [financeSummary, setFinanceSummary] = useState({});
   const [paymentAttempts, setPaymentAttempts] = useState([]);
-  const [period, setPeriod] = useState('month');
+  const [period, setPeriod] = useState('all');
   const [deskView, setDeskView] = useState('transactions');
   const [search, setSearch] = useState('');
+  const [deskStatusFilter, setDeskStatusFilter] = useState('all');
+  const [deskSort, setDeskSort] = useState('newest');
   const [customRange, setCustomRange] = useState({ from: '', to: '' });
   const [rangeDialogOpen, setRangeDialogOpen] = useState(false);
+  const [displayCurrency, setDisplayCurrency] = useState('ZAR');
 
   useEffect(() => {
     if (!isFirebaseConfigured || !db || !appId || !businessId) return undefined;
@@ -451,14 +694,14 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
       .filter((booking) => {
         if (!booking || booking.isExample) return false;
         const method = booking.paymentGateway || booking.paymentMethod || '';
-        return manualGatewayIds.has(method) || booking.paymentStatus === 'manual_pending';
+        return isGuestWorkspace || manualGatewayIds.has(method) || booking.paymentStatus === 'manual_pending';
       })
       .map((booking) => {
         const method = booking.paymentGateway || booking.paymentMethod || 'cash';
         const paid = booking.paymentStatus === 'paid';
         return {
           id: `manual-${booking.id}`,
-          gatewayType: manualGatewayIds.has(method) ? method : 'cash',
+          gatewayType: isGuestWorkspace ? method : (manualGatewayIds.has(method) ? method : 'cash'),
           status: paid ? 'paid' : 'manual_pending',
           amountInCents: getBookingAmountInCents(booking),
           currency: booking.currency || 'ZAR',
@@ -471,7 +714,7 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
           canMarkPaid: !paid
         };
       })
-  ), [bookings]);
+  ), [bookings, isGuestWorkspace]);
 
   const financeRecords = useMemo(() => (
     [...manualBookingRows, ...paymentAttempts]
@@ -481,6 +724,40 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
   const effectiveFinanceRecords = useMemo(() => (
     financeRecords.length ? financeRecords : (isGuestWorkspace ? exampleTransactions : [])
   ), [financeRecords, isGuestWorkspace]);
+
+  const inferredCurrency = useMemo(() => {
+    if (currencyOptionByCode[financeSummary.currency]) return financeSummary.currency;
+    const counts = effectiveFinanceRecords.reduce((acc, record) => {
+      const code = currencyOptionByCode[record.currency] ? record.currency : '';
+      if (code) acc[code] = (acc[code] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'ZAR';
+  }, [effectiveFinanceRecords, financeSummary.currency]);
+
+  const currencyStorageKey = useMemo(() => (
+    `build-a-booking-finance-currency-${String(businessId || (isGuestWorkspace ? 'guest' : 'local')).replace(/[^a-zA-Z0-9_-]/g, '-')}`
+  ), [businessId, isGuestWorkspace]);
+
+  useEffect(() => {
+    let stored = '';
+    try {
+      stored = window.localStorage.getItem(currencyStorageKey) || '';
+    } catch {
+      stored = '';
+    }
+    setDisplayCurrency(currencyOptionByCode[stored] ? stored : inferredCurrency);
+  }, [currencyStorageKey, inferredCurrency]);
+
+  const updateDisplayCurrency = (code) => {
+    const next = currencyOptionByCode[code] ? code : inferredCurrency;
+    setDisplayCurrency(next);
+    try {
+      window.localStorage.setItem(currencyStorageKey, next);
+    } catch {
+      // Local persistence is optional; the selected currency still applies for this session.
+    }
+  };
 
   const periodRecords = useMemo(() => {
     const startMs = periodRange.start.getTime();
@@ -505,18 +782,22 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
   }, [enabledCount, financeSummary, periodRecords]);
 
   const chartBuckets = useMemo(() => buildChartBuckets(periodRecords, period, periodRange), [period, periodRange, periodRecords]);
-  const maxChartValue = Math.max(...chartBuckets.map((bucket) => bucket.value), 1);
 
   const visibleDeskRows = useMemo(() => {
     const rows = effectiveFinanceRecords;
     const queryText = search.trim().toLowerCase();
-    return rows.filter((row) => {
+    const filtered = rows.filter((row) => {
       const typeMatches = deskView === 'transactions'
         ? true
         : deskView === 'invoices'
           ? ['initiated', 'checkout_ready', 'paid'].includes(row.status)
           : row.status === 'paid';
       if (!typeMatches) return false;
+      if (deskStatusFilter === 'paid' && row.status !== 'paid') return false;
+      if (deskStatusFilter === 'open' && ['paid', 'failed', 'cancelled', 'canceled'].includes(row.status)) return false;
+      if (deskStatusFilter === 'cash' && row.gatewayType !== 'cash') return false;
+      if (deskStatusFilter === 'eft' && row.gatewayType !== 'manual_eft') return false;
+      if (deskStatusFilter === 'card' && !cardGatewayIds.has(row.gatewayType)) return false;
       if (!queryText) return true;
       return [
         row.customerName,
@@ -526,8 +807,17 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
         row.bookingId,
         row.status
       ].some((value) => String(value || '').toLowerCase().includes(queryText));
-    }).slice(0, 12);
-  }, [deskView, effectiveFinanceRecords, search]);
+    });
+    const sorted = [...filtered].sort((a, b) => {
+      if (deskSort === 'oldest') return Number(a.updatedAtMs || 0) - Number(b.updatedAtMs || 0);
+      if (deskSort === 'amount-high') return Number(b.amountInCents || 0) - Number(a.amountInCents || 0);
+      if (deskSort === 'amount-low') return Number(a.amountInCents || 0) - Number(b.amountInCents || 0);
+      if (deskSort === 'client') return String(a.customerName || '').localeCompare(String(b.customerName || ''));
+      if (deskSort === 'status') return String(a.status || '').localeCompare(String(b.status || ''));
+      return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0);
+    });
+    return sorted.slice(0, 12);
+  }, [deskSort, deskStatusFilter, deskView, effectiveFinanceRecords, search]);
 
   const updateDraft = (gatewayId, patch) => {
     setDrafts((current) => ({
@@ -607,7 +897,7 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
       email: row.customerEmail || '',
       description: row.description || '',
       bookingId: row.bookingId || '',
-      amount: formatMoney(row.amountInCents, row.currency),
+      amount: formatMoney(row.amountInCents, displayCurrency),
       updated: formatDateTime(row.updatedAtMs)
     }));
 
@@ -659,74 +949,63 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
         </div>
       </header>
 
-      <div className="finance-hero rounded-[1.25rem] border border-neutral-200 bg-white shadow-sm overflow-hidden native-gradient-ring">
-        <div className="h-1 native-gradient-line" />
-        <div className="p-4 md:p-6 border-b border-neutral-100 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="finance-hero rounded-[1.25rem] border border-neutral-200 bg-white shadow-sm overflow-hidden">
+        <div className="finance-hero-accent" />
+        <div className="p-4 md:p-6 border-b border-neutral-100 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Revenue pulse</p>
             <h3 className="mt-1 text-2xl md:text-3xl font-black tracking-tight text-black">{periodRange.label}</h3>
           </div>
-          <div className="grid grid-cols-4 rounded-2xl border border-neutral-100 bg-neutral-50 p-1 min-w-full sm:min-w-[420px]">
-            {['day', 'week', 'month', 'custom'].map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => (item === 'custom' ? setRangeDialogOpen(true) : setPeriod(item))}
-                className={`h-10 rounded-xl text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all ${period === item ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-neutral-400 hover:text-black'}`}
+          <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
+            <label className="relative sm:w-36">
+              <span className="sr-only">Display currency</span>
+              <select
+                value={displayCurrency}
+                onChange={(event) => updateDisplayCurrency(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-neutral-100 bg-white px-4 text-[10px] font-black uppercase tracking-widest text-black outline-none focus:border-black"
               >
-                {item}
-              </button>
-            ))}
+                {currencyOptions.map((option) => (
+                  <option key={option.code} value={option.code}>{option.code}</option>
+                ))}
+              </select>
+            </label>
+            <div className="grid grid-cols-5 rounded-2xl border border-neutral-100 bg-neutral-50 p-1 min-w-full sm:min-w-[520px]">
+              {['all', 'day', 'week', 'month', 'custom'].map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => (item === 'custom' ? setRangeDialogOpen(true) : setPeriod(item))}
+                  className={`h-10 rounded-xl text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all ${period === item ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-neutral-400 hover:text-black'}`}
+                >
+                  {item === 'all' ? 'all time' : item}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-[1.05fr_1fr] gap-0">
-          <div className="p-4 md:p-6 border-b lg:border-b-0 lg:border-r border-neutral-100">
-            <div className="grid grid-cols-2 gap-3">
+        <div className="p-4 md:p-6">
+          <div className="mb-5 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Earnings timeline</p>
+              <h4 className="mt-1 text-2xl md:text-3xl font-black tracking-tight text-black">Paid revenue over time</h4>
+              <p className="mt-1 text-sm text-neutral-500">Live payment records grouped by the selected period.</p>
+            </div>
+            <div className="finance-report-strip grid grid-cols-2 sm:grid-cols-4 gap-2 lg:min-w-[520px]">
               {[
-                ['Earnings', formatMoney(financeMetrics.revenueInCents, financeSummary.currency || 'ZAR'), WalletCards, 'Paid in selected period'],
-                ['Paid', financeMetrics.paidCount, Check, 'Successful transactions'],
-                ['Open', financeMetrics.openCount, ReceiptText, 'Checkout or invoice flow'],
-                ['Gateways', financeMetrics.gatewayCount, LockKeyhole, `${gatewayCards.length} available`]
-              ].map(([label, value, Icon, caption]) => (
-                <div key={label} className="finance-metric-card rounded-2xl border border-neutral-100 bg-white p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black">
-                      <Icon size={17} />
-                    </div>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">{caption}</span>
-                  </div>
-                  <p className="mt-5 text-[10px] font-bold uppercase tracking-widest text-neutral-400">{label}</p>
-                  <p className="mt-1 text-3xl font-black tracking-tight text-black">{value}</p>
+                ['Paid', financeMetrics.paidCount],
+                ['Open', financeMetrics.openCount],
+                ['Gateways', financeMetrics.gatewayCount],
+                ['Range', chartBuckets.length]
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-neutral-100 bg-neutral-50/70 px-4 py-3">
+                  <p className="text-[8px] font-black uppercase tracking-widest text-neutral-400">{label}</p>
+                  <p className="mt-1 text-xl font-black tracking-tight text-black">{value}</p>
                 </div>
               ))}
             </div>
           </div>
-
-          <div className="p-4 md:p-6">
-            <div className="flex items-center justify-between gap-3 mb-5">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Earnings graph</p>
-                <p className="text-sm text-neutral-500">Paid revenue only, counted in cents.</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl native-gradient-button flex items-center justify-center text-black">
-                <BarChart3 size={18} />
-              </div>
-            </div>
-            <div className="finance-chart h-64 rounded-2xl border border-neutral-100 bg-neutral-50 p-4 flex items-end gap-2">
-              {chartBuckets.map((bucket) => {
-                const height = Math.max(8, Math.round((bucket.value / maxChartValue) * 100));
-                return (
-                  <div key={bucket.label} className="flex-1 h-full flex flex-col justify-end gap-2 min-w-0">
-                    <div className="finance-chart-bar rounded-t-2xl" style={{ height: `${height}%` }}>
-                      <span className="sr-only">{formatMoney(bucket.value, financeSummary.currency || 'ZAR')}</span>
-                    </div>
-                    <p className="text-center text-[9px] font-bold uppercase tracking-widest text-neutral-400 truncate">{bucket.label}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <FinanceTimelineChart buckets={chartBuckets} currency={displayCurrency} />
         </div>
       </div>
 
@@ -754,7 +1033,7 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
               ))}
             </div>
           </div>
-          <div className="p-4 md:p-5 border-b border-neutral-100">
+          <div className="p-4 md:p-5 border-b border-neutral-100 grid gap-3 lg:grid-cols-[1fr_220px_220px]">
             <div className="relative">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300" />
               <input
@@ -764,16 +1043,39 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
                 className="h-12 w-full rounded-2xl border border-neutral-200 bg-white pl-11 pr-4 text-sm font-bold text-black outline-none focus:border-black transition-colors placeholder:text-neutral-300"
               />
             </div>
+            <select
+              value={deskStatusFilter}
+              onChange={(event) => setDeskStatusFilter(event.target.value)}
+              className="h-12 rounded-2xl border border-neutral-200 bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-black outline-none focus:border-black"
+            >
+              <option value="all">All statuses</option>
+              <option value="paid">Paid</option>
+              <option value="open">Open</option>
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="eft">Manual EFT</option>
+            </select>
+            <select
+              value={deskSort}
+              onChange={(event) => setDeskSort(event.target.value)}
+              className="h-12 rounded-2xl border border-neutral-200 bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-black outline-none focus:border-black"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="amount-high">Amount high</option>
+              <option value="amount-low">Amount low</option>
+              <option value="client">Client A-Z</option>
+              <option value="status">Status A-Z</option>
+            </select>
           </div>
           <div className="divide-y divide-neutral-100">
             {visibleDeskRows.map((row) => {
               const gateway = gatewayById[row.gatewayType] || gatewayCards[0];
-              const Icon = gateway.icon;
               return (
                 <div key={row.id} className="finance-desk-row p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span className="w-11 h-11 rounded-2xl bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0">
-                      <Icon size={18} />
+                    <span className={`finance-gateway-mark w-11 h-11 rounded-2xl bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0 ${gateway.logo ? 'has-logo' : ''}`}>
+                      <GatewayLogo gateway={gateway} />
                     </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -790,7 +1092,7 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
                   <div className="grid grid-cols-2 md:flex md:items-center gap-3 md:text-right">
                     <div>
                       <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Amount</p>
-                      <p className="font-black text-black">{formatMoney(row.amountInCents, row.currency)}</p>
+                      <p className="font-black text-black">{formatMoney(row.amountInCents, displayCurrency)}</p>
                     </div>
                     <div>
                       <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Updated</p>
@@ -820,8 +1122,8 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
                 <button type="button" onClick={() => setGatewayModalOpen(false)} className="w-11 h-11 rounded-2xl bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black md:hidden">
                   <ArrowLeft size={18} />
                 </button>
-                <div className="w-11 h-11 rounded-2xl native-gradient-button flex items-center justify-center text-black shrink-0">
-                  <Settings size={18} />
+                <div className={`finance-gateway-mark w-11 h-11 rounded-2xl native-gradient-button flex items-center justify-center text-black shrink-0 ${selectedGateway.logo ? 'has-logo bg-white border border-neutral-100' : ''}`}>
+                  <GatewayLogo gateway={selectedGateway} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Gateway setup</p>
@@ -837,7 +1139,6 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
               <aside className="finance-modal-gateway-list border-b lg:border-b-0 lg:border-r border-neutral-100 bg-neutral-50/60 p-3 overflow-x-auto lg:overflow-y-auto">
                 <div className="flex lg:flex-col gap-2 min-w-max lg:min-w-0">
                   {gatewayCards.map((gateway) => {
-                    const Icon = gateway.icon;
                     const active = selectedGatewayId === gateway.id;
                     const enabled = Boolean(drafts[gateway.id]?.enabled);
                     return (
@@ -847,8 +1148,8 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
                         onClick={() => setSelectedGatewayId(gateway.id)}
                         className={`w-[220px] lg:w-full rounded-2xl border px-3 py-3 flex items-center gap-3 text-left transition-all ${active ? 'bg-black text-white border-black shadow-xl shadow-black/10' : 'bg-white text-black border-neutral-100 hover:border-neutral-300'}`}
                       >
-                        <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-white text-black' : enabled ? 'native-gradient-button text-black' : 'bg-neutral-50 text-black'}`}>
-                          <Icon size={18} />
+                        <span className={`finance-gateway-mark w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${gateway.logo ? 'has-logo' : ''} ${active ? 'bg-white text-black' : enabled ? 'native-gradient-button text-black' : 'bg-neutral-50 text-black'}`}>
+                          <GatewayLogo gateway={gateway} />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-black truncate">{gateway.name}</span>
@@ -995,3 +1296,4 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
     </section>
   );
 };
+

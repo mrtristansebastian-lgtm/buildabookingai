@@ -1,4 +1,4 @@
-import { lazy, Suspense, startTransition, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { lazy, Suspense, startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { BuildABookingBrand, BuildABookingMark } from './components/BuildABookingBrand';
 import { EmailNotificationSettings } from './components/EmailNotificationSettings';
+import { LandingFeatureBook } from './components/LandingFeatureBook';
+import { LandingPaymentRail } from './components/LandingPaymentRail';
 import { NotificationCenter } from './components/NotificationCenter';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { ProButton } from './components/ProButton';
@@ -778,127 +780,143 @@ const createDemoLogoDataUrl = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
       <defs>
         <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stop-color="#f7f3ea"/>
-          <stop offset="0.55" stop-color="#d9f99d"/>
-          <stop offset="1" stop-color="#bae6fd"/>
+          <stop offset="0" stop-color="#050505"/>
+          <stop offset="0.55" stop-color="#2dd4bf"/>
+          <stop offset="1" stop-color="#f97316"/>
         </linearGradient>
       </defs>
-      <rect width="600" height="600" rx="150" fill="#09090b"/>
-      <rect x="34" y="34" width="532" height="532" rx="126" fill="url(#g)"/>
-      <path d="M182 382c74-156 154-156 228 0" fill="none" stroke="#09090b" stroke-width="34" stroke-linecap="round"/>
-      <path d="M226 228c38-30 104-30 142 0" fill="none" stroke="#09090b" stroke-width="26" stroke-linecap="round"/>
-      <text x="300" y="478" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="900" letter-spacing="3" fill="#09090b">NORTH</text>
+      <rect width="600" height="600" rx="150" fill="#050505"/>
+      <rect x="36" y="36" width="528" height="528" rx="126" fill="url(#g)"/>
+      <circle cx="300" cy="240" r="104" fill="#050505" opacity=".92"/>
+      <path d="M226 234c44-38 104-38 148 0" fill="none" stroke="#f8fafc" stroke-width="24" stroke-linecap="round"/>
+      <path d="M210 318h180" fill="none" stroke="#f8fafc" stroke-width="30" stroke-linecap="round"/>
+      <text x="300" y="462" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="900" letter-spacing="3" fill="#050505">VELVET</text>
+      <text x="300" y="512" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="900" letter-spacing="7" fill="#050505">FADE</text>
     </svg>
   `)}`
 );
 
 const guestDemoAssets = {
   logo: createDemoLogoDataUrl(),
-  banner: demoImage('photo-1560066984-138dadb4c035', 1800, 780, 'crop', '&crop=entropy'),
+  banner: demoImage('photo-1621605815971-fbc98d665033', 1800, 780, 'crop', '&crop=entropy'),
   venue: [
-    demoImage('photo-1560066984-138dadb4c035', 1200, 900, 'crop', '&crop=entropy'),
+    demoImage('photo-1621605815971-fbc98d665033', 1200, 900, 'crop', '&crop=entropy'),
+    demoImage('photo-1585747860715-2ba37e788b70', 1200, 900, 'crop', '&crop=entropy'),
+    demoImage('photo-1512690459411-b9245aed614b', 1200, 900, 'crop', '&crop=entropy'),
+    demoImage('photo-1503951914875-452162b0f3f1', 1200, 900, 'crop', '&crop=entropy'),
     demoImage('photo-1522337360788-8b13dee7a37e', 1200, 900, 'crop', '&crop=entropy'),
-    demoImage('photo-1521590832167-7bcbfaa6381f', 1200, 900, 'crop', '&crop=entropy'),
-    demoImage('photo-1516975080664-ed2fc6a32937', 1200, 900, 'crop', '&crop=entropy'),
-    demoImage('photo-1470259078422-826894b933aa', 1200, 900, 'crop', '&crop=entropy'),
-    demoImage('photo-1527799820374-dcf8d9d4a388', 1200, 900, 'crop', '&crop=entropy')
+    demoImage('photo-1521590832167-7bcbfaa6381f', 1200, 900, 'crop', '&crop=entropy')
   ],
   services: [
-    demoImage('photo-1560066984-138dadb4c035', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1503951914875-452162b0f3f1', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1622288432450-277d0fef5ed6', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1621605815971-fbc98d665033', 900, 720, 'crop', '&crop=entropy'),
     demoImage('photo-1522337360788-8b13dee7a37e', 900, 720, 'crop', '&crop=entropy'),
-    demoImage('photo-1521590832167-7bcbfaa6381f', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1595476108010-b4d1f102b1b1', 900, 720, 'crop', '&crop=entropy'),
     demoImage('photo-1527799820374-dcf8d9d4a388', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1519014816548-bf5fe059798b', 900, 720, 'crop', '&crop=entropy'),
     demoImage('photo-1487412947147-5cebf100ffc2', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1544161515-4ab6ce6db874', 900, 720, 'crop', '&crop=entropy'),
     demoImage('photo-1516975080664-ed2fc6a32937', 900, 720, 'crop', '&crop=entropy'),
-    demoImage('photo-1519699047748-de8e457a634e', 900, 720, 'crop', '&crop=entropy'),
-    demoImage('photo-1487412720507-e7ab37603c6f', 900, 720, 'crop', '&crop=entropy')
-  ],
-  staffPeople: [
-    demoImage('photo-1494790108377-be9c29b29330', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1534528741775-53994a69daeb', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1507003211169-0a1dd7228f2d', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1544005313-94ddf0286df2', 320, 320, 'crop', '&crop=faces')
-  ],
-  clientPeople: [
-    demoImage('photo-1524504388940-b1c1722653e1', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1506794778202-cad84cf45f1d', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1517841905240-472988babdf9', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1547425260-76bcadfb4f2c', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1531123897727-8f129e1688ce', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1508214751196-bcfd4ca60f91', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1520813792240-56fc4a3765a7', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1531891437562-4301cf35b7e4', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1499952127939-9bbf5af6c51c', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1488426862026-3ee34a7d66df', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1502685104226-ee32379fefbe', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1517365830460-955ce3ccd263', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1534751516642-a1af1ef26a56', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1512316609839-ce289d3eba0a', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1544723795-3fb6469f5b39', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1500648767791-00dcc994a43e', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1548142813-c348350df52b', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1507101105822-7472b28e22ac', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1541647376583-8934aaf3448a', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1527980965255-d3b416303d12', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1554151228-14d9def656e4', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1552058544-f2b08422138a', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1560250097-0b93528c311a', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1549351512-c5e12b11e283', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1546961329-78bef0414d7c', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1521119989659-a83eee488004', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1573496359142-b8d87734a5a2', 320, 320, 'crop', '&crop=faces'),
-    demoImage('photo-1542909168-82c3e7fdca5c', 320, 320, 'crop', '&crop=faces')
+    demoImage('photo-1540555700478-4be289fbecef', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1580618672591-eb180b1a973f', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1604654894610-df63bc536371', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1560066984-138dadb4c035', 900, 720, 'crop', '&crop=entropy'),
+    demoImage('photo-1599351431202-1e0f0137899a', 900, 720, 'crop', '&crop=entropy')
   ]
 };
 
 const guestDemoServices = [
-  { id: 'demo-cut-finish', name: 'Signature Cut & Finish', category: 'Hair Styling', description: 'Consultation, precision cut, signature wash, scalp massage, and polished finish.', price: '760', duration: '75', staffIds: ['owner', 'staff-zara', 'staff-neo'], imageUrls: [guestDemoAssets.services[0]] },
-  { id: 'demo-colour-gloss', name: 'Colour Gloss Ritual', category: 'Colour', description: 'Tonal refresh, shine glaze, bond treatment, and soft editorial styling.', price: '1450', duration: '120', staffIds: ['staff-zara'], imageUrls: [guestDemoAssets.services[1]] },
-  { id: 'demo-balayage', name: 'Balayage Transformation', category: 'Colour', description: 'Dimensional hand-painted colour with toner, bond care, and finish.', price: '2850', duration: '210', staffIds: ['staff-zara', 'owner'], imageUrls: [guestDemoAssets.services[2]] },
-  { id: 'demo-silk-press', name: 'Silk Press & Hydration', category: 'Texture', description: 'Steam hydration, heat protection, smooth silk press, and movement finish.', price: '1120', duration: '105', staffIds: ['staff-ama'], imageUrls: [guestDemoAssets.services[3]] },
-  { id: 'demo-bridal-trial', name: 'Bridal Hair Trial', category: 'Events', description: 'Moodboard consult, two style directions, veil test, and photo-ready finish.', price: '1850', duration: '150', staffIds: ['owner', 'staff-ama'], imageUrls: [guestDemoAssets.services[4]] },
-  { id: 'demo-treatment', name: 'Repair Treatment Bar', category: 'Treatments', description: 'Bond repair, gloss mask, and a quick finish for busy regulars.', price: '620', duration: '45', staffIds: ['staff-neo'], imageUrls: [guestDemoAssets.services[5]] },
-  { id: 'demo-extensions', name: 'Tape Extension Refresh', category: 'Extensions', description: 'Removal, re-tape, placement refresh, finish, and aftercare plan.', price: '2350', duration: '180', staffIds: ['owner', 'staff-ama'], imageUrls: [guestDemoAssets.services[6]] },
-  { id: 'demo-event-style', name: 'Event Styling Suite', category: 'Events', description: 'Red-carpet waves, pinning, shine prep, and day-of polish.', price: '980', duration: '90', staffIds: ['staff-ama', 'staff-neo'], imageUrls: [guestDemoAssets.services[7]] }
+  { id: 'demo-basic-fade', name: 'Basic Fade Cut', category: 'Barbering', description: 'Clean everyday fade, neckline, lineup, and fresh finish for quick confidence.', price: '120', duration: '45', staffIds: ['owner', 'staff-kabelo', 'staff-reece'], imageUrls: [guestDemoAssets.services[0]] },
+  { id: 'demo-skin-fade', name: 'Skin Fade', category: 'Barbering', description: 'Tight skin fade with sharp temples, detailed blend, and camera-ready lineup.', price: '160', duration: '60', staffIds: ['owner', 'staff-kabelo'], imageUrls: [guestDemoAssets.services[1]] },
+  { id: 'demo-vip-fade-beard', name: 'VIP Fade + Beard', category: 'VIP Grooming', description: 'Premium fade, beard sculpting, hot towel, enhancements, and finish spray.', price: '220', duration: '75', staffIds: ['owner', 'staff-kabelo'], imageUrls: [guestDemoAssets.services[2]] },
+  { id: 'demo-wash-blowout', name: 'Ladies Wash & Blowout', category: 'Hair Styling', description: 'Relaxed wash, condition, blowout, and smooth volume finish.', price: '250', duration: '60', staffIds: ['staff-aaliyah', 'staff-thandi'], imageUrls: [guestDemoAssets.services[3]] },
+  { id: 'demo-braids-cornrows', name: 'Braids / Cornrows', category: 'Braids', description: 'Clean parts, neat tension control, stitch detail, and protective finish.', price: '350', duration: '120', staffIds: ['staff-aaliyah'], imageUrls: [guestDemoAssets.services[4]] },
+  { id: 'demo-wig-install', name: 'Wig Install', category: 'Installs', description: 'Natural lace prep, melt, styling, and soft finish for content-ready hair.', price: '650', duration: '150', staffIds: ['staff-thandi', 'staff-aaliyah'], imageUrls: [guestDemoAssets.services[5]] },
+  { id: 'demo-beard-shaping', name: 'Beard Shaping', category: 'Barbering', description: 'Razor-sharp beard outline, symmetry cleanup, oil, and detail work.', price: '80', duration: '30', staffIds: ['owner', 'staff-reece'], imageUrls: [guestDemoAssets.services[6]] },
+  { id: 'demo-hair-dye', name: 'Hair Dye', category: 'Colour', description: 'Creative colour or grey coverage with consultation and clean finish.', price: '300', duration: '90', staffIds: ['staff-thandi', 'staff-kabelo'], imageUrls: [guestDemoAssets.services[7]] },
+  { id: 'demo-kids-cut', name: 'Kids Cut', category: 'Family', description: 'Patient, neat kids cut with simple styling and a calm chair experience.', price: '90', duration: '30', staffIds: ['staff-reece', 'owner'], imageUrls: [guestDemoAssets.services[8]] },
+  { id: 'demo-dread-retwist', name: 'Dreadlock Retwist', category: 'Locs', description: 'Clean retwist, scalp care, part refresh, and polished loc finish.', price: '550', duration: '180', staffIds: ['staff-aaliyah', 'staff-thandi'], imageUrls: [guestDemoAssets.services[9]] },
+  { id: 'demo-scalp-treatment', name: 'Scalp Treatment', category: 'Treatments', description: 'Soothing scalp cleanse, treatment massage, hydration, and recovery plan.', price: '180', duration: '45', staffIds: ['staff-thandi'], imageUrls: [guestDemoAssets.services[10]] },
+  { id: 'demo-house-call-vip', name: 'House Call VIP Booking', category: 'Mobile VIP', description: 'Mobile grooming setup for hotels, events, shoots, and private clients.', price: '900', duration: '120', staffIds: ['owner', 'staff-kabelo'], imageUrls: [guestDemoAssets.services[11]] },
+  { id: 'demo-nail-grooming', name: 'Nail Grooming', category: 'Beauty Add-ons', description: 'Clean nail grooming, buffing, shaping, and low-key polish detail.', price: '150', duration: '45', staffIds: ['staff-thandi'], imageUrls: [guestDemoAssets.services[12]] },
+  { id: 'demo-brow-tint-shape', name: 'Eyebrow Tint & Shape', category: 'Beauty Add-ons', description: 'Tint, shape, and tidy finish for a precise face-framing result.', price: '120', duration: '30', staffIds: ['staff-thandi'], imageUrls: [guestDemoAssets.services[13]] },
+  { id: 'demo-full-grooming', name: 'Full Grooming Package', category: 'VIP Grooming', description: 'Complete refresh with cut, beard or beauty add-on, treatment, and premium finish.', price: '750', duration: '120', staffIds: ['owner', 'staff-kabelo', 'staff-thandi'], imageUrls: [guestDemoAssets.services[14]] }
 ];
 
-const guestDemoClientPool = [
-  ['Maya Nkosi', '+27 72 555 0194', 'maya.nkosi@example.com', '23 June 1996', 'VIP'],
-  ['Ava Jacobs', '+27 82 440 9011', 'ava.jacobs@example.com', '4 April 1993', 'Prefers Chat'],
-  ['Thando Mokoena', '+27 71 221 7604', 'thando.mokoena@example.com', '19 August 1989', 'High Value'],
-  ['Leila Khan', '+27 83 119 4410', 'leila.khan@example.com', '12 January 1998', 'Regular'],
-  ['Nandi Dlamini', '+27 79 880 3412', 'nandi.dlamini@example.com', '8 September 1994', 'VIP'],
-  ['Sofia Williams', '+27 73 602 8890', 'sofia.williams@example.com', '15 February 1991', 'Bridal'],
-  ['Zoe Adams', '+27 81 771 2017', 'zoe.adams@example.com', '28 May 1997', 'Regular'],
-  ['Kuhle Maseko', '+27 76 309 1188', 'kuhle.maseko@example.com', '7 July 1995', 'Waitlist'],
-  ['Lina Pretorius', '+27 84 902 3301', 'lina.pretorius@example.com', '3 December 1992', 'VIP'],
-  ['Imani Daniels', '+27 74 556 2109', 'imani.daniels@example.com', '9 October 1990', 'High Value'],
-  ['Priya Naidoo', '+27 72 119 7780', 'priya.naidoo@example.com', '30 March 1988', 'Regular'],
-  ['Cara Meyer', '+27 83 909 1502', 'cara.meyer@example.com', '11 November 1999', 'Prefers Chat'],
-  ['Lerato Botha', '+27 78 442 9001', 'lerato.botha@example.com', '2 June 1993', 'VIP'],
-  ['Mila Davids', '+27 79 445 3002', 'mila.davids@example.com', '17 April 1996', 'Regular'],
-  ['Noa Pillay', '+27 72 443 6003', 'noa.pillay@example.com', '5 May 1991', 'High Value'],
-  ['Sade Koopman', '+27 81 220 1004', 'sade.koopman@example.com', '25 September 1994', 'Waitlist'],
-  ['Ella Naicker', '+27 73 887 2005', 'ella.naicker@example.com', '14 August 1997', 'Regular'],
-  ['Tara Mthembu', '+27 74 665 7006', 'tara.mthembu@example.com', '1 February 1990', 'Bridal'],
-  ['Bianca Solomons', '+27 82 300 7007', 'bianca.solomons@example.com', '20 June 1995', 'VIP'],
-  ['Aaliyah Forbes', '+27 71 909 8008', 'aaliyah.forbes@example.com', '6 October 1998', 'Regular'],
-  ['Gemma Oosthuizen', '+27 84 774 6009', 'gemma.oosthuizen@example.com', '13 January 1987', 'High Value'],
-  ['Rene Williams', '+27 76 552 4010', 'rene.williams@example.com', '18 December 1991', 'Regular'],
-  ['Anika Patel', '+27 72 118 9011', 'anika.patel@example.com', '22 July 1996', 'Prefers Chat'],
-  ['Chloe September', '+27 79 771 3012', 'chloe.september@example.com', '10 March 1999', 'First Time'],
-  ['Keira Daniels', '+27 83 120 4013', 'keira.daniels@example.com', '27 May 1994', 'VIP'],
-  ['Nomsa Khumalo', '+27 73 491 5014', 'nomsa.khumalo@example.com', '16 April 1992', 'Regular'],
-  ['Megan Isaacs', '+27 71 339 6015', 'megan.isaacs@example.com', '29 September 1990', 'High Value'],
-  ['Farah Omar', '+27 82 449 7016', 'farah.omar@example.com', '24 November 1997', 'Bridal']
-].map(([name, phone, email, birthday, label], index) => ({
+const guestDemoClientRows = [
+  ["Sipho Mokoena", 24, "Graphic Designer", "Skin Fade", "160", "Every 2 weeks", "Loves clean temple fades and always books Friday afternoons.", "Asked if the barber could make the fade hit like payday energy.", "Regular"],
+  ["Aaliyah Jacobs", 27, "Makeup Artist", "Wig Install", "650", "Monthly", "Prefers natural lace finish and soft curls.", "Chatted about content creation and Instagram reels during appointment.", "VIP"],
+  ["Kabelo Ndlovu", 31, "Gym Owner", "VIP Fade + Beard", "220", "Weekly", "Keeps beard razor sharp for branding photos.", "Mentioned he has three selfies pending after this cut.", "VIP"],
+  ["Zanele Khumalo", 22, "University Student", "Braids / Cornrows", "350", "Every 6 weeks", "Prefers long stitch braids.", "Discussed varsity stress and amapiano playlists.", "Student"],
+  ["Ethan Daniels", 29, "Software Developer", "Basic Fade Cut", "120", "Monthly", "Quiet client, always books online.", "Talked briefly about gaming PCs and coffee.", "Online Booker"],
+  ["Lerato Maseko", 34, "HR Manager", "Ladies Wash & Blowout", "250", "Monthly", "Prefers silky volume finish.", "Shared funny office gossip stories.", "Regular"],
+  ["Jayden Petersen", 19, "Student", "Hair Dye", "300", "Every 2 months", "Changes colour often.", "Wanted anime protagonist silver.", "Creative"],
+  ["Nomvula Dube", 38, "Entrepreneur", "Full Grooming Package", "750", "Monthly", "VIP customer.", "Discussed opening another beauty branch in Sandton.", "VIP"],
+  ["Musa Cele", 26, "DJ", "Dreadlock Retwist", "550", "Monthly", "Often arrives with headphones on.", "Played unreleased amapiano tracks during appointment.", "Creative"],
+  ["Priya Naidoo", 30, "Pharmacist", "Eyebrow Tint & Shape", "120", "Every 3 weeks", "Precision-focused client.", "Recommended skincare products to staff.", "Regular"],
+  ["Thabo Mthembu", 28, "Forex Trader", "VIP Fade + Beard", "220", "Weekly", "Always checking charts mid-cut.", "Said if NASDAQ taps TP today, add extra enhancements.", "VIP"],
+  ["Bianca Smith", 25, "Fashion Influencer", "Wig Install", "650", "Monthly", "Loves platinum blonde styles.", "Filmed TikTok transition inside the shop.", "Creator"],
+  ["Ayanda Zulu", 40, "Taxi Business Owner", "Beard Shaping", "80", "Weekly", "Loyal customer for 2 years.", "Spoke about business growth and fuel prices.", "Loyal"],
+  ["Chloe Van Wyk", 21, "Student", "Nail Grooming", "150", "Monthly", "Minimalist nail styles.", "Asked for selfie lighting recommendations.", "Student"],
+  ["Devon Arendse", 35, "Real Estate Agent", "Skin Fade", "160", "Every 2 weeks", "Wants executive look.", "Mentioned clients trust fresh haircuts more.", "Professional"],
+  ["Nthabiseng Radebe", 29, "Teacher", "Scalp Treatment", "180", "Monthly", "Focused on healthy hair recovery.", "Relaxing appointment with little conversation.", "Wellness"],
+  ["Yusuf Khan", 33, "Restaurant Owner", "Full Grooming Package", "750", "Monthly", "Premium client.", "Brought free burgers for the staff.", "VIP"],
+  ["Megan Daniels", 26, "Photographer", "Ladies Wash & Blowout", "250", "Monthly", "Loves volume curls.", "Discussed camera gear and editing styles.", "Creative"],
+  ["Sanele Hlophe", 23, "Soccer Player", "Basic Fade Cut", "120", "Weekly", "Sharp lineup every match week.", "Debated Premier League predictions.", "Athlete"],
+  ["Reece Williams", 32, "Sales Consultant", "Hair Dye", "300", "Quarterly", "Covers greys professionally.", "Asked about loyalty discounts.", "Professional"],
+  ["Candice Fortuin", 28, "Events Coordinator", "Braids / Cornrows", "350", "Every 6 weeks", "Likes neat braids that last through events.", "Talked about festival outfits.", "Event Ready"],
+  ["Tshepo Moloi", 36, "Operations Manager", "Kids Cut", "90", "Monthly", "Books for his son and prefers patient barbers.", "Son refused to leave after getting a lollipop.", "Family"],
+  ["Keagan Adams", 22, "Content Creator", "Skin Fade", "160", "Every 2 weeks", "Wants very sharp detail for videos.", "Wanted TikTok barber level precision.", "Creator"],
+  ["Boitumelo Mokoena", 30, "Interior Designer", "Wig Install", "650", "Monthly", "Prefers polished soft glam finishes.", "Preparing for engagement photos.", "VIP"],
+  ["Ricardo Hendricks", 37, "Project Manager", "Beard Shaping", "80", "Weekly", "Likes a clean beard line and quick service.", "Spoke about rugby and braais.", "Loyal"],
+  ["Anele Sithole", 33, "Legal Assistant", "Scalp Treatment", "180", "Monthly", "Prefers quiet chair and massage-focused treatment.", "Relaxed spa-style session.", "Wellness"],
+  ["Jade Pillay", 24, "Sneaker Reseller", "Nail Grooming", "150", "Monthly", "Likes clean minimalist grooming.", "Asked staff where they buy sneakers.", "Trend"],
+  ["Lungelo Dlamini", 27, "Brand Strategist", "VIP Fade + Beard", "220", "Every 2 weeks", "Books before date nights and launches.", "Came directly before a date night.", "VIP"],
+  ["Taryn Fisher", 31, "Accountant", "Eyebrow Tint & Shape", "120", "Every 3 weeks", "Prefers subtle brow finish.", "Recommended Netflix shows.", "Regular"],
+  ["Mbuso Ngema", 34, "Music Producer", "Dreadlock Retwist", "550", "Monthly", "Needs locs neat for studio sessions.", "Producer working on gospel album.", "Creative"],
+  ["Nicole Botha", 29, "Marketing Manager", "Ladies Wash & Blowout", "250", "Monthly", "Prefers glossy blowouts.", "Loved the cappuccino machine.", "Regular"],
+  ["Karabo Seema", 18, "Student", "Basic Fade Cut", "120", "Monthly", "Wants school-event friendly style.", "Asked for school dance style.", "Student"],
+  ["Tyrone Isaacs", 41, "Conference Speaker", "House Call VIP Booking", "900", "Quarterly", "Hotel appointments before keynote events.", "Barber came to hotel before business conference.", "Mobile VIP"],
+  ["Palesa Mabena", 26, "Travel Consultant", "Braids / Cornrows", "350", "Every 6 weeks", "Needs long-lasting vacation styles.", "Needed vacation-ready look.", "Travel"],
+  ["Darren Jacobs", 30, "Tattoo Artist", "Hair Dye", "300", "Quarterly", "Open to bold colour changes.", "Went full copper brown transformation.", "Creative"],
+  ["Simphiwe Dube", 35, "Product Manager", "Full Grooming Package", "750", "Monthly", "Likes premium reset appointments.", "Called it a software update for humans.", "VIP"],
+  ["Kiara Naicker", 28, "Bride-to-be", "Wig Install", "650", "Monthly", "Needs bridal-ready finish.", "Bridal prep appointment.", "Bridal"],
+  ["Warren Petersen", 39, "Insurance Broker", "Beard Shaping", "80", "Weekly", "Quick lunchtime cleanup client.", "Quick lunchtime cleanup.", "Professional"],
+  ["Naledi Phiri", 25, "Beauty Buyer", "Nail Grooming", "150", "Monthly", "Likes current skincare and beauty trends.", "Chatted about skincare trends.", "Trend"],
+  ["Brandon September", 27, "Fitness Coach", "Skin Fade", "160", "Every 2 weeks", "Loves ultra-clean side profile fades.", "Loves ultra-clean side profile fades.", "Athlete"],
+  ["Faith Mthethwa", 32, "Nurse", "Scalp Treatment", "180", "Monthly", "Self-care appointment after long shifts.", "Relaxing self-care appointment.", "Wellness"],
+  ["Jason Govender", 28, "Logistics Planner", "Basic Fade Cut", "120", "Weekly", "Likes recurring appointment discipline.", "Booked recurring Tuesday slot.", "Regular"],
+  ["Luyanda Msimango", 29, "Music Producer", "Dreadlock Retwist", "550", "Monthly", "Purple dyed locs and clean retwist.", "Music producer with purple dyed locs.", "Creative"],
+  ["Simone Abrahams", 34, "Event Planner", "Eyebrow Tint & Shape", "120", "Every 3 weeks", "Books before dinner events.", "Fast appointment before dinner event.", "Event Ready"],
+  ["Trevor Molefe", 38, "Podcast Host", "VIP Fade + Beard", "220", "Every 2 weeks", "Needs beard and fade sharp on camera.", "Preparing for podcast appearance.", "Creator"],
+  ["Zoya Khan", 27, "Boutique Owner", "Ladies Wash & Blowout", "250", "Monthly", "Requested soft luxury hair.", "Requested soft luxury hair.", "VIP"],
+  ["Neo Ramokgopa", 6, "Primary School Learner", "Kids Cut", "90", "Monthly", "First haircut experience, parent-managed profile.", "First haircut experience. Tiny legend survived.", "Family"],
+  ["Caitlyn Arendse", 23, "Fashion Student", "Braids / Cornrows", "350", "Every 6 weeks", "Wants summer-ready boho braids.", "Wanted summer-ready boho braids.", "Student"],
+  ["Kabelo Sithole", 25, "Musician", "Hair Dye", "300", "Quarterly", "Changes colour for shoots.", "Dyed hair for music video shoot.", "Creative"],
+  ["Ameer Jacobs", 36, "Hospitality Director", "Full Grooming Package", "750", "Monthly", "Premium grooming and fragrance-focused client.", "Said the shop smells like confidence and cologne.", "VIP"]
+];
+
+const guestDemoClientPool = guestDemoClientRows.map(([name, age, occupation, serviceName, price, frequency, notes, chatSummary, label], index) => ({
   name,
-  phone,
-  email,
-  birthday,
+  age,
+  occupation,
+  serviceName,
+  price,
+  frequency,
+  notes,
+  chatSummary,
   label,
-  avatar: guestDemoAssets.clientPeople[index % guestDemoAssets.clientPeople.length]
+  phone: `+27 ${['72', '82', '71', '73', '79', '81', '83', '76', '84', '74'][index % 10]} ${String(210 + index).padStart(3, '0')} ${String(4000 + index * 37).slice(-4)}`,
+  email: `${name.toLowerCase().replace(/[^a-z]+/g, '.').replace(/^\.+|\.+$/g, '')}@velvetfade.example`,
+  birthday: `${(index % 27) + 1} ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][index % 12]} ${2026 - (age || 28)}`,
+  avatar: ''
 }));
+
+const guestDemoServiceByName = guestDemoServices.reduce((serviceMap, service) => {
+  serviceMap[service.name] = service;
+  return serviceMap;
+}, {});
 
 const createGuestDemoDate = (offset = 0) => {
   const date = new Date();
@@ -913,8 +931,8 @@ const createGuestDemoDate = (offset = 0) => {
 
 const createGuestDemoSchedule = () => {
   const schedule = {};
-  const busyTimes = ['08:30', '09:30', '10:30', '11:30', '13:00', '14:00', '15:30', '16:30', '17:30'];
-  const expressTimes = ['09:00', '10:00', '12:00', '14:30', '16:00'];
+  const busyTimes = ['08:00', '09:00', '10:00', '11:00', '12:30', '14:00', '15:30', '17:00', '18:30'];
+  const expressTimes = ['09:00', '10:00', '12:30', '15:30', '17:00'];
   for (let offset = -92; offset < 35; offset += 1) {
     const { date, dateKey } = createGuestDemoDate(offset);
     const isSunday = date.getDay() === 0;
@@ -929,47 +947,61 @@ const createGuestDemoSchedule = () => {
 
 const createGuestDemoBookings = () => {
   const now = Date.now();
-  const timeCycle = ['08:30', '09:30', '10:30', '11:30', '13:00', '14:00', '15:30', '16:30', '17:30'];
+  const timeCycle = ['08:00', '09:00', '10:00', '11:00', '12:30', '14:00', '15:30', '17:00', '18:30'];
   const bookings = [];
-  const pushBooking = (offset, seed, extra = false) => {
-    const { date, dateKey, label } = createGuestDemoDate(offset);
-    if (date.getDay() === 0) return;
-    const client = guestDemoClientPool[Math.abs(seed) % guestDemoClientPool.length];
-    const service = guestDemoServices[Math.abs(seed * 3 + (extra ? 2 : 0)) % guestDemoServices.length];
+  const getDemoDate = ({ monthOffset = 0, day = 1, hour = 10, minute = 0 }) => {
+    const date = new Date();
+    date.setHours(hour, minute, 0, 0);
+    date.setMonth(date.getMonth() + monthOffset, day);
+    if (date.getDay() === 0) date.setDate(date.getDate() + 1);
+    return {
+      date,
+      dateKey: getLocalDateStr(date),
+      label: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    };
+  };
+  const pushBooking = ({ client, clientIndex, monthOffset, day, timeIndex, status = 'confirmed', paymentStatus = 'paid', sequence = 0 }) => {
+    const service = guestDemoServiceByName[client.serviceName] || guestDemoServices[0];
     const amountInCents = Number(service.price) * 100;
-    const status = offset < -3
-      ? (seed % 23 === 0 ? 'declined' : 'confirmed')
-      : offset <= 2
-        ? (seed % 6 === 0 ? 'waitlist' : seed % 5 === 0 ? 'pending' : 'confirmed')
-        : (seed % 4 === 0 ? 'waitlist' : seed % 3 === 0 ? 'pending' : 'confirmed');
-    const paymentStatus = status === 'declined'
-      ? 'unpaid'
-      : status === 'confirmed' && (offset <= 0 || seed % 2 === 0)
-        ? 'paid'
-        : 'manual_pending';
-    const paymentGateway = seed % 5 === 0 ? 'cash' : 'manual_eft';
+    const [hour, minute] = timeCycle[timeIndex % timeCycle.length].split(':').map(Number);
+    const { date, dateKey, label } = getDemoDate({ monthOffset, day, hour, minute });
     const appointmentAt = new Date(date);
-    const [hour, minute] = timeCycle[Math.abs(seed) % timeCycle.length].split(':').map(Number);
-    appointmentAt.setHours(hour, minute, 0, 0);
+    const gatewayCycle = ['manual_eft', 'cash', 'stripe', 'payfast', 'yoco', 'paystack', 'ozow'];
+    const paymentGateway = gatewayCycle[(clientIndex + sequence) % gatewayCycle.length];
+    const paymentProviderName = paymentGateway === 'cash'
+      ? 'Cash'
+      : paymentGateway === 'manual_eft'
+        ? 'Manual EFT'
+        : paymentGateway === 'payfast'
+          ? 'Payfast card'
+          : paymentGateway === 'yoco'
+            ? 'Yoco card'
+            : paymentGateway === 'paystack'
+              ? 'Paystack card'
+              : paymentGateway === 'ozow'
+                ? 'Ozow payment'
+                : 'Stripe card';
     const paidAt = paymentStatus === 'paid'
-      ? Math.min(appointmentAt.getTime() + 1000 * 60 * 75, now - 1000 * 60 * Math.max(10, Math.abs(seed) + 2))
+      ? Math.min(appointmentAt.getTime() + 1000 * 60 * 75, now - 1000 * 60 * Math.max(20, clientIndex + sequence + 5))
       : null;
-    const updatedAt = paymentStatus === 'paid' ? paidAt : Math.min(now - 1000 * 60 * (Math.abs(seed) + 20), appointmentAt.getTime());
-    const id = `booking-aurora-${String(1000 + bookings.length + 1).padStart(4, '0')}`;
+    const updatedAt = paymentStatus === 'paid'
+      ? paidAt
+      : Math.min(appointmentAt.getTime(), now - 1000 * 60 * (clientIndex + sequence + 20));
+    const id = `booking-velvet-${String(1000 + bookings.length + 1).padStart(4, '0')}`;
     bookings.push({
       id,
       clientName: client.name,
       clientPhone: client.phone,
       clientEmail: client.email,
       clientBirthday: client.birthday,
-      clientNote: extra
-        ? 'Added from support chat after a stylist follow-up. Client wants a premium finish and product advice.'
-        : seed % 4 === 0
-          ? 'Prefers sparkling water, quiet chair, and a soft wave finish.'
-          : 'Client profile includes preferences so the team can personalize each visit.',
-      clientPhotoURL: client.avatar,
-      clientAvatar: client.avatar,
-      avatar: client.avatar,
+      clientNote: sequence === 3
+        ? `Chat: ${client.chatSummary} Added from support chat after a stylist follow-up. Notes: ${client.notes}`
+        : (clientIndex + sequence) % 4 === 0
+          ? `${client.notes} Frequency: ${client.frequency}. Chat: ${client.chatSummary}`
+          : `${client.occupation}. ${client.notes} Chat: ${client.chatSummary}`,
+      clientPhotoURL: '',
+      clientAvatar: '',
+      avatar: '',
       serviceId: service.id,
       serviceName: service.name,
       serviceDuration: service.duration,
@@ -980,7 +1012,7 @@ const createGuestDemoBookings = () => {
       currency: 'ZAR',
       paymentMethod: paymentGateway,
       paymentGateway,
-      paymentProviderName: paymentGateway === 'cash' ? 'Cash' : 'Manual EFT',
+      paymentProviderName,
       paymentStatus,
       paymentReference: id.toUpperCase(),
       manualPayment: true,
@@ -988,22 +1020,43 @@ const createGuestDemoBookings = () => {
       paidAt,
       date: label,
       dateKey,
-      time: status === 'waitlist' ? 'Waitlist' : timeCycle[Math.abs(seed) % timeCycle.length],
+      time: status === 'waitlist' ? 'Waitlist' : timeCycle[timeIndex % timeCycle.length],
       status,
       timestamp: appointmentAt.getTime(),
-      createdAt: appointmentAt.getTime() - 1000 * 60 * 60 * 36,
+      createdAt: appointmentAt.getTime() - 1000 * 60 * 60 * (24 + ((clientIndex + sequence) % 24)),
       updatedAt,
-      staffId: service.staffIds[Math.abs(seed) % service.staffIds.length] || 'owner',
-      noShowHistory: seed % 31 === 0,
+      staffId: service.staffIds[(clientIndex + sequence) % service.staffIds.length] || 'owner',
+      noShowHistory: (clientIndex + sequence) % 37 === 0,
       source: 'guest-demo'
     });
   };
 
-  for (let offset = -88; offset <= 24; offset += 1) {
-    pushBooking(offset, offset + 143);
-    if (offset < 4 && offset % 3 === 0) pushBooking(offset, offset + 267, true);
-    if (offset < -12 && offset % 7 === 0) pushBooking(offset, offset + 389, true);
-  }
+  guestDemoClientPool.forEach((client, clientIndex) => {
+    const preferredDay = 2 + (clientIndex % 24);
+    [-2, -1, 0].forEach((monthOffset, historyIndex) => {
+      pushBooking({
+        client,
+        clientIndex,
+        monthOffset,
+        day: preferredDay,
+        timeIndex: clientIndex + historyIndex,
+        status: 'confirmed',
+        paymentStatus: 'paid',
+        sequence: historyIndex
+      });
+    });
+    const upcomingStatus = clientIndex % 10 === 0 ? 'waitlist' : clientIndex % 6 === 0 ? 'pending' : 'confirmed';
+    pushBooking({
+      client,
+      clientIndex,
+      monthOffset: clientIndex < 28 ? 0 : 1,
+      day: clientIndex < 28 ? 27 + (clientIndex % 4) : 2 + (clientIndex % 18),
+      timeIndex: clientIndex + 3,
+      status: upcomingStatus,
+      paymentStatus: upcomingStatus === 'confirmed' && clientIndex % 4 === 0 ? 'paid' : 'manual_pending',
+      sequence: 3
+    });
+  });
 
   return bookings.sort((a, b) => (b.updatedAt || b.timestamp || 0) - (a.updatedAt || a.timestamp || 0));
 };
@@ -1013,18 +1066,14 @@ const createGuestDemoClients = (bookings = []) => (
     const clientBookings = bookings.filter(booking => booking.clientEmail === client.email);
     const lastBooking = [...clientBookings].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0] || null;
     return {
-      id: `guest-client-${index + 1}`,
+      id: `phone-${client.phone.replace(/\D/g, '')}`,
       name: client.name,
       phone: client.phone,
       email: client.email,
       birthday: client.birthday,
-      notes: client.label === 'VIP'
-        ? 'VIP regular. Pre-books colour maintenance, likes reference photos, and buys aftercare products.'
-        : client.label === 'Bridal'
-          ? 'Event client. Needs timelines, trial notes, and calm communication before the appointment.'
-          : 'Saved guest profile with preferences, contact details, and booking history for the showroom workspace.',
-      avatar: client.avatar,
-      labels: [client.label, clientBookings.length >= 4 ? 'Regular' : 'Needs Follow-up'].filter(Boolean),
+      notes: `${client.age}-year-old ${client.occupation}. Books ${client.serviceName} at R${client.price}. ${client.frequency}. ${client.notes} Chat: ${client.chatSummary}`,
+      avatar: '',
+      labels: [client.label, client.frequency, clientBookings.length >= 4 ? 'Regular' : 'Needs Follow-up'].filter(Boolean),
       source: 'guest-demo',
       createdAt: clientBookings[clientBookings.length - 1]?.createdAt || Date.now() - (index + 12) * 86400000,
       updatedAt: lastBooking?.updatedAt || Date.now() - index * 3600000
@@ -1033,29 +1082,30 @@ const createGuestDemoClients = (bookings = []) => (
 );
 
 const createGuestDemoStaff = () => ([
-  { id: 'owner', uid: 'guest-owner', name: 'Jordan Vale', email: 'jordan@northlinestudio.example', phone: '+27 21 555 0144', photoURL: guestDemoAssets.staffPeople[0], role: 'owner', status: 'connected', color: '#111827', speciality: 'Cut and colour direction' },
-  { id: 'staff-zara', name: 'Zara Mbele', email: 'zara@northlinestudio.example', phone: '+27 72 555 0172', photoURL: guestDemoAssets.staffPeople[1], role: 'stylist', status: 'access-ready', color: '#8B5CF6', speciality: 'Balayage and gloss' },
-  { id: 'staff-ama', name: 'Ama Jacobs', email: 'ama@northlinestudio.example', phone: '+27 82 555 0182', photoURL: guestDemoAssets.staffPeople[2], role: 'stylist', status: 'access-ready', color: '#06B6D4', speciality: 'Texture and event styling' },
-  { id: 'staff-neo', name: 'Neo Daniels', email: 'neo@northlinestudio.example', phone: '+27 73 555 0193', photoURL: guestDemoAssets.staffPeople[3], role: 'assistant', status: 'access-ready', color: '#22C55E', speciality: 'Treatment bar' }
+  { id: 'owner', uid: 'guest-owner', name: 'Mandla Jacobs', email: 'mandla@velvetfade.example', phone: '+27 11 555 0144', photoURL: '', role: 'owner', status: 'connected', color: '#111827', speciality: 'VIP fades, beard work, and mobile grooming' },
+  { id: 'staff-aaliyah', name: 'Aaliyah Fortuin', email: 'aaliyah@velvetfade.example', phone: '+27 72 555 0172', photoURL: '', role: 'stylist', status: 'access-ready', color: '#F97316', speciality: 'Braids, installs, and glam finishes' },
+  { id: 'staff-kabelo', name: 'Kabelo Dube', email: 'kabelo@velvetfade.example', phone: '+27 82 555 0182', photoURL: '', role: 'barber', status: 'access-ready', color: '#14B8A6', speciality: 'Skin fades, kids cuts, and colour' },
+  { id: 'staff-thandi', name: 'Thandi Naidoo', email: 'thandi@velvetfade.example', phone: '+27 73 555 0193', photoURL: '', role: 'beauty lead', status: 'access-ready', color: '#A855F7', speciality: 'Blowouts, brows, scalp care, and nails' },
+  { id: 'staff-reece', name: 'Reece September', email: 'reece@velvetfade.example', phone: '+27 79 555 0155', photoURL: '', role: 'junior barber', status: 'access-ready', color: '#22C55E', speciality: 'Basic fades, beard cleanups, and family bookings' }
 ]);
 
 const createGuestDemoSettings = () => ({
   ...createDefaultSettings(),
-  guestDemoVersion: 3,
-  slug: 'northline-studio',
-  brandName: 'Northline Studio',
-  businessName: 'Northline Studio',
-  tagline: 'Cape Town hair studio / booked-out operations',
-  welcomeMessage: 'Modern cuts, colour work, texture care, and event styling from a busy studio that runs on clear bookings, client notes, and paid appointments.',
-  primaryColor: '#0B0B0D',
+  guestDemoVersion: 4,
+  slug: 'velvet-fade-studio',
+  brandName: 'Velvet Fade Studio',
+  businessName: 'Velvet Fade Studio',
+  tagline: 'Sharp cuts. Smooth energy. Kasi luxury with city polish.',
+  welcomeMessage: 'Modern unisex Johannesburg grooming with clean fades, braids, beard work, installs, treatments, beauty add-ons, loyalty energy, walk-ins, appointments, and VIP mobile bookings.',
+  primaryColor: '#050505',
   headingColor: '#050505',
-  bodyColor: '#505763',
-  backgroundColor: '#FCFBF8',
+  bodyColor: '#4B5563',
+  backgroundColor: '#F8F7F4',
   slotBgColor: '#FFFFFF',
   slotTextColor: '#111827',
   dateBgColor: '#FFFFFF',
   dateTextColor: '#6B7280',
-  dateActiveBgColor: '#DDF9C6',
+  dateActiveBgColor: '#99F6E4',
   dateActiveTextColor: '#050505',
   buttonColor: '#050505',
   buttonTextColor: '#FFFFFF',
@@ -1070,7 +1120,7 @@ const createGuestDemoSettings = () => ({
   welcomeSize: 20,
   nativeAccent: true,
   calendarDisplayStyle: 'editorial',
-  timeDisplayStyle: 'luxury',
+  timeDisplayStyle: 'commerce',
   serviceDisplayStyle: 'gallery',
   serviceBorderStyle: 'solid',
   faqDisplayStyle: 'split',
@@ -1079,14 +1129,14 @@ const createGuestDemoSettings = () => ({
   mapDisplayStyle: 'card',
   socialDisplayStyle: 'solid',
   socialIconStyle: 'solid',
-  dateLabel: 'Choose your salon day',
+  dateLabel: 'Choose your grooming day',
   timeLabel: 'Pick your chair time',
-  buttonText: 'Book Northline',
+  buttonText: 'Book Velvet Fade',
   confirmButtonText: 'Reserve Appointment',
   detailsHeading: 'Client Details',
-  detailsSubHeading: 'So the team can prepare your visit',
-  successHeading: 'You are on the books',
-  availableTimes: ['08:30', '09:30', '10:30', '11:30', '13:00', '14:00', '15:30', '16:30', '17:30'],
+  detailsSubHeading: 'So the team can prep your chair, style notes, and smooth arrival.',
+  successHeading: 'You are locked in',
+  availableTimes: ['08:00', '09:00', '10:00', '11:00', '12:30', '14:00', '15:30', '17:00', '18:30'],
   schedule: createGuestDemoSchedule(),
   features: {
     birthday: true,
@@ -1101,49 +1151,49 @@ const createGuestDemoSettings = () => ({
     emailUpdates: true,
     faqEnabled: true,
     socialLinks: true,
-    location: 'https://maps.google.com/?q=Cape%20Town%20hair%20salon',
+    location: 'https://maps.google.com/?q=Johannesburg%20barbershop',
     faqs: [
-      { q: 'Should I arrive with clean hair?', a: 'Arrive with dry, detangled hair unless your service includes a wash. Colour clients should avoid heavy oils before the visit.' },
-      { q: 'Do you take deposits?', a: 'High-value colour and bridal bookings can be reserved with EFT or cash-on-arrival tracking in the finance desk.' },
-      { q: 'Can I join a waitlist?', a: 'Yes. If a full day opens, the salon can move waitlisted clients into confirmed slots and send updates.' },
-      { q: 'Where should I park?', a: 'Street parking is usually easiest before 10:00. The venue gallery and map section show clients what to expect.' }
+      { q: 'Do you take walk-ins?', a: 'Yes, but online bookings get priority. Busy Fridays and Saturdays are best reserved ahead.' },
+      { q: 'Can I book a house call?', a: 'VIP mobile bookings are available for hotels, events, shoots, and private clients around Johannesburg.' },
+      { q: 'Do you offer hair and beauty combos?', a: 'Yes. Clients can pair barbering with braids, installs, blowouts, brows, nails, or scalp treatments.' },
+      { q: 'Do regulars get rewards?', a: 'The guest demo includes recurring clients, loyalty notes, and high-value booking history so owners can see retention clearly.' }
     ]
   },
   accountProfiles: {
     'guest-workspace': {
       uid: 'guest-workspace',
-      firstName: 'Jordan',
-      lastName: 'Vale',
-      email: 'jordan@northlinestudio.example',
-      mobile: '+27 21 555 0144',
-      photoURL: guestDemoAssets.staffPeople[0],
+      firstName: 'Mandla',
+      lastName: 'Jacobs',
+      email: 'mandla@velvetfade.example',
+      mobile: '+27 11 555 0144',
+      photoURL: '',
       updatedAt: Date.now()
     }
   },
   services: guestDemoServices,
-  serviceIndustry: 'hair_salon',
+  serviceIndustry: 'barbershop',
   logoDisplay: { visible: true, alignment: 'left', size: 104 },
   bannerDisplay: { visible: true, height: 284, position: 'center' },
   logo: guestDemoAssets.logo,
   bannerImage: guestDemoAssets.banner,
   venuePhotos: guestDemoAssets.venue,
-  venueTitle: 'Inside the studio',
-  venueIntro: 'A real studio feel: working chairs, treatment bar, product wall, and client-ready corners before they book.',
-  address: '77 Bree Street, Cape Town',
+  venueTitle: 'Inside Velvet Fade',
+  venueIntro: 'Neon mirrors, premium chairs, espresso shots, sneaker talk, amapiano in the background, and fresh confidence walking out the door.',
+  address: '88 Commissioner Street, Johannesburg',
   socials: {
-    instagram: '@northlinestudio',
-    tiktok: '@northlinestudio',
-    facebook: 'northlinestudio',
-    website: 'https://northlinestudio.example'
+    instagram: '@velvetfadestudio',
+    tiktok: '@velvetfadeza',
+    facebook: 'velvetfadestudio',
+    website: 'https://velvetfade.example'
   }
 });
 
 const createGuestDemoCommunications = () => ({
   ...createDefaultCommunications(),
-  confirmed: { active: true, text: 'Your Northline Studio appointment is confirmed. We have saved your chair and your stylist is prepping your notes.' },
-  review: { active: true, text: 'Thank you for visiting Northline Studio. If the visit felt sharp, a quick review helps the studio grow.' },
-  waitlist: { active: true, text: 'A Northline Studio slot opened up. Reply quickly and we can move you from waitlist to confirmed.' },
-  runningLate: { active: true, text: 'The salon is running about 10 minutes behind. Your stylist still has your full appointment protected.' }
+  confirmed: { active: true, text: 'Your Velvet Fade Studio booking is confirmed. Your chair is saved and the team has your grooming notes ready.' },
+  review: { active: true, text: 'Thanks for visiting Velvet Fade Studio. If the cut, install, or treatment felt fresh, a quick review helps the shop grow.' },
+  waitlist: { active: true, text: 'A Velvet Fade slot opened up. Reply quickly and we can move you from waitlist to confirmed.' },
+  runningLate: { active: true, text: 'The shop is running about 10 minutes behind. Your appointment is still protected and the espresso machine is on.' }
 });
 
 const createGuestDemoWorkspace = () => {
@@ -2106,7 +2156,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px) and (orientation: portrait)')?.matches
             ));
             const [mobileNavCollapsed, setMobileNavCollapsed] = useState(false);
-            const [bookingDeskPeriod, setBookingDeskPeriod] = useState('day');
+            const [bookingDeskPeriod, setBookingDeskPeriod] = useState('all');
             const [bookingCustomRange, setBookingCustomRange] = useState(() => {
                 const today = getLocalDateStr(new Date());
                 return { from: today, to: today };
@@ -2114,6 +2164,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [bookingRangeDialogOpen, setBookingRangeDialogOpen] = useState(false);
             const [bookingFilter, setBookingFilter] = useState('upcoming');
             const [bookingSearch, setBookingSearch] = useState('');
+            const [bookingSort, setBookingSort] = useState('newest');
+            const [bookingPaymentFilter, setBookingPaymentFilter] = useState('all');
             const [clientRecords, setClientRecords] = useState([]);
             const [clientSearch, setClientSearch] = useState('');
             const [clientDeskFilter, setClientDeskFilter] = useState('all');
@@ -2637,23 +2689,23 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const visibleBookings = bookings;
             const exampleBooking = useMemo(() => ({
                 id: 'example-booking',
-                clientName: 'Maya Nkosi',
-                clientPhone: '+27 72 555 0194',
-                clientEmail: 'maya.nkosi@example.com',
-                clientNote: 'Example only. Maya prefers morning slots and asked to be notified if an earlier time opens.',
-                clientBirthday: '23 June 1996',
-                clientPhotoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
-                clientAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
-                avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
-                serviceName: 'Signature Blowout',
+                clientName: 'Sipho Mokoena',
+                clientPhone: '+27 72 210 4000',
+                clientEmail: 'sipho.mokoena@velvetfade.example',
+                clientNote: 'Example only. Sipho loves clean temple fades and always books Friday afternoons.',
+                clientBirthday: '1 January 2002',
+                clientPhotoURL: '',
+                clientAvatar: '',
+                avatar: '',
+                serviceName: 'Skin Fade',
                 serviceDuration: '60',
-                servicePrice: '650',
+                servicePrice: '160',
                 paymentMethod: 'cash',
                 paymentGateway: 'cash',
                 paymentStatus: 'manual_pending',
                 paymentProviderName: 'Cash',
                 date: 'Thursday, May 28',
-                time: '10:30',
+                time: '17:00',
                 status: 'pending',
                 timestamp: 0,
                 noShowHistory: false,
@@ -2661,12 +2713,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             }), []);
             const exampleClient = useMemo(() => ({
                 id: 'example-client',
-                name: 'Maya Nkosi',
-                phone: '+27 72 555 0194',
-                email: 'maya.nkosi@example.com',
-                birthday: '23 June 1996',
-                notes: 'Example only. Maya likes quiet morning appointments and usually books finishing services before events.',
-                avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
+                name: 'Sipho Mokoena',
+                phone: '+27 72 210 4000',
+                email: 'sipho.mokoena@velvetfade.example',
+                birthday: '1 January 2002',
+                notes: 'Example only. Graphic designer. Books Skin Fade at R160 every 2 weeks. Loves clean temple fades and Friday afternoons.',
+                avatar: '',
                 labels: ['Example'],
                 autoLabels: ['First Time'],
                 bookings: [{ ...exampleBooking, id: 'example-client-history', status: 'confirmed' }],
@@ -2722,6 +2774,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     return Number.isNaN(parsed.getTime()) ? null : getLocalDateStr(parsed);
                 };
                 const periodConfig = {
+                    all: {
+                        id: 'all',
+                        label: 'All time',
+                        periodName: 'All time',
+                        rangeLabel: 'All time',
+                        start: null,
+                        end: null
+                    },
                     day: {
                         id: 'day',
                         label: 'Day',
@@ -2755,9 +2815,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         end: new Date(`${bookingCustomRange.to || bookingCustomRange.from}T00:00:00`)
                     }
                 };
-                const activePeriod = periodConfig[bookingDeskPeriod] || periodConfig.day;
-                const startKey = getLocalDateStr(activePeriod.start);
-                const endKey = getLocalDateStr(activePeriod.end);
+                const activePeriod = periodConfig[bookingDeskPeriod] || periodConfig.all;
+                const isAllTime = activePeriod.id === 'all';
+                const startKey = isAllTime ? '' : getLocalDateStr(activePeriod.start);
+                const endKey = isAllTime ? '9999-12-31' : getLocalDateStr(activePeriod.end);
                 const toMinutes = (time = '') => {
                     const match = String(time || '').match(/^(\d{1,2}):(\d{2})/);
                     return match ? (Number(match[1]) * 60) + Number(match[2]) : 9999;
@@ -2772,11 +2833,20 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     toMinutes(b.time) - toMinutes(a.time) ||
                     Number(b.timestamp || 0) - Number(a.timestamp || 0)
                 ));
+                const sortRows = (rows = []) => {
+                    const nextRows = [...rows];
+                    if (bookingSort === 'oldest') return nextRows.sort((a, b) => Number(a.timestamp || 0) - Number(b.timestamp || 0));
+                    if (bookingSort === 'amount-high') return nextRows.sort((a, b) => Number(b.amountInCents || 0) - Number(a.amountInCents || 0));
+                    if (bookingSort === 'amount-low') return nextRows.sort((a, b) => Number(a.amountInCents || 0) - Number(b.amountInCents || 0));
+                    if (bookingSort === 'client') return nextRows.sort((a, b) => String(a.clientName || '').localeCompare(String(b.clientName || '')));
+                    if (bookingSort === 'service') return nextRows.sort((a, b) => String(a.serviceName || '').localeCompare(String(b.serviceName || '')));
+                    return nextRows.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                };
                 const records = visibleBookings.map(booking => ({
                     ...booking,
                     dateKeyResolved: parseBookingDate(booking)
                 }));
-                const periodRecords = records.filter(booking => (
+                const periodRecords = isAllTime ? records : records.filter(booking => (
                     booking.dateKeyResolved &&
                     booking.dateKeyResolved >= startKey &&
                     booking.dateKeyResolved <= endKey
@@ -2802,12 +2872,21 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         staffList.find(staff => staff.id === booking.staffId)?.name
                     ].filter(Boolean).join(' ').toLowerCase().includes(normalizedSearch))
                     : periodRecords;
-                const activeRecords = searchedRecords.filter(booking => booking.status !== 'declined');
-                const pending = searchedRecords.filter(booking => booking.status === 'pending').length;
-                const waitlist = searchedRecords.filter(booking => booking.status === 'waitlist').length;
-                const confirmedRecords = searchedRecords.filter(booking => booking.status === 'confirmed');
-                const declinedRecords = searchedRecords.filter(booking => booking.status === 'declined');
-                const reviewRecords = searchedRecords.filter(booking => booking.status === 'pending' || booking.status === 'waitlist');
+                const paymentFilteredRecords = searchedRecords.filter(booking => {
+                    if (bookingPaymentFilter === 'paid') return booking.paymentStatus === 'paid';
+                    if (bookingPaymentFilter === 'open') return booking.paymentStatus !== 'paid';
+                    const method = booking.paymentGateway || booking.paymentMethod || '';
+                    if (bookingPaymentFilter === 'cash') return method === 'cash';
+                    if (bookingPaymentFilter === 'eft') return method === 'manual_eft';
+                    if (bookingPaymentFilter === 'card') return method && !['cash', 'manual_eft'].includes(method);
+                    return true;
+                });
+                const activeRecords = paymentFilteredRecords.filter(booking => booking.status !== 'declined');
+                const pending = paymentFilteredRecords.filter(booking => booking.status === 'pending').length;
+                const waitlist = paymentFilteredRecords.filter(booking => booking.status === 'waitlist').length;
+                const confirmedRecords = paymentFilteredRecords.filter(booking => booking.status === 'confirmed');
+                const declinedRecords = paymentFilteredRecords.filter(booking => booking.status === 'declined');
+                const reviewRecords = paymentFilteredRecords.filter(booking => booking.status === 'pending' || booking.status === 'waitlist');
                 const upcomingRecords = activeRecords.filter(booking => !booking.dateKeyResolved || booking.dateKeyResolved >= todayKey);
                 const historyRecords = searchedRecords.filter(booking => (
                     booking.status === 'declined' ||
@@ -2821,7 +2900,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     review: sortUpcoming(reviewRecords),
                     upcoming: sortUpcoming(upcomingRecords),
                     confirmed: sortUpcoming(confirmedRecords),
-                    waitlist: sortUpcoming(searchedRecords.filter(booking => booking.status === 'waitlist')),
+                    waitlist: sortUpcoming(paymentFilteredRecords.filter(booking => booking.status === 'waitlist')),
                     history: sortRecent(historyRecords)
                 };
                 const filters = [
@@ -2830,7 +2909,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     { id: 'confirmed', label: 'Confirmed', count: confirmedRecords.length },
                     { id: 'waitlist', label: 'Waitlist', count: waitlist },
                     { id: 'history', label: 'History', count: historyRecords.length },
-                    { id: 'all', label: 'All', count: searchedRecords.length }
+                    { id: 'all', label: 'All', count: paymentFilteredRecords.length }
                 ];
                 const activeFilter = filters.some(filter => filter.id === bookingFilter) ? bookingFilter : 'upcoming';
                 const activeFilterLabel = filters.find(filter => filter.id === activeFilter)?.label || 'Upcoming';
@@ -2842,10 +2921,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     activeFilter,
                     activeFilterLabel,
                     rowsByFilter,
-                    filteredRows: rowsByFilter[activeFilter] || rowsByFilter.all,
-                    total: searchedRecords.length,
+                    filteredRows: sortRows(rowsByFilter[activeFilter] || rowsByFilter.all),
+                    total: paymentFilteredRecords.length,
                     periodTotal: periodRecords.length,
                     searchActive: Boolean(normalizedSearch),
+                    paymentFilter: bookingPaymentFilter,
+                    sort: bookingSort,
                     pending,
                     waitlist,
                     confirmed: confirmedRecords.length,
@@ -2856,13 +2937,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     bookingRate,
                     eligibleCount,
                     metrics: [
-                        { label: 'Upcoming', value: upcomingRecords.length, hint: activePeriod.id === 'day' ? 'Today' : activePeriod.id === 'week' ? 'This week' : 'This month', icon: CalendarCheck },
+                        { label: 'Upcoming', value: upcomingRecords.length, hint: activePeriod.id === 'all' ? 'All time' : activePeriod.id === 'day' ? 'Today' : activePeriod.id === 'week' ? 'This week' : 'This month', icon: CalendarCheck },
                         { label: 'Needs Review', value: reviewRecords.length, hint: `${pending} pending / ${waitlist} waitlist`, icon: Bell },
                         { label: 'Confirmed', value: confirmedRecords.length, hint: `${bookingRate}% booking rate`, icon: CheckCircle2 },
                         { label: 'History', value: historyRecords.length, hint: `${declinedRecords.length} declined`, icon: History }
                     ]
                 };
-            }, [bookingDeskPeriod, bookingFilter, bookingSearch, visibleBookings, staffList, bookingCustomRange]);
+            }, [bookingDeskPeriod, bookingFilter, bookingSearch, bookingPaymentFilter, bookingSort, visibleBookings, staffList, bookingCustomRange]);
 
             const filteredBookings = bookingDesk.filteredRows;
             const showBookingExample = isGuestWorkspace && bookingsReady && visibleBookings.length === 0;
@@ -5826,6 +5907,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     showToast('This booking is missing its record ID.');
                     return;
                 }
+                if (isGuestWorkspace) {
+                    setSupportThreadFocus({ threadId: `guest-thread-${booking.id}`, bookingId: booking.id, requestId: Date.now() });
+                    setActiveTab('communications');
+                    return;
+                }
                 const emailKey = normalizeEmail(booking.clientEmail || '');
                 if (!emailKey) {
                     showToast('Add a client email before opening an in-app chat thread.');
@@ -6421,9 +6507,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             if (view === 'client') {
                 const clientPortalUser = user || (clientGuestMode ? {
                     uid: 'guest-client-preview',
-                    displayName: 'Maya Nkosi',
-                    email: 'maya.nkosi@example.com',
-                    photoURL: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80'
+                    displayName: 'Sipho Mokoena',
+                    email: 'sipho.mokoena@velvetfade.example',
+                    photoURL: ''
                 } : null);
 
                 if (!clientPortalUser) {
@@ -6526,98 +6612,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                       </div>
                     </section>
             
-                    {/* Bento Grid Features */}
-                    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-32">
-                      <div className="text-center mb-16 md:mb-24">
-                        <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tighter mb-6">Every tool behind a booking experience clients trust.</h2>
-                        <p className="text-neutral-500 font-medium text-lg md:text-xl max-w-2xl mx-auto">Design the page, control availability, approve requests, message clients, and remember the people behind every booking.</p>
-                      </div>
-                      
-                      <div className="native-feature-wave-list grid grid-cols-1 md:grid-cols-3 gap-6">
-                        
-                        {/* Box 1: Design (Span 2) */}
-                        <div className="native-feature-card md:col-span-2 bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group relative overflow-hidden">
-                          <Palette className="mb-6 text-black relative z-10" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl md:text-4xl font-bold tracking-tight mb-4 text-black relative z-10">Editor.</h3>
-                          <p className="text-neutral-500 font-medium text-lg max-w-md relative z-10">Design your booking page in minutes. Change colors, try fonts, upload your logo, and preview every detail as you go.</p>
-                        </div>
-                        
-                        {/* Box 2: Bookings (Span 1) */}
-                        <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group flex flex-col">
-                          <BookOpen className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Bookings.</h3>
-                          <p className="text-neutral-500 font-medium flex-1">Review requests, confirm clients, manage waitlists, and keep every booking moving.</p>
-                        </div>
-                        
-                        {/* Box 3: Services (Span 1) */}
-                        <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group">
-                          <Briefcase className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Services.</h3>
-                          <p className="text-neutral-500 font-medium">Build a clean service menu with prices, durations, galleries, packages, and assigned staff.</p>
-                        </div>
+                    <LandingFeatureBook />
 
-                        {/* Box 4: Schedule (Span 1) */}
-                        <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group">
-                          <Calendar className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Schedule.</h3>
-                          <p className="text-neutral-500 font-medium">Open days, close dates, adjust slots, and keep availability clear for clients.</p>
-                        </div>
-
-                        {/* Box 5: Support Inbox (Span 1) */}
-                        <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group">
-                          <MessageSquare className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Support Inbox.</h3>
-                          <p className="text-neutral-500 font-medium">Reply to clients, manage reschedule requests, and keep every booking conversation tied to the right request.</p>
-                        </div>
-
-                        {/* Box 6: Clients (Span 1) */}
-                        <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group">
-                          <Star className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Clients.</h3>
-                          <p className="text-neutral-500 font-medium">Build client profiles with notes, labels, photos, messages, and booking history.</p>
-                        </div>
-
-                        {/* Box 7: Finance (Span 1) */}
-                        <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group">
-                          <CreditCard className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Finance.</h3>
-                          <p className="text-neutral-500 font-medium">Connect payment gateways, track earnings, review invoices, and keep transactions tidy.</p>
-                        </div>
-            
-                        {/* Box 8: Team/Staff (Span 2) */}
-                        <div className="native-feature-card native-feature-hero-card md:col-span-2 bg-[#fafafa] text-black rounded-lg p-6 sm:p-8 md:p-16 border border-neutral-200/60 hover:shadow-xl transition-all relative overflow-hidden group">
-                          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
-                              <div className="max-w-xl">
-                                  <Users className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                                  <h3 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Team.</h3>
-                                  <p className="text-neutral-500 font-medium text-lg">Add your team, assign bookings, and see who handled each client at a glance.</p>
-                              </div>
-                          </div>
-                        </div>
-
-                        {/* Box 9: Profile (Span 1) */}
-                        <div className="native-feature-card bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-14 border border-neutral-200/60 hover:shadow-xl transition-all group flex flex-col">
-                          <User className="mb-6 text-black" size={36} strokeWidth={1.5} />
-                          <h3 className="text-2xl font-bold tracking-tight mb-4 text-black">Profile.</h3>
-                          <p className="text-neutral-500 font-medium flex-1">Keep business details, logos, social links, and referral tools in one place.</p>
-                        </div>
-
-                        {/* Box 10: Dashboard (Span 3) */}
-                        <div className="native-feature-card md:col-span-3 bg-[#fafafa] rounded-lg p-6 sm:p-8 md:p-12 border border-neutral-200/60 hover:shadow-xl transition-all flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 text-center md:text-left">
-                            <div className="flex items-center gap-6">
-                                <div className="w-16 h-16 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-black shadow-sm shrink-0"><Layout size={24}/></div>
-                                <div>
-                                    <h3 className="text-xl font-bold tracking-tight text-black mb-1">Dashboard.</h3>
-                                    <p className="text-neutral-500 font-medium">See today, requests, booking rate, clients, messages, and schedule health at a glance.</p>
-                                </div>
-                            </div>
-                            <button onClick={openGuestDashboard} className="h-14 px-8 rounded-full bg-[#39FF14] text-black font-bold text-sm hover:scale-105 transition-transform shrink-0 w-full md:w-auto shadow-xl shadow-[#39FF14]/20">
-                                Browse Dashboard
-                            </button>
-                        </div>
-
-                      </div>
-                    </section>
+                    <LandingPaymentRail />
             
                     {/* Footer CTA */}
                     <section className="py-20 md:py-32 px-4 sm:px-6 text-center border-t border-neutral-200/50 bg-neutral-50/50">
@@ -8764,7 +8761,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 transformOrigin: isCompactEditorViewport ? 'top center' : 'center center',
                                 '--booking-preview-input-color': settings.headingColor || '#050505'
                             }}
-                            className={`editor-preview-frame transition-all duration-700 ease-out relative flex flex-col shrink-0 bg-white shadow-[0_100px_200px_-50px_rgba(0,0,0,0.15)] border-black overflow-hidden ${editorPreviewFrameClass}`}
+                            className={`editor-preview-frame ${device === 'mobile' ? 'is-mobile-preview' : 'is-desktop-preview'} transition-all duration-700 ease-out relative flex flex-col shrink-0 bg-white shadow-[0_100px_200px_-50px_rgba(0,0,0,0.15)] border-black overflow-hidden ${editorPreviewFrameClass}`}
                         >
                             
                             {device === 'desktop' && (
@@ -8867,6 +8864,38 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             className="w-full h-12 rounded-lg bg-white border border-neutral-200 pl-11 pr-4 text-sm font-bold text-black outline-none focus:border-black transition-colors"
                                         />
                                     </label>
+                                    <div className="grid grid-cols-2 gap-2 xl:w-[420px]">
+                                        <label className="relative">
+                                            <span className="sr-only">Filter by payment</span>
+                                            <select
+                                                value={bookingPaymentFilter}
+                                                onChange={(event) => setBookingPaymentFilter(event.target.value)}
+                                                className="w-full h-12 rounded-lg bg-white border border-neutral-200 px-3 text-[10px] font-bold uppercase tracking-widest text-black outline-none focus:border-black"
+                                            >
+                                                <option value="all">All payments</option>
+                                                <option value="paid">Paid</option>
+                                                <option value="open">Open</option>
+                                                <option value="cash">Cash</option>
+                                                <option value="card">Card</option>
+                                                <option value="eft">Manual EFT</option>
+                                            </select>
+                                        </label>
+                                        <label className="relative">
+                                            <span className="sr-only">Sort bookings</span>
+                                            <select
+                                                value={bookingSort}
+                                                onChange={(event) => setBookingSort(event.target.value)}
+                                                className="w-full h-12 rounded-lg bg-white border border-neutral-200 px-3 text-[10px] font-bold uppercase tracking-widest text-black outline-none focus:border-black"
+                                            >
+                                                <option value="newest">Newest first</option>
+                                                <option value="oldest">Oldest first</option>
+                                                <option value="amount-high">Amount high</option>
+                                                <option value="amount-low">Amount low</option>
+                                                <option value="client">Client A-Z</option>
+                                                <option value="service">Service A-Z</option>
+                                            </select>
+                                        </label>
+                                    </div>
                                     <div className="booking-filter-rail flex flex-wrap items-center gap-2">
                                         {bookingDesk.filters.map(filter => (
                                             <button
@@ -9100,3 +9129,4 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 </div>
             );
         }
+

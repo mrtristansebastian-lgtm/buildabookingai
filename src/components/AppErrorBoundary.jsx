@@ -12,7 +12,12 @@ export class AppErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('Build A Booking recovered from a render error.', error, info);
+    console.error('Build A Booking recovered from a render error.', {
+      message: error?.message || String(error),
+      stack: error?.stack,
+      source: this.props.label || 'react-boundary',
+      componentStack: info?.componentStack
+    });
     reportClientError(error, {
       source: this.props.label || 'react-boundary',
       info

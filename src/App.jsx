@@ -1853,6 +1853,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px) and (orientation: portrait)')?.matches
             ));
             const [mobileNavCollapsed, setMobileNavCollapsed] = useState(false);
+            const [mobileNavOpen, setMobileNavOpen] = useState(false);
             const [editorRoomNavOffset, setEditorRoomNavOffset] = useState({ x: 0, y: 0 });
             const [bookingDeskPeriod, setBookingDeskPeriod] = useState('all');
             const [bookingCustomRange, setBookingCustomRange] = useState(() => {
@@ -1955,6 +1956,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             }, [dashboardThemeMode]);
             useEffect(() => {
                 if (activeTab !== 'profile') setActiveProfileSection('');
+                setMobileNavOpen(false);
             }, [activeTab]);
 
             useEffect(() => {
@@ -3406,9 +3408,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             useEffect(() => {
                 if (activeTab !== 'editor') return undefined;
                 setEditorPreviewBooting(true);
-                const timer = window.setTimeout(() => setEditorPreviewBooting(false), 520);
+                const timer = window.setTimeout(() => setEditorPreviewBooting(false), 820);
                 return () => window.clearTimeout(timer);
-            }, [activeTab, device]);
+            }, [activeTab, device, editorStudioModal, editorCollapsed, mobileNavCollapsed]);
 
             useEffect(() => {
                 if (activeTab !== 'editor') return;
@@ -4549,6 +4551,41 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     }
                 } catch (error) {
                     console.warn('Editor studio sound unavailable', error);
+                }
+            };
+            const playMobileNavSound = () => {
+                if (typeof window === 'undefined') return;
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                try {
+                    const context = editorStudioAudioRef.current || new AudioContext();
+                    editorStudioAudioRef.current = context;
+                    if (context.state === 'suspended') context.resume();
+                    const now = context.currentTime;
+                    const master = context.createGain();
+                    master.gain.setValueAtTime(0.0001, now);
+                    master.gain.exponentialRampToValueAtTime(0.052, now + 0.015);
+                    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+                    master.connect(context.destination);
+                    const playTone = (frequency, offset, duration, wave = 'triangle', endFrequency = frequency) => {
+                        const osc = context.createOscillator();
+                        const gain = context.createGain();
+                        osc.type = wave;
+                        osc.frequency.setValueAtTime(frequency, now + offset);
+                        osc.frequency.exponentialRampToValueAtTime(endFrequency, now + offset + duration);
+                        gain.gain.setValueAtTime(0.0001, now + offset);
+                        gain.gain.exponentialRampToValueAtTime(0.36, now + offset + 0.012);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + duration);
+                        osc.connect(gain);
+                        gain.connect(master);
+                        osc.start(now + offset);
+                        osc.stop(now + offset + duration + 0.03);
+                    };
+                    playTone(440, 0, 0.12, 'triangle', 660);
+                    playTone(880, 0.045, 0.14, 'sine', 1320);
+                    playTone(1760, 0.11, 0.1, 'sine', 2349);
+                } catch (error) {
+                    console.warn('Mobile nav sound unavailable', error);
                 }
             };
 
@@ -6665,43 +6702,77 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     {dashboardThemeMode === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
                 </button>
 
-                {isGuestWorkspace && (
-                    <div className="mobile-guest-auth-cta md:hidden fixed left-3 right-3 bottom-[5.35rem] z-[130] rounded-2xl border border-neutral-200 bg-white/95 backdrop-blur-xl shadow-2xl shadow-black/10 p-2 flex items-center gap-2">
-                        <div className="min-w-0 flex-1 px-2">
-                            <p className="text-[8px] font-bold uppercase tracking-[0.22em] text-neutral-400">Guest Mode</p>
-                            <p className="text-xs font-bold text-black truncate">Save this workspace</p>
+                <nav className={`mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-[120] transition-all duration-500 ${mobileNavOpen ? 'is-open' : ''} ${activeTab === 'editor' && mobileNavCollapsed ? 'mobile-bottom-nav-collapsed' : ''}`}>
+                    {mobileNavOpen && (
+                        <button
+                            type="button"
+                            aria-label="Close mobile navigation"
+                            className="mobile-nav-dim"
+                            onClick={() => setMobileNavOpen(false)}
+                        />
+                    )}
+                    <div className="mobile-nav-menu-popover">
+                        <div className="mobile-nav-menu-grid">
+                            {navItems.map(item => {
+                                const IconCmp = item.icon;
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        data-tour={`mobile-nav-${item.id}`}
+                                        type="button"
+                                        aria-current={isActive ? 'page' : undefined}
+                                        onClick={(event) => {
+                                            navigateWorkspaceTab(item.id);
+                                            setMobileNavOpen(false);
+                                        }}
+                                        className={`mobile-nav-menu-item ${isActive ? 'is-active' : ''}`}
+                                    >
+                                        <span className="mobile-nav-menu-icon">
+                                            <IconCmp size={17} strokeWidth={2.3} />
+                                            {item.badge && <i />}
+                                        </span>
+                                        <span>{item.label}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
-                        <button type="button" onClick={() => openAuthPanel('signin', 'owner')} className="h-10 px-3 rounded-xl bg-neutral-100 text-black text-[9px] font-bold uppercase tracking-widest">
-                            Sign In
-                        </button>
-                        <button type="button" onClick={() => openAuthPanel('signup', 'owner')} className="h-10 px-3 rounded-xl bg-[#39FF14] text-black text-[9px] font-bold uppercase tracking-widest shadow-lg shadow-[#39FF14]/20">
-                            Sign Up
-                        </button>
                     </div>
-                )}
-
-                <nav className={`mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 z-[120] bg-white/95 backdrop-blur-xl border-t border-neutral-200 shadow-[0_-16px_40px_-30px_rgba(0,0,0,0.45)] transition-all duration-500 ${activeTab === 'editor' && mobileNavCollapsed ? 'mobile-bottom-nav-collapsed' : ''}`}>
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar px-3 py-3 justify-around">
-                        {navItems.map(item => {
-                            const IconCmp = item.icon;
-                            const isActive = activeTab === item.id;
-                            return (
-                                <button
-                                    key={item.id}
-                                    data-tour={`mobile-nav-${item.id}`}
-                                    aria-label={item.label}
-                                    onClick={() => navigateWorkspaceTab(item.id)}
-                                    className={`relative min-w-[56px] h-14 rounded-lg flex items-center justify-center transition-all ${isActive ? 'bg-[#39FF14] text-black shadow-lg shadow-[#39FF14]/20 scale-[1.03]' : 'text-neutral-400 bg-neutral-50'}`}
-                                >
-                                    <IconCmp size={20} strokeWidth={2.35} />
-                                    {item.badge && <span className={`absolute top-1.5 right-2 w-2 h-2 rounded-full ${isActive ? 'bg-black' : 'bg-[#39FF14]'}`} />}
-                                </button>
-                            );
-                        })}
+                    <div className="mobile-nav-dock">
+                        {isGuestWorkspace && (
+                            <button type="button" onClick={() => openAuthPanel('signin', 'owner')} className="mobile-guest-dock-action mobile-guest-dock-signin">
+                                Sign In
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            className={`mobile-nav-logo-button ${isGuestWorkspace ? 'is-guest-mode' : ''}`}
+                            aria-label={mobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                            aria-expanded={mobileNavOpen}
+                            onClick={() => {
+                                playMobileNavSound();
+                                setMobileNavOpen(open => !open);
+                            }}
+                        >
+                            {isGuestWorkspace && (
+                                <svg className="mobile-nav-guest-orbit" viewBox="0 0 120 52" aria-hidden="true">
+                                    <path id="mobileGuestModeArc" d="M18 36 Q60 8 102 36" fill="none" />
+                                    <text>
+                                        <textPath href="#mobileGuestModeArc" startOffset="50%" textAnchor="middle">Guest mode</textPath>
+                                    </text>
+                                </svg>
+                            )}
+                            <BuildABookingMark className="mobile-nav-logo-mark" variant={dashboardThemeMode === 'dark' ? 'light' : 'dark'} />
+                        </button>
+                        {isGuestWorkspace && (
+                            <button type="button" onClick={() => openAuthPanel('signup', 'owner')} className="mobile-guest-dock-action mobile-guest-dock-signup">
+                                Sign Up
+                            </button>
+                        )}
                     </div>
                 </nav>
 
-                <div className={`dashboard-main relative z-10 flex-1 flex overflow-hidden ${isGuestWorkspace ? 'pb-36' : 'pb-20'} md:pb-0 ${activeTab === 'editor' && mobileNavCollapsed ? 'mobile-nav-space-collapsed' : ''}`}>
+                <div className={`dashboard-main relative z-10 flex-1 flex overflow-hidden pb-28 md:pb-0 ${activeTab === 'editor' && mobileNavCollapsed ? 'mobile-nav-space-collapsed' : ''}`}>
                     {activeTab === 'overview' && (
                         <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
                             <header className="dashboard-page-header mb-4 md:mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
@@ -8768,6 +8839,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 <p>Landscape gives the PC preview enough room to edit without squashing the page.</p>
                                 <button type="button" onClick={() => handleEditorDeviceChange('mobile')}>Back to mobile</button>
                             </div>
+                        ) : editorPreviewBooting ? (
+                            <div className="editor-preview-boot-loader" role="status" aria-live="polite">
+                                <BrandLoader label="Loading preview" />
+                            </div>
                         ) : (
                         <div
                             style={{
@@ -8777,7 +8852,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 transformOrigin: isCompactEditorViewport ? 'top center' : 'center center',
                                 '--booking-preview-input-color': settings.headingColor || '#050505'
                             }}
-                            className={`editor-preview-frame ${device === 'mobile' ? 'is-mobile-preview' : 'is-desktop-preview'} transition-all duration-700 ease-out relative flex flex-col shrink-0 bg-white shadow-[0_100px_200px_-50px_rgba(0,0,0,0.15)] border-black overflow-hidden ${editorPreviewFrameClass}`}
+                            className={`editor-preview-frame ${device === 'mobile' ? 'is-mobile-preview' : 'is-desktop-preview'} relative flex flex-col shrink-0 bg-white shadow-[0_100px_200px_-50px_rgba(0,0,0,0.15)] border-black overflow-hidden ${editorPreviewFrameClass}`}
                         >
                             
                             {device === 'desktop' && (
@@ -8809,7 +8884,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             </div>
 
                             <div className="flex-1 overflow-y-auto no-scrollbar relative group/simulator" style={{ backgroundColor: settings.backgroundColor }}>
-                            {shouldMountEditorPreview && !editorPreviewBooting ? (
+                            {shouldMountEditorPreview ? (
                                 <>
                                 <div className="absolute top-8 right-8 z-50 flex items-center gap-2 px-4 py-2 bg-black/10 backdrop-blur-md rounded-full text-[9px] font-bold uppercase tracking-[0.2em] opacity-0 group-hover/simulator:opacity-100 transition-opacity pointer-events-none text-black">
                                     <MousePointerClick size={12} /> Design Inspector Live
@@ -8822,7 +8897,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 </>
                             ) : (
                                 <div className="h-full w-full flex items-center justify-center">
-                                    <BrandLoader label={showPortraitDesktopEditorPrompt ? 'Rotate to preview PC' : 'Loading preview'} />
+                                    <BrandLoader label="Loading preview" />
                                 </div>
                             )}
                             </div>

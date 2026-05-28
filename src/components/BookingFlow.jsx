@@ -445,9 +445,9 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             if (!activeDate) return <div className="h-full w-full flex items-center justify-center font-bold text-xl opacity-20">No Availability</div>;
 
             return (
-                <div className={`w-full h-full flex flex-col transition-all duration-1000 select-none pb-12 ${nativeAccent ? 'native-booking-theme' : ''} ${!isPreview ? 'booking-flow-public' : ''}`} style={dynamicStyles}>
+                <div className={`w-full h-full flex flex-col transition-all duration-1000 select-none pb-12 ${nativeAccent ? 'native-booking-theme' : ''} ${isPreview ? 'booking-flow-preview' : 'booking-flow-public'}`} style={dynamicStyles}>
                 {step === 1 && (
-                    <div className={`animate-in fade-in slide-in-from-bottom-20 duration-1000 min-h-full flex flex-col p-6 md:p-12 relative z-10 ${!isPreview ? 'booking-flow-public-shell' : ''}`}>
+                    <div className={`animate-in fade-in slide-in-from-bottom-20 duration-1000 min-h-full flex flex-col p-6 md:p-12 relative z-10 ${isPreview ? 'booking-flow-preview-shell' : 'booking-flow-public-shell'}`}>
                     
                     {/* BRAND HEADER */}
                     <header className="mb-10 flex-shrink-0" data-preview-section="introduction">

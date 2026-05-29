@@ -1753,6 +1753,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             }, []);
 
             const [bookings, setBookings] = useState(() => getInitialGuestWorkspace()?.bookings || []);
+            const [financeImports, setFinanceImports] = useState(() => getInitialGuestWorkspace()?.financeImports || []);
             const [bookingsReady, setBookingsReady] = useState(() => Boolean(getInitialGuestWorkspace()) || !isFirebaseConfigured);
             const [staffList, setStaffList] = useState(() => getInitialGuestWorkspace()?.staffList || [{id: 'owner', name: 'Admin', color: '#39FF14'}]);
             const [accountProfileOverride, setAccountProfileOverride] = useState(() => getInitialGuestWorkspace()?.settings?.accountProfiles?.['guest-workspace'] || {});
@@ -1810,6 +1811,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 setSettings(createDefaultSettings());
                 setCommunications(createDefaultCommunications());
                 setBookings([]);
+                setFinanceImports([]);
                 setBookingsReady(true);
                 setClientRecords([]);
                 setStaffList([{ id: 'owner', name: 'Admin', color: '#39FF14' }]);
@@ -1850,6 +1852,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const demoWorkspace = initialGuestWorkspaceRef.current || createGuestDemoWorkspace();
                 setSettings(demoWorkspace.settings);
                 setBookings(demoWorkspace.bookings);
+                setFinanceImports(demoWorkspace.financeImports || []);
                 setBookingsReady(true);
                 setStaffList(demoWorkspace.staffList);
                 setClientRecords(demoWorkspace.clientRecords);
@@ -2424,6 +2427,15 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 firstTimers: clientDirectory.filter(client => client.autoLabels?.includes('First Time')).length,
                 enriched: clientDirectory.filter(client => client.notes || client.avatar || client.labels?.length).length
             }), [clientDirectory]);
+
+            const importedMigrationCounts = useMemo(() => ({
+                clients: clientRecords.filter(client => client.importedViaCsv).length,
+                bookings: bookings.filter(booking => booking.importedViaCsv).length,
+                financeRecords: (
+                    financeImports.filter(record => record.importedViaCsv).length +
+                    bookings.filter(booking => booking.importedViaCsv && Number(booking.amountInCents || booking.amountPaidInCents || 0) > 0).length
+                )
+            }), [bookings, clientRecords, financeImports]);
 
             const createOwnerNotification = async (payload, options = {}) => {
                 const ownerId = payload?.ownerId || workspaceOwnerId;
@@ -3601,7 +3613,18 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         setClientRecords(prev => prev.length ? [] : prev);
                     }
                 }, handleSyncError('Client'));
-                return () => { unsubSettings(); unsubEditorDraft(); unsubStaff(); unsubComms(); unsubClients(); };
+
+                const financeImportsRef = FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'finance', 'imports');
+                const unsubFinanceImports = FirebaseSDK.onSnapshot(financeImportsRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const nextImports = docSnap.data().list || [];
+                        setFinanceImports(prev => areJsonEqual(prev, nextImports) ? prev : nextImports);
+                    } else {
+                        setFinanceImports(prev => prev.length ? [] : prev);
+                    }
+                }, handleSyncError('Finance import'));
+
+                return () => { unsubSettings(); unsubEditorDraft(); unsubStaff(); unsubComms(); unsubClients(); unsubFinanceImports(); };
             }, [user, workspaceOwnerId, isWorkspaceOwner, publicSlug, personalDisplayName, personalProfile.email, personalProfile.mobile, personalProfile.photoURL, isEditorWorkspaceOpen, canManageWorkspace]);
 
             useEffect(() => {
@@ -3947,6 +3970,155 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 setClientRecords(newList);
                 if (!user || !workspaceOwnerId || !isFirebaseConfigured) return;
                 await FirebaseSDK.setDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'clients'), { list: newList, updatedAt: Date.now() });
+            };
+
+            const saveFinanceImports = async (newList) => {
+                setFinanceImports(newList);
+                if (!user || !workspaceOwnerId || !isFirebaseConfigured) return;
+                await FirebaseSDK.setDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'finance', 'imports'), { list: newList, updatedAt: Date.now() });
+            };
+
+            const getImportedClientKey = (client = {}) => {
+                const emailKey = normalizeEmail(client.email || '');
+                const phoneKey = String(client.phone || '').replace(/\D/g, '');
+                if (emailKey) return `email:${emailKey}`;
+                if (phoneKey) return `phone:${phoneKey}`;
+                return `id:${client.id || buildClientKey(client.name, client.phone)}`;
+            };
+
+            const handleCsvMigrationImport = async (payload = {}) => {
+                if (!canManageWorkspace) {
+                    showToast('Only owners and admins can import CSV data.');
+                    return { clients: 0, bookings: 0, financeRecords: 0 };
+                }
+                const now = Date.now();
+                const batchId = payload.batchId || `csv-${now}`;
+                const fileName = payload.fileName || '';
+                const incomingClients = Array.isArray(payload.clients) ? payload.clients : [];
+                const incomingBookings = Array.isArray(payload.bookings) ? payload.bookings : [];
+                const incomingFinanceRecords = Array.isArray(payload.financeRecords) ? payload.financeRecords : [];
+                const existingClientKeys = new Set(clientRecords.map(getImportedClientKey));
+                const incomingClientKeys = new Set();
+                const importedClients = incomingClients
+                    .map(client => ({
+                        ...client,
+                        id: client.id || buildClientKey(client.name, client.phone),
+                        source: 'csv-import',
+                        importedViaCsv: true,
+                        importBatchId: batchId,
+                        importFileName: fileName,
+                        importedAt: client.importedAt || now,
+                        createdAt: client.createdAt || now,
+                        updatedAt: now
+                    }))
+                    .filter(client => {
+                        const key = getImportedClientKey(client);
+                        if (existingClientKeys.has(key) || incomingClientKeys.has(key)) return false;
+                        incomingClientKeys.add(key);
+                        return true;
+                    });
+                const importedBookings = incomingBookings.map((booking, index) => ({
+                    ...booking,
+                    id: booking.id || `${batchId}-booking-${index + 1}`,
+                    workspaceSlug: settings.slug || bookingPageSlug,
+                    workspaceName: settings.brandName || settings.businessName || 'Build A Booking',
+                    source: 'csv-import',
+                    importedViaCsv: true,
+                    importBatchId: batchId,
+                    importFileName: fileName,
+                    importedAt: booking.importedAt || now,
+                    createdAt: booking.createdAt || booking.timestamp || now,
+                    updatedAt: now,
+                    timestamp: Number(booking.timestamp || booking.createdAt || now)
+                }));
+                const importedFinance = incomingFinanceRecords.map((record, index) => ({
+                    ...record,
+                    id: record.id || `${batchId}-finance-${index + 1}`,
+                    source: 'csv-import',
+                    importedViaCsv: true,
+                    importBatchId: batchId,
+                    importFileName: fileName,
+                    importedAt: record.importedAt || now,
+                    updatedAtMs: Number(record.updatedAtMs || record.paidAt || record.createdAt || now)
+                }));
+
+                if (!importedClients.length && !importedBookings.length && !importedFinance.length) {
+                    showToast('No new CSV rows to import. Existing matching clients were left untouched.');
+                    return { clients: 0, bookings: 0, financeRecords: 0 };
+                }
+
+                const bookingIds = new Set(importedBookings.map(booking => booking.id));
+                setBookingsAndCache(prev => (
+                    [...importedBookings, ...prev.filter(booking => !bookingIds.has(booking.id))]
+                        .sort((a, b) => getTimestampValue(b.timestamp || b.updatedAt || b.createdAt) - getTimestampValue(a.timestamp || a.updatedAt || a.createdAt))
+                ));
+                const nextClients = [...importedClients, ...clientRecords];
+                const financeIds = new Set(importedFinance.map(record => record.id));
+                const nextFinanceImports = [
+                    ...importedFinance,
+                    ...financeImports.filter(record => !financeIds.has(record.id))
+                ];
+
+                try {
+                    await Promise.all([
+                        importedClients.length ? saveClients(nextClients) : Promise.resolve(),
+                        importedFinance.length ? saveFinanceImports(nextFinanceImports) : Promise.resolve(),
+                        (isFirebaseConfigured && user && workspaceOwnerId && importedBookings.length)
+                            ? Promise.all(importedBookings.map((booking) => {
+                                const { id, ...bookingPayload } = booking;
+                                return FirebaseSDK.setDoc(
+                                    FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'bookings', id),
+                                    bookingPayload
+                                );
+                            }))
+                            : Promise.resolve()
+                    ]);
+                    const parts = [
+                        importedClients.length ? `${importedClients.length} client${importedClients.length === 1 ? '' : 's'}` : '',
+                        importedBookings.length ? `${importedBookings.length} booking${importedBookings.length === 1 ? '' : 's'}` : '',
+                        importedFinance.length ? `${importedFinance.length} finance row${importedFinance.length === 1 ? '' : 's'}` : ''
+                    ].filter(Boolean);
+                    showToast(`Imported ${parts.join(', ')} from CSV.`);
+                    return { clients: importedClients.length, bookings: importedBookings.length, financeRecords: importedFinance.length };
+                } catch (error) {
+                    console.error('CSV migration import failed', error);
+                    showToast('CSV import could not be saved.');
+                    return { clients: 0, bookings: 0, financeRecords: 0 };
+                }
+            };
+
+            const handleClearCsvMigrationData = async () => {
+                if (!canManageWorkspace) {
+                    showToast('Only owners and admins can delete uploaded data.');
+                    return { clients: 0, bookings: 0, financeRecords: 0 };
+                }
+                const importedClientCount = clientRecords.filter(client => client.importedViaCsv).length;
+                const importedBookingCount = bookings.filter(booking => booking.importedViaCsv).length;
+                const importedFinanceCount = financeImports.filter(record => record.importedViaCsv).length;
+                const nextClients = clientRecords.filter(client => !client.importedViaCsv);
+                const nextFinanceImports = financeImports.filter(record => !record.importedViaCsv);
+                setBookingsAndCache(prev => prev.filter(booking => !booking.importedViaCsv));
+
+                try {
+                    await Promise.all([
+                        saveClients(nextClients),
+                        saveFinanceImports(nextFinanceImports),
+                        (isFirebaseConfigured && user && workspaceOwnerId)
+                            ? FirebaseSDK.getDocs(FirebaseSDK.query(
+                                FirebaseSDK.collection(db, 'artifacts', appId, 'users', workspaceOwnerId, 'bookings'),
+                                FirebaseSDK.where('importedViaCsv', '==', true)
+                            )).then(snapshot => Promise.all(snapshot.docs.map(docSnap => (
+                                FirebaseSDK.deleteDoc(FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'bookings', docSnap.id))
+                            ))))
+                            : Promise.resolve()
+                    ]);
+                    showToast('Deleted uploaded CSV data. Live records were left alone.');
+                    return { clients: importedClientCount, bookings: importedBookingCount, financeRecords: importedFinanceCount };
+                } catch (error) {
+                    console.error('CSV migration clear failed', error);
+                    showToast('Uploaded data could not be fully cleared.');
+                    return { clients: 0, bookings: 0, financeRecords: 0 };
+                }
             };
 
             const upsertClientRecord = (clientId, updates) => {
@@ -7421,6 +7593,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         canManageWorkspace={canManageWorkspace}
                                         showToast={showToast}
                                         bookings={bookings}
+                                        importedFinanceRecords={financeImports}
+                                        importedMigrationCounts={importedMigrationCounts}
+                                        onImportMigrationCsv={handleCsvMigrationImport}
+                                        onClearMigrationData={handleClearCsvMigrationData}
                                         onMarkBookingPaid={markBookingPaid}
                                     />
                                 </AppErrorBoundary>

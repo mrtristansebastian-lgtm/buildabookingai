@@ -3,16 +3,22 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Banknote,
+  CalendarCheck,
   Check,
   CreditCard,
   Download,
+  FileSpreadsheet,
   KeyRound,
   Landmark,
   LockKeyhole,
   RefreshCw,
+  ReceiptText,
   Search,
   Settings,
   ShieldCheck,
+  Trash2,
+  Upload,
+  Users,
   X,
   Zap
 } from 'lucide-react';
@@ -487,6 +493,677 @@ const StatusPill = ({ status }) => {
   return <span className={`rounded-full border px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${tone}`}>{label}</span>;
 };
 
+const migrationColumnAliases = {
+  clientName: ['client name', 'customer name', 'customer', 'name', 'full name', 'member name'],
+  firstName: ['first name', 'firstname', 'given name'],
+  lastName: ['last name', 'lastname', 'surname', 'family name'],
+  email: ['email', 'email address', 'customer email', 'client email'],
+  phone: ['phone', 'phone number', 'mobile', 'mobile number', 'contact number', 'client phone'],
+  birthday: ['birthday', 'birth date', 'date of birth', 'dob'],
+  notes: ['notes', 'client notes', 'memo', 'comments'],
+  tags: ['tags', 'labels', 'segment'],
+  serviceName: ['service', 'service name', 'class', 'class name', 'appointment type', 'product'],
+  serviceCategory: ['category', 'service category', 'class category'],
+  serviceDuration: ['duration', 'service duration', 'minutes', 'length'],
+  bookingDate: ['booking date', 'appointment date', 'date', 'session date', 'class date', 'scheduled date'],
+  bookingTime: ['booking time', 'appointment time', 'time', 'session time', 'start time'],
+  bookingStatus: ['booking status', 'appointment status', 'status'],
+  bookingId: ['booking id', 'appointment id', 'reservation id', 'order id', 'reference'],
+  staffName: ['staff', 'coach', 'trainer', 'instructor', 'specialist'],
+  amount: ['amount', 'total', 'price', 'paid', 'payment amount', 'transaction amount', 'gross amount', 'amount paid'],
+  amountInCents: ['amount in cents', 'amount_in_cents', 'total cents', 'price cents'],
+  currency: ['currency', 'currency code'],
+  paymentStatus: ['payment status', 'transaction status', 'paid status', 'finance status'],
+  paymentMethod: ['payment method', 'method', 'gateway', 'payment gateway', 'processor'],
+  paymentReference: ['payment reference', 'transaction id', 'transaction reference', 'receipt id', 'invoice id', 'payment id'],
+  paidAt: ['paid at', 'payment date', 'transaction date', 'settled date', 'updated at'],
+  description: ['description', 'transaction description', 'item', 'line item']
+};
+
+const migrationScopeCards = [
+  {
+    id: 'clients',
+    title: 'Client list',
+    caption: 'Creates saved client profiles only.',
+    Icon: Users
+  },
+  {
+    id: 'bookings',
+    title: 'Bookings',
+    caption: 'Adds dated sessions to the booking desk.',
+    Icon: CalendarCheck
+  },
+  {
+    id: 'finance',
+    title: 'Finance history',
+    caption: 'Imports paid or pending transaction rows.',
+    Icon: ReceiptText
+  }
+];
+
+const normalizeCsvColumn = (value = '') => String(value)
+  .trim()
+  .toLowerCase()
+  .normalize('NFKD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9]+/g, '');
+
+const csvAliasKeys = Object.fromEntries(
+  Object.entries(migrationColumnAliases).map(([key, aliases]) => [
+    key,
+    aliases.map(normalizeCsvColumn)
+  ])
+);
+
+const parseCsvText = (text = '') => {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+  const source = String(text || '').replace(/^\uFEFF/, '');
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        cell += '"';
+        index += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+    if (char === ',' && !inQuotes) {
+      row.push(cell);
+      cell = '';
+      continue;
+    }
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && next === '\n') index += 1;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+      continue;
+    }
+    cell += char;
+  }
+
+  row.push(cell);
+  rows.push(row);
+
+  const cleanRows = rows
+    .map((cells) => cells.map((value) => String(value ?? '').trim()))
+    .filter((cells) => cells.some(Boolean));
+
+  if (cleanRows.length < 2) {
+    throw new Error('CSV needs a header row and at least one data row.');
+  }
+
+  const headers = cleanRows[0].map((header, index) => header || `Column ${index + 1}`);
+  const normalizedHeaders = headers.map(normalizeCsvColumn);
+  const dataRows = cleanRows.slice(1)
+    .map((cells, rowIndex) => {
+      const values = {};
+      headers.forEach((header, index) => {
+        const key = normalizedHeaders[index];
+        if (!key || Object.prototype.hasOwnProperty.call(values, key)) return;
+        values[key] = String(cells[index] ?? '').trim();
+      });
+      return { index: rowIndex, values };
+    })
+    .filter((item) => Object.values(item.values).some(Boolean));
+
+  if (!dataRows.length) {
+    throw new Error('No usable rows were found after the header.');
+  }
+
+  return { headers, normalizedHeaders, rows: dataRows };
+};
+
+const hasCsvColumns = (parsedCsv, fields = []) => fields.some((field) => {
+  const aliases = csvAliasKeys[field] || [];
+  return parsedCsv.normalizedHeaders.some((header) => aliases.includes(header));
+});
+
+const detectCsvScopes = (parsedCsv) => ({
+  clients: hasCsvColumns(parsedCsv, ['clientName', 'firstName', 'lastName', 'email', 'phone', 'birthday', 'notes', 'tags']),
+  bookings: hasCsvColumns(parsedCsv, ['serviceName', 'bookingDate', 'bookingTime', 'bookingStatus', 'bookingId', 'staffName']),
+  finance: hasCsvColumns(parsedCsv, ['amount', 'amountInCents', 'currency', 'paymentStatus', 'paymentMethod', 'paymentReference', 'paidAt'])
+});
+
+const pickCsvField = (row, field) => {
+  const aliases = csvAliasKeys[field] || [];
+  for (const key of aliases) {
+    const value = row.values[key];
+    if (String(value || '').trim()) return { key, value: String(value).trim() };
+  }
+  return { key: '', value: '' };
+};
+
+const slugifyImportValue = (value = 'item') => String(value || 'item')
+  .trim()
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '') || 'item';
+
+const buildImportedClientId = ({ name = '', email = '', phone = '' }) => {
+  const emailKey = String(email || '').trim().toLowerCase();
+  const phoneKey = String(phone || '').replace(/\D/g, '');
+  if (emailKey) return `email-${emailKey.replace(/[^a-z0-9]+/g, '-')}`;
+  if (phoneKey) return `phone-${phoneKey}`;
+  return `name-${slugifyImportValue(name || 'client')}`;
+};
+
+const parseCsvMoneyToCents = (field = {}) => {
+  if (!field.value) return 0;
+  const raw = String(field.value || '').trim();
+  const numeric = raw.replace(/[^\d.,-]/g, '').replace(',', '.');
+  const parsed = Number.parseFloat(numeric);
+  if (!Number.isFinite(parsed)) return 0;
+  const key = String(field.key || '').toLowerCase();
+  if (key.includes('cents')) return Math.max(0, Math.round(parsed));
+  return Math.max(0, Math.round(parsed * 100));
+};
+
+const parseCsvDate = (value = '') => {
+  const clean = String(value || '').trim();
+  if (!clean) return null;
+  const iso = clean.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (iso) {
+    const date = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  const splitDate = clean.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
+  if (splitDate) {
+    const first = Number(splitDate[1]);
+    const second = Number(splitDate[2]);
+    const year = Number(splitDate[3].length === 2 ? `20${splitDate[3]}` : splitDate[3]);
+    const month = second > 12 ? first : second;
+    const day = second > 12 ? second : first;
+    const date = new Date(year, month - 1, day);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  const parsed = Date.parse(clean);
+  return Number.isNaN(parsed) ? null : new Date(parsed);
+};
+
+const applyCsvTime = (date, value = '') => {
+  if (!date) return null;
+  const next = new Date(date);
+  const clean = String(value || '').trim();
+  if (!clean) return next;
+  const match = clean.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+  if (!match) return next;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  const meridian = String(match[3] || '').toLowerCase();
+  if (meridian === 'pm' && hours < 12) hours += 12;
+  if (meridian === 'am' && hours === 12) hours = 0;
+  next.setHours(hours, minutes, 0, 0);
+  return next;
+};
+
+const formatCsvDateKey = (date) => {
+  if (!date) return '';
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
+const formatCsvBookingDate = (date) => (
+  date
+    ? date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    : ''
+);
+
+const normalizeCsvPaymentStatus = (value = '', amountInCents = 0) => {
+  const clean = String(value || '').trim().toLowerCase();
+  if (clean.includes('unpaid') || clean.includes('not paid') || clean.includes('not_paid')) return 'manual_pending';
+  if (clean.includes('paid') && !clean.includes('unpaid')) return 'paid';
+  if (clean.includes('settled') || clean.includes('complete') || clean.includes('success')) return 'paid';
+  if (clean.includes('pending') || clean.includes('open') || clean.includes('due') || clean.includes('manual')) return 'manual_pending';
+  if (clean.includes('fail') || clean.includes('cancel') || clean.includes('refund')) return 'failed';
+  return amountInCents > 0 ? 'paid' : 'manual_pending';
+};
+
+const normalizeCsvBookingStatus = (value = '') => {
+  const clean = String(value || '').trim().toLowerCase();
+  if (clean.includes('cancel')) return 'cancelled';
+  if (clean.includes('declin')) return 'declined';
+  if (clean.includes('wait')) return 'waitlist';
+  if (clean.includes('pending') || clean.includes('request')) return 'pending';
+  if (clean.includes('complete')) return 'completed';
+  return 'confirmed';
+};
+
+const normalizeCsvGateway = (value = '') => {
+  const clean = String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  if (clean.includes('eft') || clean.includes('bank')) return 'manual_eft';
+  if (clean.includes('cash')) return 'cash';
+  if (clean.includes('stripe')) return 'stripe';
+  if (clean.includes('payfast')) return 'payfast';
+  if (clean.includes('paystack')) return 'paystack';
+  if (clean.includes('yoco')) return 'yoco';
+  if (clean.includes('ozow')) return 'ozow';
+  return clean || 'cash';
+};
+
+const extractCsvClient = (row) => {
+  const firstName = pickCsvField(row, 'firstName').value;
+  const lastName = pickCsvField(row, 'lastName').value;
+  const email = pickCsvField(row, 'email').value;
+  const phone = pickCsvField(row, 'phone').value;
+  const explicitName = pickCsvField(row, 'clientName').value;
+  const name = explicitName || [firstName, lastName].filter(Boolean).join(' ') || email.split('@')[0] || '';
+  return {
+    name: name.trim(),
+    email,
+    phone,
+    birthday: pickCsvField(row, 'birthday').value,
+    notes: pickCsvField(row, 'notes').value,
+    tags: pickCsvField(row, 'tags').value
+  };
+};
+
+const buildCsvMigrationPayload = (parsedCsv, selectedScopes, displayCurrency, batchId) => {
+  if (!parsedCsv) return { clients: [], bookings: [], financeRecords: [], skippedRows: 0, total: 0 };
+  const clients = new Map();
+  const bookings = [];
+  const financeRecords = [];
+  let skippedRows = 0;
+  const importedAt = Date.now();
+
+  parsedCsv.rows.forEach((row) => {
+    const rowNumber = row.index + 2;
+    const client = extractCsvClient(row);
+    const hasClient = Boolean(client.name || client.email || client.phone);
+    const clientId = hasClient ? buildImportedClientId(client) : '';
+    const serviceName = pickCsvField(row, 'serviceName').value;
+    const serviceCategory = pickCsvField(row, 'serviceCategory').value;
+    const serviceDuration = pickCsvField(row, 'serviceDuration').value;
+    const bookingDate = parseCsvDate(pickCsvField(row, 'bookingDate').value);
+    const bookingTime = pickCsvField(row, 'bookingTime').value;
+    const bookingDateTime = applyCsvTime(bookingDate, bookingTime);
+    const bookingId = pickCsvField(row, 'bookingId').value;
+    const amountField = pickCsvField(row, 'amountInCents').value
+      ? pickCsvField(row, 'amountInCents')
+      : pickCsvField(row, 'amount');
+    const amountInCents = parseCsvMoneyToCents(amountField);
+    const currency = (pickCsvField(row, 'currency').value || displayCurrency || 'ZAR').toUpperCase();
+    const paymentStatus = normalizeCsvPaymentStatus(pickCsvField(row, 'paymentStatus').value, amountInCents);
+    const gatewayType = normalizeCsvGateway(pickCsvField(row, 'paymentMethod').value);
+    const paymentReference = pickCsvField(row, 'paymentReference').value || bookingId;
+    const paidDate = parseCsvDate(pickCsvField(row, 'paidAt').value);
+    const paidDateTime = applyCsvTime(paidDate, bookingTime);
+    const description = pickCsvField(row, 'description').value || serviceName || 'Imported transaction';
+    const rowHasBooking = Boolean((bookingDate || bookingTime || serviceName || bookingId) && hasClient);
+    const rowHasFinance = Boolean(amountInCents || (paymentReference && (paidDate || pickCsvField(row, 'paymentStatus').value)));
+    let createdSomething = false;
+    let createdBooking = null;
+
+    if (selectedScopes.clients && hasClient) {
+      const labels = client.tags
+        ? client.tags.split(/[|;,]/).map((tag) => tag.trim()).filter(Boolean)
+        : [];
+      clients.set(clientId, {
+        id: clientId,
+        name: client.name || 'Imported Client',
+        phone: client.phone || '',
+        email: client.email || '',
+        birthday: client.birthday || '',
+        notes: client.notes || '',
+        avatar: '',
+        labels: Array.from(new Set(['Imported', ...labels])),
+        source: 'csv-import',
+        importedViaCsv: true,
+        importBatchId: batchId,
+        importedAt,
+        createdAt: importedAt,
+        updatedAt: importedAt
+      });
+      createdSomething = true;
+    }
+
+    if (selectedScopes.bookings && rowHasBooking) {
+      const id = bookingId
+        ? `csv-booking-${slugifyImportValue(bookingId)}`
+        : `${batchId}-booking-${rowNumber}`;
+      const timestamp = bookingDateTime?.getTime() || paidDateTime?.getTime() || importedAt;
+      createdBooking = {
+        id,
+        clientName: client.name || 'Imported Client',
+        clientPhone: client.phone || '',
+        clientEmail: client.email || '',
+        clientBirthday: client.birthday || '',
+        clientNote: client.notes || '',
+        clientEmailOptIn: Boolean(client.email),
+        serviceId: '',
+        serviceName: serviceName || description || 'Imported booking',
+        serviceDescription: '',
+        servicePrice: amountInCents ? String(amountInCents / 100) : '',
+        servicePriceType: 'fixed',
+        serviceDuration,
+        serviceCategory,
+        amountInCents,
+        amountPaidInCents: paymentStatus === 'paid' ? amountInCents : 0,
+        currency,
+        paymentMethod: gatewayType,
+        paymentGateway: cardGatewayIds.has(gatewayType) ? gatewayType : '',
+        paymentProviderName: gatewayById[gatewayType]?.name || gatewayType.replace(/_/g, ' '),
+        paymentStatus,
+        paymentReference,
+        paidAt: paymentStatus === 'paid' ? (paidDateTime?.getTime() || timestamp) : null,
+        notificationChannels: { email: false, portal: false },
+        date: formatCsvBookingDate(bookingDate),
+        dateKey: formatCsvDateKey(bookingDate),
+        time: bookingTime || '',
+        status: normalizeCsvBookingStatus(pickCsvField(row, 'bookingStatus').value),
+        staffName: pickCsvField(row, 'staffName').value,
+        noShowHistory: false,
+        source: 'csv-import',
+        importedViaCsv: true,
+        importBatchId: batchId,
+        importedAt,
+        createdAt: timestamp,
+        updatedAt: importedAt,
+        timestamp
+      };
+      bookings.push(createdBooking);
+      createdSomething = true;
+    }
+
+    if (selectedScopes.finance && rowHasFinance && !createdBooking) {
+      const financeId = paymentReference
+        ? `csv-finance-${slugifyImportValue(paymentReference)}`
+        : `${batchId}-finance-${rowNumber}`;
+      const updatedAtMs = paidDateTime?.getTime() || bookingDateTime?.getTime() || importedAt;
+      financeRecords.push({
+        id: financeId,
+        gatewayType,
+        status: paymentStatus,
+        amountInCents,
+        currency,
+        customerName: client.name || 'Imported Client',
+        customerEmail: client.email || '',
+        description,
+        bookingId: bookingId || paymentReference || '',
+        providerReference: paymentReference || '',
+        updatedAtMs,
+        importedViaCsv: true,
+        importBatchId: batchId,
+        importedAt,
+        source: 'csv-import'
+      });
+      createdSomething = true;
+    }
+
+    if (!createdSomething) skippedRows += 1;
+  });
+
+  return {
+    clients: Array.from(clients.values()),
+    bookings,
+    financeRecords,
+    skippedRows,
+    total: clients.size + bookings.length + financeRecords.length
+  };
+};
+
+const MigrationImportPanel = ({
+  canManageWorkspace,
+  displayCurrency,
+  importedCounts = {},
+  onImportMigrationCsv,
+  onClearMigrationData,
+  showToast
+}) => {
+  const [parsedCsv, setParsedCsv] = useState(null);
+  const [fileName, setFileName] = useState('');
+  const [csvError, setCsvError] = useState('');
+  const [selectedScopes, setSelectedScopes] = useState({ clients: true, bookings: false, finance: false });
+  const [batchId, setBatchId] = useState(`csv-${Date.now()}`);
+  const [importing, setImporting] = useState(false);
+  const [clearing, setClearing] = useState(false);
+
+  const preview = useMemo(
+    () => buildCsvMigrationPayload(parsedCsv, selectedScopes, displayCurrency, batchId),
+    [batchId, displayCurrency, parsedCsv, selectedScopes]
+  );
+  const uploadedTotal = Number(importedCounts.clients || 0) + Number(importedCounts.bookings || 0) + Number(importedCounts.financeRecords || 0);
+  const selectedCount = Object.values(selectedScopes).filter(Boolean).length;
+  const canImport = Boolean(canManageWorkspace && parsedCsv && selectedCount && preview.total && !importing);
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setCsvError('');
+    setParsedCsv(null);
+    if (file.size > 3 * 1024 * 1024) {
+      setCsvError('Keep CSV uploads under 3MB for a fast import.');
+      event.target.value = '';
+      return;
+    }
+    try {
+      const text = await file.text();
+      const parsed = parseCsvText(text);
+      const detectedScopes = detectCsvScopes(parsed);
+      setParsedCsv(parsed);
+      setFileName(file.name);
+      setBatchId(`csv-${Date.now()}`);
+      setSelectedScopes({
+        clients: detectedScopes.clients || (!detectedScopes.bookings && !detectedScopes.finance),
+        bookings: detectedScopes.bookings,
+        finance: detectedScopes.finance
+      });
+    } catch (error) {
+      setCsvError(error?.message || 'This CSV could not be read.');
+      setFileName('');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const toggleScope = (scopeId) => {
+    setSelectedScopes((current) => ({ ...current, [scopeId]: !current[scopeId] }));
+  };
+
+  const handleImport = async () => {
+    if (!canImport) {
+      if (!canManageWorkspace) showToast?.('Only owners and admins can import data.');
+      else if (!parsedCsv) showToast?.('Upload a CSV first.');
+      else showToast?.('Select at least one data type with usable rows.');
+      return;
+    }
+    setImporting(true);
+    try {
+      await onImportMigrationCsv?.({
+        ...preview,
+        batchId,
+        fileName,
+        selectedScopes
+      });
+      setParsedCsv(null);
+      setFileName('');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleClear = async () => {
+    if (!uploadedTotal || clearing) return;
+    if (!window.confirm('Delete CSV-uploaded clients, bookings, and finance rows only? Existing live records will stay untouched.')) return;
+    setClearing(true);
+    try {
+      await onClearMigrationData?.();
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  return (
+    <section className="finance-migration-panel rounded-[1.25rem] border border-neutral-200 bg-white shadow-sm overflow-hidden">
+      <div className="p-4 md:p-5 border-b border-neutral-100 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span className="finance-migration-icon w-11 h-11 rounded-2xl bg-black text-white flex items-center justify-center shrink-0">
+            <FileSpreadsheet size={19} />
+          </span>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Migration studio</p>
+            <h3 className="text-2xl font-black tracking-tight text-black mt-1">Import one CSV, choose what it contains</h3>
+            <p className="mt-2 text-sm text-neutral-500 max-w-2xl">
+              Upload a client list, booking history, transaction history, or a mixed export. Build A Booking only creates the records you tick below.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+          <label className="h-11 px-4 rounded-2xl native-gradient-button text-black text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer">
+            <Upload size={15} /> Upload CSV
+            <input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleFileChange} />
+          </label>
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={!uploadedTotal || clearing}
+            className="h-11 px-4 rounded-2xl border border-neutral-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            <Trash2 size={15} /> {clearing ? 'Clearing' : 'Delete uploads'}
+          </button>
+        </div>
+      </div>
+
+      <div className="p-4 md:p-5 grid xl:grid-cols-[minmax(0,1fr)_360px] gap-4">
+        <div className="finance-migration-drop rounded-2xl border border-neutral-100 bg-neutral-50 p-4 md:p-5">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">File readout</p>
+              <p className="mt-1 text-lg font-black text-black">{fileName || 'No CSV selected'}</p>
+            </div>
+            <span className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-neutral-400">
+              {parsedCsv ? `${parsedCsv.rows.length} rows` : 'CSV only'}
+            </span>
+          </div>
+          {csvError && (
+            <p className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{csvError}</p>
+          )}
+          {parsedCsv ? (
+            <div className="mt-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Detected columns</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {parsedCsv.headers.slice(0, 14).map((header) => (
+                  <span key={header} className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-[10px] font-bold text-neutral-500">{header}</span>
+                ))}
+                {parsedCsv.headers.length > 14 && (
+                  <span className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-[10px] font-bold text-neutral-500">+{parsedCsv.headers.length - 14} more</span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-5 grid sm:grid-cols-3 gap-2">
+              {migrationScopeCards.map(({ id, title, Icon }) => (
+                <div key={id} className="rounded-2xl border border-neutral-100 bg-white p-3 flex items-center gap-2">
+                  <Icon size={16} className="text-neutral-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">{title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <aside className="finance-migration-summary rounded-2xl border border-neutral-100 bg-white p-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Upload status</p>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {[
+              ['Clients', importedCounts.clients || 0],
+              ['Bookings', importedCounts.bookings || 0],
+              ['Finance', importedCounts.financeRecords || 0]
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-neutral-100 bg-neutral-50 p-3">
+                <p className="text-xl font-black text-black">{value}</p>
+                <p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-neutral-400">{label}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs font-bold text-neutral-400">
+            Imported rows are tagged as uploaded data. Delete uploads clears those rows without touching native bookings, live payments, or manually created clients.
+          </p>
+        </aside>
+      </div>
+
+      {parsedCsv && (
+        <div className="px-4 md:px-5 pb-4 md:pb-5">
+          <div className="grid lg:grid-cols-3 gap-3">
+            {migrationScopeCards.map(({ id, title, caption, Icon }) => {
+              const checked = Boolean(selectedScopes[id]);
+              const count = id === 'clients' ? preview.clients.length : id === 'bookings' ? preview.bookings.length : preview.financeRecords.length;
+              return (
+                <label key={id} className={`finance-migration-scope rounded-2xl border p-4 cursor-pointer transition-all ${checked ? 'is-selected' : ''}`}>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={checked}
+                    onChange={() => toggleScope(id)}
+                  />
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-3 min-w-0">
+                      <span className="w-10 h-10 rounded-2xl bg-neutral-50 border border-neutral-100 flex items-center justify-center text-black shrink-0">
+                        <Icon size={17} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black text-black truncate">{title}</span>
+                        <span className="block mt-1 text-xs text-neutral-500">{caption}</span>
+                      </span>
+                    </span>
+                    <span className={`finance-migration-check w-6 h-6 rounded-full border flex items-center justify-center shrink-0 ${checked ? 'is-selected' : ''}`}>
+                      {checked && <Check size={14} />}
+                    </span>
+                  </span>
+                  <span className="mt-4 block text-[10px] font-bold uppercase tracking-widest text-neutral-400">{count} ready</span>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 rounded-2xl border border-neutral-100 bg-neutral-50 p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="grid grid-cols-4 gap-2 lg:min-w-[420px]">
+              {[
+                ['Clients', preview.clients.length],
+                ['Bookings', preview.bookings.length],
+                ['Finance', preview.financeRecords.length],
+                ['Skipped', preview.skippedRows]
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl bg-white border border-neutral-100 p-3">
+                  <p className="text-xl font-black text-black">{value}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-neutral-400">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={() => { setParsedCsv(null); setFileName(''); setCsvError(''); }}
+                className="h-11 px-5 rounded-2xl border border-neutral-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={handleImport}
+                disabled={!canImport}
+                className="h-11 px-5 rounded-2xl bg-black text-white text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                {importing ? <RefreshCw size={15} className="animate-spin" /> : <Check size={15} />}
+                Import selected data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
 const FinanceTimelineChart = ({ buckets = [], currency = 'ZAR', statItems = [] }) => {
   const safeBuckets = buckets.length ? buckets : [{ label: 'No data', rangeLabel: 'No paid records', value: 0, count: 0 }];
   const chartWidth = 920;
@@ -610,7 +1287,19 @@ const FinanceTimelineChart = ({ buckets = [], currency = 'ZAR', statItems = [] }
     </div>
   );
 };
-export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = false, canManageWorkspace, showToast, bookings = [], onMarkBookingPaid }) => {
+export const FinancePaymentSettings = ({
+  appId,
+  businessId,
+  isGuestWorkspace = false,
+  canManageWorkspace,
+  showToast,
+  bookings = [],
+  importedFinanceRecords = [],
+  importedMigrationCounts = {},
+  onImportMigrationCsv,
+  onClearMigrationData,
+  onMarkBookingPaid
+}) => {
   const [saved, setSaved] = useState({});
   const [drafts, setDrafts] = useState(emptyDrafts);
   const [saving, setSaving] = useState('');
@@ -712,10 +1401,29 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
       })
   ), [bookings, isGuestWorkspace]);
 
+  const importedFinanceRows = useMemo(() => (
+    (importedFinanceRecords || [])
+      .filter((record) => record && !record.isExample)
+      .map((record) => ({
+        id: `csv-${record.id || record.providerReference || record.bookingId}`,
+        gatewayType: normalizeCsvGateway(record.gatewayType || record.paymentMethod || record.paymentGateway || 'cash'),
+        status: normalizeCsvPaymentStatus(record.status || record.paymentStatus, Number(record.amountInCents || 0)),
+        amountInCents: Number(record.amountInCents || 0),
+        currency: record.currency || 'ZAR',
+        customerName: record.customerName || record.clientName || 'Imported Client',
+        customerEmail: record.customerEmail || record.clientEmail || '',
+        description: record.description || 'Imported transaction',
+        bookingId: record.bookingId || record.providerReference || '',
+        providerReference: record.providerReference || '',
+        updatedAtMs: dateToMs(record.updatedAtMs || record.updatedAt || record.paidAt || record.createdAt) || Date.now(),
+        importedViaCsv: true
+      }))
+  ), [importedFinanceRecords]);
+
   const financeRecords = useMemo(() => (
-    [...manualBookingRows, ...paymentAttempts]
+    [...manualBookingRows, ...paymentAttempts, ...importedFinanceRows]
       .sort((a, b) => (b.updatedAtMs || 0) - (a.updatedAtMs || 0))
-  ), [manualBookingRows, paymentAttempts]);
+  ), [importedFinanceRows, manualBookingRows, paymentAttempts]);
 
   const effectiveFinanceRecords = useMemo(() => financeRecords, [financeRecords]);
 
@@ -953,6 +1661,17 @@ export const FinancePaymentSettings = ({ appId, businessId, isGuestWorkspace = f
           </button>
         </div>
       </header>
+
+      <div className="mb-4 md:mb-5">
+        <MigrationImportPanel
+          canManageWorkspace={canManageWorkspace}
+          displayCurrency={displayCurrency}
+          importedCounts={importedMigrationCounts}
+          onImportMigrationCsv={onImportMigrationCsv}
+          onClearMigrationData={onClearMigrationData}
+          showToast={showToast}
+        />
+      </div>
 
       <div className="finance-hero rounded-[1.25rem] border border-neutral-200 bg-white shadow-sm overflow-hidden">
         <div className="finance-hero-accent" />

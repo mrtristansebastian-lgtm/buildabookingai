@@ -2876,8 +2876,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 { id: 'staff', icon: Users, label: 'Team' },
                 { id: 'profile', icon: User, label: 'Profile' }
             ];
-            const mobilePrimaryNavIds = ['overview', 'bookings', 'communications', 'editor'];
-            const mobilePrimaryNavItems = navItems.filter(item => mobilePrimaryNavIds.includes(item.id));
+            const mobilePrimaryNavIds = ['communications', 'bookings', 'business', 'finance'];
+            const mobilePrimaryNavItems = mobilePrimaryNavIds.map(id => navItems.find(item => item.id === id)).filter(Boolean);
             const mobileMoreNavItems = navItems.filter(item => !mobilePrimaryNavIds.includes(item.id));
             const mobileMoreActive = mobileMoreNavItems.some(item => item.id === activeTab);
             const mobileMoreHasBadge = mobileMoreNavItems.some(item => item.badge);
@@ -6712,7 +6712,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         <IconCmp size={18} strokeWidth={2.35} />
                                         {item.badge && <i />}
                                     </span>
-                                    <span>{item.label === 'Support Inbox' ? 'Inbox' : item.label}</span>
+                                    <span>{item.id === 'communications' ? 'Support' : item.label}</span>
                                 </button>
                             );
                         })}

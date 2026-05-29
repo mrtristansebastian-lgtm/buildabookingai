@@ -19916,14 +19916,18 @@ body {
             }
 
             .editor-fullscreen-workspace.mobile-editor-portrait-runtime.mobile-editor-room-open .mobile-editor-panel {
-                top: auto !important;
+                top: clamp(21.2rem, 49dvh, 27rem) !important;
                 left: 0.55rem !important;
                 right: 0.55rem !important;
-                bottom: calc(9.6rem + env(safe-area-inset-bottom)) !important;
+                bottom: calc(5.35rem + env(safe-area-inset-bottom)) !important;
                 width: auto !important;
                 min-width: 0 !important;
                 max-width: none !important;
-                max-height: min(32vh, 18rem) !important;
+                height: auto !important;
+                max-height: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
                 transform: translateY(0) scale(1) !important;
             }
 
@@ -19932,8 +19936,41 @@ body {
             }
 
             .editor-fullscreen-workspace.mobile-editor-portrait-runtime.mobile-editor-room-open .editor-panel-scroll {
-                max-height: calc(min(32vh, 18rem) - 3.55rem) !important;
-                padding: 0.5rem 0.58rem 0.72rem !important;
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                padding: 0.5rem 0.58rem 0.9rem !important;
+                overflow-y: auto !important;
+            }
+
+            .editor-fullscreen-workspace.mobile-editor-portrait-runtime.mobile-editor-room-open .mobile-editor-panel > .editor-floating-launch-toolbar {
+                position: relative !important;
+                left: auto !important;
+                right: auto !important;
+                bottom: auto !important;
+                width: calc(100% - 1rem) !important;
+                max-width: none !important;
+                flex-shrink: 0 !important;
+                align-self: center !important;
+                margin: 0.42rem auto 0.62rem !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                transform: none !important;
+            }
+
+            .editor-fullscreen-workspace.mobile-editor-portrait-runtime.mobile-editor-room-open .mobile-editor-panel > .editor-floating-launch-toolbar button {
+                min-width: 0 !important;
+                flex: 1 1 0 !important;
+                height: 2.36rem !important;
+                padding: 0 0.38rem !important;
+                gap: 0.24rem !important;
+                font-size: 0.5rem !important;
+                letter-spacing: 0.045em !important;
+            }
+
+            .editor-fullscreen-workspace.mobile-editor-portrait-runtime.mobile-editor-room-open .mobile-editor-panel > .editor-floating-launch-toolbar button svg {
+                width: 0.82rem !important;
+                height: 0.82rem !important;
             }
         }
 

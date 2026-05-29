@@ -13317,8 +13317,84 @@ body {
 
         .finance-timeline-canvas {
             background-image:
-                radial-gradient(circle at top right, rgba(20,184,166,0.09), transparent 34%),
-                linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+                linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(251,252,254,0.98) 100%);
+        }
+
+        .finance-timeline-canvas svg {
+            display: block;
+            overflow: visible;
+        }
+
+        .finance-axis-line {
+            stroke: rgba(148, 163, 184, 0.2);
+            stroke-width: 1.2;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .finance-axis-baseline {
+            stroke: rgba(15, 23, 42, 0.16);
+            stroke-width: 1.25;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .finance-grid-line {
+            stroke: rgba(148, 163, 184, 0.18);
+            stroke-width: 1;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .finance-x-axis-tick {
+            stroke: rgba(148, 163, 184, 0.28);
+            stroke-width: 1.2;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .finance-axis-label {
+            fill: #8b96a8;
+            font-size: 0.78rem;
+            font-weight: 850;
+            letter-spacing: 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .finance-axis-label-y {
+            fill: #7d8aa0;
+        }
+
+        .finance-axis-label-x {
+            fill: #94a3b8;
+            font-size: 0.76rem;
+        }
+
+        .finance-chart-line-shadow {
+            stroke: rgba(15, 23, 42, 0.08);
+            stroke-width: 8;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .finance-chart-line {
+            stroke-width: 3.4;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .finance-chart-hit-dot {
+            fill: transparent;
+            stroke: transparent;
+        }
+
+        .finance-chart-dot {
+            fill: #fbfcfe;
+            stroke: #0f766e;
+            stroke-width: 3;
+            vector-effect: non-scaling-stroke;
+            filter: drop-shadow(0 5px 9px rgba(15, 23, 42, 0.12));
+        }
+
+        .finance-chart-dot.is-peak {
+            fill: #050505;
+            stroke: #050505;
+            stroke-width: 2;
+            filter: drop-shadow(0 8px 14px rgba(15, 23, 42, 0.26));
         }
 
         .finance-timeline-statbar > div {
@@ -13423,6 +13499,37 @@ body {
         .native-ui.dashboard-dark .finance-timeline-chart {
             background: #17191d !important;
             border-color: rgba(255,255,255,0.08) !important;
+        }
+
+        .native-ui.dashboard-dark .finance-axis-line,
+        .native-ui.dashboard-dark .finance-axis-baseline {
+            stroke: rgba(255,255,255,0.16);
+        }
+
+        .native-ui.dashboard-dark .finance-grid-line {
+            stroke: rgba(255,255,255,0.1);
+        }
+
+        .native-ui.dashboard-dark .finance-x-axis-tick {
+            stroke: rgba(255,255,255,0.16);
+        }
+
+        .native-ui.dashboard-dark .finance-axis-label {
+            fill: #a8b3c7;
+        }
+
+        .native-ui.dashboard-dark .finance-chart-line-shadow {
+            stroke: rgba(0,0,0,0.25);
+        }
+
+        .native-ui.dashboard-dark .finance-chart-dot {
+            fill: #17191d;
+            stroke: #5eead4;
+        }
+
+        .native-ui.dashboard-dark .finance-chart-dot.is-peak {
+            fill: #f8fafc;
+            stroke: #f8fafc;
         }
 
         .native-ui.dashboard-dark .finance-hero-accent {

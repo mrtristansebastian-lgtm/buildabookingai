@@ -251,6 +251,8 @@ const getPublicBookingSlug = () => {
   const url = new URL(window.location.href);
   const querySlug = url.searchParams.get('book') || url.searchParams.get('workspace');
   if (querySlug) return querySlug.trim().toLowerCase();
+  const hashBookMatch = url.hash.match(/^#\/book\/([^/?#]+)/i);
+  if (hashBookMatch?.[1]) return decodeURIComponent(hashBookMatch[1]).trim().toLowerCase();
   const [, section, slug] = url.pathname.split('/');
   if (section === 'book' && slug) return slug.trim().toLowerCase();
   return '';
@@ -1791,10 +1793,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 () => buildBookingSlug(settings.slug || settings.brandName || settings.businessName || 'studio'),
                 [settings.brandName, settings.businessName, settings.slug]
             );
+            const bookingPageRoute = `#/book/${bookingPageSlug}`;
             const bookingPageUrl = useMemo(() => {
-                if (typeof window === 'undefined') return `#/book/${bookingPageSlug}`;
-                return `${window.location.origin}${window.location.pathname}#/book/${bookingPageSlug}`;
-            }, [bookingPageSlug]);
+                if (typeof window === 'undefined') return bookingPageRoute;
+                return `${window.location.origin}${window.location.pathname}${bookingPageRoute}`;
+            }, [bookingPageRoute]);
             const resetWorkspaceRuntimeState = () => {
                 publishedSettingsSnapshotRef.current = null;
                 cloudEditorDraftRef.current = null;
@@ -3401,6 +3404,20 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             useEffect(() => {
                 if (!publicSlug) return;
+                const localGuestSettings = settingsRef.current || settings;
+                const localGuestSlug = buildBookingSlug(localGuestSettings.slug || localGuestSettings.brandName || localGuestSettings.businessName || 'studio');
+                if (!user && (guestMode || safeLocalGet(guestModeStorageKey) === 'true') && localGuestSlug === publicSlug) {
+                    const publishableGuestSettings = stripEditorDraftFields(localGuestSettings);
+                    setPublicError('');
+                    setPublicWorkspace({
+                        ...publishableGuestSettings,
+                        slug: publicSlug,
+                        workspaceName: publishableGuestSettings.brandName || publishableGuestSettings.businessName || 'Build A Booking Workspace',
+                        ownerId: ''
+                    });
+                    setPublicLoading(false);
+                    return;
+                }
                 if (!isFirebaseConfigured) {
                     setPublicError('Firebase is not configured yet.');
                     setPublicLoading(false);
@@ -3442,7 +3459,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     cancelled = true;
                     window.clearTimeout(timeoutId);
                 };
-            }, [publicSlug, publicReloadKey]);
+            }, [publicSlug, publicReloadKey, guestMode, user?.uid]);
 
             useEffect(() => {
                 let cancelled = false;
@@ -3805,7 +3822,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             const openBookingPage = () => {
                 if (typeof window === 'undefined') return;
-                window.open(bookingPageUrl, '_blank', 'noopener,noreferrer');
+                const opened = window.open(bookingPageUrl, '_blank');
+                if (opened) {
+                    opened.opener = null;
+                    return;
+                }
+                if (!opened) {
+                    window.location.assign(bookingPageUrl);
+                }
             };
 
             const writeStaffAccessGrant = async (staff) => {
@@ -8641,7 +8665,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     <div className="editor-launch-popover-head">
                                         <div>
                                             <span>{editorLaunchPanel === 'booking' ? 'Booking page' : 'Draft versions'}</span>
-                                            <strong>{editorLaunchPanel === 'booking' ? `/book/${bookingPageSlug}` : `${editorDraftVersions.length} saved`}</strong>
+                                            <strong>{editorLaunchPanel === 'booking' ? bookingPageRoute : `${editorDraftVersions.length} saved`}</strong>
                                         </div>
                                         <button type="button" onClick={() => setEditorLaunchPanel(null)} aria-label="Close editor panel">
                                             <X size={14} />
@@ -8650,7 +8674,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     {editorLaunchPanel === 'booking' ? (
                                         <div className="editor-launch-popover-body">
                                             <button type="button" onClick={() => copyToClipboard(bookingPageUrl, 'Booking page link')} className="editor-link-pill" title={bookingPageUrl}>
-                                                <span>/book/{bookingPageSlug}</span>
+                                                <span>{bookingPageUrl}</span>
                                                 <Share2 size={13} />
                                             </button>
                                             <div className="editor-launch-actions">

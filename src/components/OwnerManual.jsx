@@ -490,7 +490,7 @@ const sectionMatchesQuery = (section, query) => {
   return haystack.includes(needle);
 };
 
-export function OwnerManual({ themeMode = 'light', onClose, onNavigate }) {
+export function OwnerManual({ onClose, onNavigate }) {
   const [activeId, setActiveId] = useState('start');
   const [query, setQuery] = useState('');
 
@@ -507,7 +507,7 @@ export function OwnerManual({ themeMode = 'light', onClose, onNavigate }) {
   };
 
   return (
-    <div className={`native-ui owner-manual-shell fixed inset-0 z-[10000] overflow-hidden ${themeMode === 'dark' ? 'dashboard-dark bg-[#050506] text-white' : 'bg-[#F7F7F5] text-black'}`}>
+    <div className="native-ui owner-manual-shell fixed inset-0 z-[10000] overflow-hidden bg-[#F7F7F5] text-black">
       <div className="absolute inset-x-0 top-0 h-1 native-gradient-line" />
       <header className="relative z-10 bg-white/92 backdrop-blur-xl border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-3">

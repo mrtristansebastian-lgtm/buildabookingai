@@ -60,7 +60,7 @@ const navItems = [
   { id: 'profile', label: 'Profile', icon: UserRound }
 ];
 
-export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPreview = false, onSignOut, onOwnerLogin, onInstallApp }) {
+export function ClientPortal({ appId, db, user, isGuestPreview = false, onSignOut, onOwnerLogin, onInstallApp }) {
   const emailKey = normalizeEmail(user?.email);
   const [activeView, setActiveView] = useState('chats');
   const [bookings, setBookings] = useState([]);
@@ -976,7 +976,7 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
   };
 
   return (
-    <div className={`native-ui client-portal-shell min-h-screen pb-28 md:pb-0 ${themeMode === 'dark' ? 'dashboard-dark bg-[#050506] text-white' : 'bg-[#F7F7F5] text-black'}`}>
+    <div className="native-ui client-portal-shell min-h-screen pb-28 md:pb-0 bg-[#F7F7F5] text-black">
       <NotificationCenter
         title="Client Alerts"
         subtitle="Booking approvals, reschedules, running-late notes, and chat replies."
@@ -990,7 +990,7 @@ export function ClientPortal({ appId, db, user, themeMode = 'light', isGuestPrev
       />
       <header className="client-portal-header sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-neutral-200/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 h-16 md:h-20 flex items-center justify-between gap-4">
-          <BuildABookingBrand className="w-[154px] md:w-[190px]" variant={themeMode === 'dark' ? 'light' : 'dark'} />
+          <BuildABookingBrand className="w-[154px] md:w-[190px]" variant="dark" />
           <div className="hidden md:flex items-center gap-2 rounded-full bg-neutral-50 border border-neutral-100 p-1">
             {navItems.map(item => {
               const IconCmp = item.icon;

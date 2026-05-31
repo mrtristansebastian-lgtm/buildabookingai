@@ -2,13 +2,12 @@ import { lazy, Suspense, startTransition, useEffect, useLayoutEffect, useMemo, u
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
-    AlignCenter, AlignLeft, AlignRight, ArrowRight, Battery, Bell, BookOpen, BookOpenCheck, Briefcase, BriefcaseBusiness, Calendar, CalendarCheck, CalendarDays, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, CreditCard, Crop, DollarSign, Eye, FileText, Globe, GripVertical, HeartHandshake, HelpCircle, History, Home, Hourglass, ImagePlus, Images, Info, Instagram, Layers, Layout, LayoutDashboard, Mail, MessageCircle, MessageSquare, MessagesSquare, Monitor, Moon, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Settings2, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Sun, Tag, Trash2, Type, User, Users, UsersRound, Wifi, X, Zap
+    AlignCenter, AlignLeft, AlignRight, ArrowRight, Battery, Bell, BookOpen, BookOpenCheck, Briefcase, BriefcaseBusiness, Calendar, CalendarCheck, CalendarDays, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, CreditCard, Crop, DollarSign, Eye, FileText, Globe, GripVertical, HeartHandshake, HelpCircle, History, Home, Hourglass, ImagePlus, Images, Inbox, Info, Instagram, Layers, Layout, LayoutDashboard, Mail, MessageCircle, MessageSquare, MessagesSquare, Monitor, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Settings2, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Tag, Trash2, Type, User, Users, UsersRound, Wifi, X, Zap
 } from 'lucide-react';
 import { BuildABookingBrand, BuildABookingMark } from './components/BuildABookingBrand';
 import { EmailNotificationSettings } from './components/EmailNotificationSettings';
 import { LandingFeatureBook } from './components/LandingFeatureBook';
 import { LandingPaymentRail } from './components/LandingPaymentRail';
-import { NotificationCenter } from './components/NotificationCenter';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { ProButton } from './components/ProButton';
 import { FONT_OPTIONS, getFontFamily } from './data/fonts';
@@ -25,6 +24,7 @@ import {
   getBrowserNotificationPermission,
   makeClientNotification,
   makeOwnerNotification,
+  formatNotificationTime,
   notificationEmailKey,
   requestBrowserNotificationPermission,
   showBrowserNotification,
@@ -1490,9 +1490,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [publicReloadKey, setPublicReloadKey] = useState(0);
             const [activeTab, setActiveTab] = useState(initialWorkspaceRoute.activeTab);
             const [dashboardPeriod, setDashboardPeriod] = useState('today');
-            const [dashboardThemeMode, setDashboardThemeMode] = useState(() => (
-                safeLocalGet('build-a-booking-dashboard-theme') === 'dark' ? 'dark' : 'light'
-            ));
             const [editorTab, setEditorTab] = useState(initialWorkspaceRoute.editorTab);
             const [editorStudioModal, setEditorStudioModal] = useState(null);
             const editorStudioAudioRef = useRef(null);
@@ -1533,6 +1530,27 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [bookingSearch, setBookingSearch] = useState('');
             const [bookingSort, setBookingSort] = useState('newest');
             const [bookingPaymentFilter, setBookingPaymentFilter] = useState('all');
+            const [dashboardScheduleStaffId, setDashboardScheduleStaffId] = useState('all');
+            const [dashboardScheduleView, setDashboardScheduleView] = useState('availability');
+            const [dashboardFeedPages, setDashboardFeedPages] = useState({
+                bookings: 0,
+                chats: 0,
+                schedule: 0,
+                finance: 0
+            });
+            const [dashboardFeedPageSizes, setDashboardFeedPageSizes] = useState({
+                bookings: 5,
+                chats: 5,
+                schedule: 5,
+                finance: 5
+            });
+            const [dashboardFeedFilters, setDashboardFeedFilters] = useState({
+                bookings: 'all',
+                chats: 'all'
+            });
+            const [dashboardMobileTile, setDashboardMobileTile] = useState('bookings');
+            const [profileNotificationFilter, setProfileNotificationFilter] = useState('all');
+            const [profileSystemFilter, setProfileSystemFilter] = useState('all');
             const [bookingInfoDialog, setBookingInfoDialog] = useState(null);
             const [manualBookingOpen, setManualBookingOpen] = useState(false);
             const [manualBookingServiceId, setManualBookingServiceId] = useState('custom');
@@ -1575,12 +1593,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [supportThreadFocus, setSupportThreadFocus] = useState(null);
             const [legalPanel, setLegalPanel] = useState(null);
             const [ownerNotifications, setOwnerNotifications] = useState([]);
+            const [dashboardClientThreads, setDashboardClientThreads] = useState([]);
             const [guestNotificationReadIds, setGuestNotificationReadIds] = useState(() => new Set());
             const [browserNotificationPermission, setBrowserNotificationPermission] = useState(getBrowserNotificationPermission);
             const toastTimerRef = useRef(null);
             const unsavedWorkspaceChangesRef = useRef(false);
             const ownerNotificationSeenRef = useRef(new Set());
             const ownerNotificationsReadyRef = useRef(false);
+            const dashboardTileTouchRef = useRef(null);
             
             const showToast = (msg) => {
                 window.clearTimeout(toastTimerRef.current);
@@ -1622,8 +1642,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 return () => window.removeEventListener('beforeunload', confirmPageExit);
             }, []);
             useEffect(() => {
-                safeLocalSet('build-a-booking-dashboard-theme', dashboardThemeMode);
-            }, [dashboardThemeMode]);
+                safeLocalRemove('build-a-booking-dashboard-theme');
+            }, []);
             useEffect(() => {
                 if (activeTab !== 'profile') setActiveProfileSection('');
                 setMobileNavOpen(false);
@@ -2425,6 +2445,42 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }));
             }, [clientRecords, exampleBooking, guestNotificationReadIds, isGuestWorkspace, visibleBookings]);
             const workspaceNotifications = isGuestWorkspace ? guestOwnerNotifications : ownerNotifications;
+            const dashboardSupportThreads = useMemo(() => {
+                if (!isGuestWorkspace) return dashboardClientThreads;
+                const seenClients = new Set();
+                return visibleBookings
+                    .filter(booking => ['pending', 'confirmed', 'waitlist'].includes(String(booking.status || '').toLowerCase()))
+                    .filter((booking) => {
+                        const key = notificationEmailKey(booking.clientEmail || '') || String(booking.clientName || '').trim().toLowerCase();
+                        if (!key || seenClients.has(key)) return false;
+                        seenClients.add(key);
+                        return true;
+                    })
+                    .map((booking, index) => {
+                        const chatMessages = Array.isArray(booking.chatMessages) ? booking.chatMessages : [];
+                        const lastClientMessage = chatMessages
+                            .map(message => (typeof message === 'string' ? message : message?.text))
+                            .filter(Boolean)
+                            .find(message => !String(message).toLowerCase().startsWith('absolutely')) || '';
+                        return {
+                            id: `guest-thread-${booking.id}`,
+                            clientName: booking.clientName || 'Client',
+                            clientEmail: booking.clientEmail || '',
+                            bookingId: booking.id,
+                            bookingStatus: booking.status || 'pending',
+                            rescheduleStatus: index % 5 === 0 ? 'requested' : '',
+                            serviceName: booking.serviceName || 'Booking',
+                            lastMessage: booking.chatPreview || lastClientMessage || booking.clientNote || 'Client message waiting.',
+                            lastMessageAt: booking.updatedAt || booking.timestamp || booking.createdAt,
+                            updatedAt: booking.updatedAt || booking.timestamp || booking.createdAt,
+                            ownerUnread: index % 4 === 0 ? 2 : index % 3 === 0 ? 1 : 0,
+                            isGuestDemo: true
+                        };
+                    })
+                    .sort((a, b) => dateValueToMs(b.lastMessageAt || b.updatedAt) - dateValueToMs(a.lastMessageAt || a.updatedAt))
+                    .slice(0, 40);
+            }, [dashboardClientThreads, isGuestWorkspace, visibleBookings]);
+            const dashboardSupportUnreadCount = dashboardSupportThreads.reduce((sum, thread) => sum + Number(thread.ownerUnread || 0), 0);
 
             const clientLabelOptions = ['VIP', 'Needs Follow-up', 'Prefers Chat', 'High Value', 'No-show Risk'];
             const buildClientKey = (name, phone) => {
@@ -2724,7 +2780,17 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     return total + dayTimes.length;
                 }, 0);
 
-                const bookingsWithDates = visibleBookings.map(booking => ({ ...booking, dateKeyResolved: parseBookingDate(booking) }));
+                const bookingsWithDates = visibleBookings.map(booking => {
+                    const dateKeyResolved = parseBookingDate(booking);
+                    const timeMatch = String(booking.time || '').match(/\b(\d{1,2}):(\d{2})\b/);
+                    const normalizedTime = timeMatch ? `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}` : '00:00';
+                    const scheduledMs = dateKeyResolved ? new Date(`${dateKeyResolved}T${normalizedTime}:00`).getTime() : 0;
+                    return {
+                        ...booking,
+                        dateKeyResolved,
+                        dashboardSortMs: scheduledMs || dateValueToMs(booking.updatedAt || booking.timestamp || booking.createdAt) || 0
+                    };
+                });
                 const activeBookings = bookingsWithDates.filter(booking => booking.status !== 'declined');
                 const periodBookings = isDashboardAllTime
                     ? bookingsWithDates
@@ -2764,7 +2830,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 status: booking.paymentStatus === 'paid' ? 'paid' : 'manual_pending',
                                 amountInCents,
                                 currency: booking.currency || settings.currency || 'ZAR',
-                                updatedAtMs: financeRecordMsFromBooking(booking)
+                                updatedAtMs: financeRecordMsFromBooking(booking),
+                                title: booking.clientName || 'Client payment',
+                                detail: booking.serviceName || booking.service || 'Booking payment'
                             };
                         }),
                     ...financeImports
@@ -2775,7 +2843,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 status: normalizeFinanceStatus(record.status || record.paymentStatus, amountInCents),
                                 amountInCents,
                                 currency: record.currency || settings.currency || 'ZAR',
-                                updatedAtMs: dateValueToMs(record.updatedAtMs || record.updatedAt || record.paidAt || record.createdAt)
+                                updatedAtMs: dateValueToMs(record.updatedAtMs || record.updatedAt || record.paidAt || record.createdAt),
+                                title: record.clientName || record.name || record.reference || 'Finance row',
+                                detail: record.serviceName || record.gateway || record.paymentMethod || 'Imported payment'
                             };
                         }),
                     ...financePaymentAttempts
@@ -2784,7 +2854,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             status: record.status || 'initiated',
                             amountInCents: Number(record.amountInCents || record.amountPaidInCents || 0),
                             currency: record.currency || settings.currency || 'ZAR',
-                            updatedAtMs: dateValueToMs(record.paidAt || record.updatedAtMs || record.updatedAt || record.createdAt)
+                            updatedAtMs: dateValueToMs(record.paidAt || record.updatedAtMs || record.updatedAt || record.createdAt),
+                            title: record.clientName || record.customerName || 'Payment attempt',
+                            detail: record.gateway || record.provider || record.status || 'Gateway activity'
                         }))
                 ];
                 const paidFinanceRecords = financeRecordsForDashboard.filter(record => (
@@ -2813,6 +2885,15 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const totalRevenueLabel = formatDashboardMoney(totalRevenueInCents, dashboardRevenueCurrency);
                 const pendingRevenueLabel = formatDashboardMoney(pendingRevenueInCents, dashboardRevenueCurrency);
                 const totalRevenueHint = `${paidFinanceRecords.length} paid ${paidFinanceRecords.length === 1 ? 'record' : 'records'}`;
+                const financeActivity = financeRecordsForDashboard
+                    .filter(record => record.updatedAtMs >= financePeriodStartMs && record.updatedAtMs < financePeriodEndMs)
+                    .sort((a, b) => Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0))
+                    .slice(0, 24)
+                    .map(record => ({
+                        ...record,
+                        amountLabel: formatDashboardMoney(Number(record.amountInCents || 0), record.currency || dashboardRevenueCurrency),
+                        normalizedStatus: normalizeFinanceStatus(record.status, record.amountInCents)
+                    }));
                 const periodClientIds = new Set(periodActiveBookings.map(booking => buildClientKey(booking.clientName, booking.clientPhone)));
                 const firstTimers = Array.from(periodClientIds).filter(id => {
                     const client = clientDirectory.find(profile => profile.id === id);
@@ -2849,6 +2930,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     endKey,
                     periodBookings,
                     periodActiveBookings,
+                    dateKeys,
+                    todayKey,
+                    defaultTimes,
                     activityList: periodActiveBookings.length ? periodActiveBookings : [],
                     upcomingBookings,
                     todayBookings,
@@ -2862,6 +2946,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     totalRevenuePaidCount: paidFinanceRecords.length,
                     pendingRevenueLabel,
                     pendingFinanceCount: pendingFinanceRecords.length,
+                    financeActivity,
                     pending,
                     waitlist,
                     confirmed,
@@ -2881,6 +2966,226 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     allActiveBookings: activeBookings.length
                 };
             }, [visibleBookings, financeImports, financePaymentAttempts, dashboardPeriod, settings.schedule, settings.availableTimes, settings.brandName, settings.slug, settings.welcomeMessage, settings.currency, communications, clientMetrics, clientDirectory, isGuestWorkspace, workspaceOwnerId]);
+
+            const dashboardFeedFilterOptions = [
+                { id: 'all', label: 'All' },
+                { id: 'pending', label: 'Requests' },
+                { id: 'waitlist', label: 'Waitlist' },
+                { id: 'confirmed', label: 'Confirmed' },
+                { id: 'reschedule', label: 'Reschedule' }
+            ];
+            const sortDashboardLatest = (items, getTime) => (
+                [...(items || [])].sort((a, b) => {
+                    const aTime = Number(getTime(a) || 0);
+                    const bTime = Number(getTime(b) || 0);
+                    return bTime - aTime;
+                })
+            );
+            const getDashboardFilterText = (item) => ([
+                item?.status,
+                item?.type,
+                item?.kind,
+                item?.requestType,
+                item?.rescheduleStatus,
+                item?.bookingStatus,
+                item?.title,
+                item?.body,
+                item?.detail,
+                item?.clientName,
+                item?.serviceName,
+                item?.clientNote,
+                item?.note,
+                item?.notes,
+                item?.lastMessage,
+                item?.message
+            ].filter(Boolean).join(' ').toLowerCase());
+            const bookingMatchesDashboardFilter = (booking, filter) => {
+                if (!filter || filter === 'all') return true;
+                const status = String(booking?.status || '').toLowerCase();
+                const text = getDashboardFilterText(booking);
+                if (filter === 'pending') return status === 'pending' || text.includes('request') || text.includes('review');
+                if (filter === 'waitlist') return status === 'waitlist';
+                if (filter === 'confirmed') return status === 'confirmed';
+                if (filter === 'reschedule') {
+                    return text.includes('reschedule') || text.includes('rescheduled') || text.includes('change time') || text.includes('move');
+                }
+                return true;
+            };
+            const notificationMatchesDashboardFilter = (notification, filter) => {
+                if (!filter || filter === 'all') return true;
+                const text = getDashboardFilterText(notification);
+                if (filter === 'pending') return text.includes('request') || text.includes('review') || text.includes('ready');
+                if (filter === 'waitlist') return text.includes('waitlist') || text.includes('spot opens') || text.includes('spot opened');
+                if (filter === 'confirmed') return text.includes('confirmed');
+                if (filter === 'reschedule') return text.includes('reschedule') || text.includes('rescheduled') || text.includes('change time') || text.includes('move');
+                return true;
+            };
+            const threadMatchesDashboardFilter = (thread, filter) => {
+                if (!filter || filter === 'all') return true;
+                const status = String(thread?.bookingStatus || thread?.status || '').toLowerCase();
+                const rescheduleStatus = String(thread?.rescheduleStatus || '').toLowerCase();
+                const text = getDashboardFilterText(thread);
+                if (filter === 'pending') return ['pending', 'requested'].includes(status) || text.includes('request') || text.includes('review');
+                if (filter === 'waitlist') return status === 'waitlist' || text.includes('waitlist') || text.includes('spot opens');
+                if (filter === 'confirmed') return status === 'confirmed';
+                if (filter === 'reschedule') {
+                    return ['requested', 'countered'].includes(rescheduleStatus) || text.includes('reschedule') || text.includes('rescheduled') || text.includes('change time') || text.includes('move');
+                }
+                return true;
+            };
+            const getBookingDashboardDot = (booking) => (
+                booking?.status === 'waitlist'
+                    ? 'waitlist'
+                    : booking?.status === 'confirmed' && booking?.paymentStatus === 'paid'
+                        ? 'paid-confirmed'
+                        : booking?.status === 'confirmed'
+                            ? 'confirmed-unpaid'
+                            : (booking?.status || 'pending')
+            );
+            const getThreadDashboardDot = (thread, linkedBooking = null) => {
+                const status = String(thread?.bookingStatus || thread?.status || '').toLowerCase();
+                if (linkedBooking) return getBookingDashboardDot(linkedBooking);
+                if (threadMatchesDashboardFilter(thread, 'reschedule')) return 'reschedule';
+                if (status === 'waitlist') return 'waitlist';
+                if (status === 'confirmed' && String(thread?.paymentStatus || '').toLowerCase() === 'paid') return 'paid-confirmed';
+                if (status === 'confirmed') return 'confirmed-unpaid';
+                return Number(thread?.ownerUnread || 0) > 0 ? 'unread' : 'pending';
+            };
+            const renderDashboardFilterControl = (section) => (
+                <div className="dashboard-filter-strip" aria-label={`${section} filter`}>
+                    {dashboardFeedFilterOptions.map(option => (
+                        <button
+                            key={`${section}-${option.id}`}
+                            type="button"
+                            className={`dashboard-filter-chip ${dashboardFeedFilters[section] === option.id ? 'is-active' : ''}`}
+                            onClick={() => {
+                                setDashboardFeedFilters(prev => ({ ...prev, [section]: option.id }));
+                                resetDashboardFeedPage(section);
+                            }}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            );
+            const getBookingDashboardTime = (booking) => (
+                Number(booking?.dashboardSortMs || 0) ||
+                dateValueToMs(booking?.updatedAt || booking?.timestamp || booking?.createdAt)
+            );
+            const getNotificationDashboardTime = (notification) => (
+                dateValueToMs(notification?.createdAtMs || notification?.createdAt || notification?.updatedAt) ||
+                Number(notification?.createdAtMs || notification?.updatedAtMs || 0)
+            );
+            const getDateKeyDashboardTime = (dateKey) => (
+                dateKey ? new Date(`${dateKey}T00:00:00`).getTime() : 0
+            );
+            const dashboardMobileTiles = [
+                { id: 'bookings', label: 'Bookings', icon: BookOpenCheck, value: dashboardPortfolio.activeBookings, hint: 'Total' },
+                { id: 'chats', label: 'Chats', icon: MessagesSquare, value: dashboardSupportUnreadCount, hint: 'Unread' },
+                { id: 'schedule', label: 'Schedule', icon: CalendarDays, value: dashboardPortfolio.openSlots, hint: 'Open' },
+                { id: 'finance', label: 'Payments', icon: DollarSign, value: dashboardPortfolio.totalRevenueLabel, hint: 'Revenue' }
+            ];
+            const dashboardActiveTileIndex = Math.max(0, dashboardMobileTiles.findIndex(tile => tile.id === dashboardMobileTile));
+            const dashboardActiveTile = dashboardMobileTiles[dashboardActiveTileIndex] || dashboardMobileTiles[0];
+            const dashboardScheduleViewOptions = [
+                { id: 'availability', label: 'Availability' },
+                { id: 'pending', label: 'Pending Requests' },
+                { id: 'confirmed', label: 'Confirmed Bookings' }
+            ];
+            const DASHBOARD_FEED_PAGE_SIZE = 5;
+            const DASHBOARD_FEED_PAGE_SIZE_OPTIONS = [5, 10, 15];
+            const resetDashboardFeedPage = (section) => {
+                setDashboardFeedPages(prev => ({ ...prev, [section]: 0 }));
+            };
+            const resetDashboardFeedPages = () => {
+                setDashboardFeedPages({
+                    bookings: 0,
+                    chats: 0,
+                    schedule: 0,
+                    finance: 0
+                });
+            };
+            const setDashboardFeedPageSize = (section, pageSize) => {
+                const safeSize = DASHBOARD_FEED_PAGE_SIZE_OPTIONS.includes(Number(pageSize))
+                    ? Number(pageSize)
+                    : DASHBOARD_FEED_PAGE_SIZE;
+                setDashboardFeedPageSizes(prev => ({ ...prev, [section]: safeSize }));
+                resetDashboardFeedPage(section);
+            };
+            const getDashboardPagedFeed = (section, rows, pageSize = dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE) => {
+                const safeRows = Array.isArray(rows) ? rows : [];
+                const totalPages = Math.max(1, Math.ceil(safeRows.length / pageSize));
+                const requestedPage = Number(dashboardFeedPages[section] || 0);
+                const page = Math.min(Math.max(requestedPage, 0), totalPages - 1);
+                return {
+                    rows: safeRows.slice(page * pageSize, page * pageSize + pageSize),
+                    page,
+                    totalPages,
+                    totalRows: safeRows.length
+                };
+            };
+            const shiftDashboardFeedPage = (section, direction, totalPages) => {
+                setDashboardFeedPages(prev => {
+                    const pageCount = Math.max(1, Number(totalPages || 1));
+                    const current = Math.min(Math.max(Number(prev[section] || 0), 0), pageCount - 1);
+                    return { ...prev, [section]: (current + direction + pageCount) % pageCount };
+                });
+            };
+            const renderDashboardFeedPager = (section, pageData) => {
+                if (!pageData || pageData.totalRows <= DASHBOARD_FEED_PAGE_SIZE) return null;
+                return (
+                    <div className="dashboard-feed-pager" aria-label={`${section} pages`}>
+                        <button
+                            type="button"
+                            onClick={() => shiftDashboardFeedPage(section, -1, pageData.totalPages)}
+                            aria-label={`Previous ${section} page`}
+                            disabled={pageData.totalPages <= 1}
+                        >
+                            <ChevronLeft size={14} strokeWidth={2.6} />
+                        </button>
+                        <span>{pageData.page + 1} / {pageData.totalPages}</span>
+                        <label className="dashboard-feed-size">
+                            <span>Show</span>
+                            <select
+                                value={dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE}
+                                onChange={event => setDashboardFeedPageSize(section, event.target.value)}
+                                aria-label={`Show ${section} rows`}
+                            >
+                                {DASHBOARD_FEED_PAGE_SIZE_OPTIONS.map(option => (
+                                    <option key={`${section}-size-${option}`} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => shiftDashboardFeedPage(section, 1, pageData.totalPages)}
+                            aria-label={`Next ${section} page`}
+                            disabled={pageData.totalPages <= 1}
+                        >
+                            <ChevronRight size={14} strokeWidth={2.6} />
+                        </button>
+                    </div>
+                );
+            };
+            const shiftDashboardMobileTile = (direction = 1) => {
+                setDashboardMobileTile(current => {
+                    const currentIndex = Math.max(0, dashboardMobileTiles.findIndex(tile => tile.id === current));
+                    const nextIndex = (currentIndex + direction + dashboardMobileTiles.length) % dashboardMobileTiles.length;
+                    return dashboardMobileTiles[nextIndex]?.id || 'bookings';
+                });
+            };
+            const handleDashboardTileTouchStart = (event) => {
+                dashboardTileTouchRef.current = event.touches?.[0]?.clientX ?? null;
+            };
+            const handleDashboardTileTouchEnd = (event) => {
+                const startX = dashboardTileTouchRef.current;
+                dashboardTileTouchRef.current = null;
+                const endX = event.changedTouches?.[0]?.clientX;
+                if (!Number.isFinite(startX) || !Number.isFinite(endX)) return;
+                const delta = endX - startX;
+                if (Math.abs(delta) < 44) return;
+                shiftDashboardMobileTile(delta < 0 ? 1 : -1);
+            };
 
             const filteredClients = useMemo(() => {
                 const query = clientSearch.trim().toLowerCase();
@@ -3004,6 +3309,28 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }, (error) => console.error('Owner notifications sync failed', error));
                 return () => unsubscribe();
             }, [user?.uid, workspaceOwnerId, publicSlug]);
+
+            useEffect(() => {
+                if (!isFirebaseConfigured || !db || !user || !workspaceOwnerId || publicSlug || isGuestWorkspace) {
+                    setDashboardClientThreads([]);
+                    return undefined;
+                }
+                const threadsQuery = FirebaseSDK.query(
+                    FirebaseSDK.collection(db, 'artifacts', appId, 'clientThreads'),
+                    FirebaseSDK.where('ownerId', '==', workspaceOwnerId)
+                );
+                const unsubscribe = FirebaseSDK.onSnapshot(threadsQuery, (snap) => {
+                    const nextThreads = snap.docs
+                        .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
+                        .sort((a, b) => (
+                            dateValueToMs(b.lastMessageAt || b.updatedAt || b.createdAt) -
+                            dateValueToMs(a.lastMessageAt || a.updatedAt || a.createdAt)
+                        ))
+                        .slice(0, 40);
+                    setDashboardClientThreads(nextThreads);
+                }, (error) => console.error('Dashboard client threads sync failed', error));
+                return () => unsubscribe();
+            }, [user?.uid, workspaceOwnerId, publicSlug, isGuestWorkspace]);
 
             useEffect(() => {
                 if (!isFirebaseConfigured || !db || !user || !workspaceOwnerId || !clientDirectory.length) return;
@@ -6029,6 +6356,25 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 setActiveTab('communications');
             };
 
+            const openDashboardSupportThread = (thread) => {
+                const linkedBooking = visibleBookings.find(booking => (
+                    booking.id === thread?.bookingId ||
+                    booking.threadId === thread?.id ||
+                    notificationEmailKey(booking.clientEmail || '') === notificationEmailKey(thread?.clientEmail || '')
+                ));
+                if (linkedBooking) {
+                    openBookingChat(linkedBooking);
+                    return;
+                }
+                if (!thread?.id) {
+                    navigateWorkspaceTab('communications');
+                    return;
+                }
+                if (!confirmLeavingUnsavedChanges()) return;
+                setSupportThreadFocus({ threadId: thread.id, bookingId: thread.bookingId || '', requestId: Date.now() });
+                setActiveTab('communications');
+            };
+
             const approveBooking = async (booking) => {
                 await updateBooking(booking.id, { status: 'confirmed' });
                 await sendBookingEmail({ ...booking, status: 'confirmed' }, 'confirmed');
@@ -6543,6 +6889,211 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     // The rotate prompt in the preview handles locked-orientation browsers.
                 }
             };
+            const classifyWorkspaceNotification = (notification = {}) => {
+                const text = `${notification.type || ''} ${notification.title || ''} ${notification.body || ''}`.toLowerCase();
+                if (text.includes('reschedule') || text.includes('move') || text.includes('change time')) return 'reschedules';
+                if (text.includes('message') || text.includes('chat') || text.includes('reply')) return 'messages';
+                if (text.includes('payment') || text.includes('paid') || text.includes('invoice')) return 'payments';
+                if (text.includes('waitlist')) return 'waitlist';
+                if (text.includes('request') || text.includes('booking')) return 'requests';
+                return 'alerts';
+            };
+            const profileNotificationItems = sortDashboardLatest([
+                ...workspaceNotifications.map(notification => {
+                    const category = classifyWorkspaceNotification(notification);
+                    return {
+                        id: `notification-${notification.id}`,
+                        kind: 'notification',
+                        category,
+                        iconKind: category === 'payments' ? 'payment' : category === 'messages' ? 'chat' : category === 'reschedules' ? 'reschedule' : category === 'requests' || category === 'waitlist' ? 'booking' : 'notification',
+                        title: notification.title || 'Workspace update',
+                        detail: notification.body || 'Open Build A Booking for the latest update.',
+                        time: dateValueToMs(notification.createdAtMs || notification.createdAt || notification.updatedAt),
+                        label: notification.read ? 'Read' : 'Unread',
+                        isUnread: !notification.read,
+                        source: notification
+                    };
+                }),
+                ...dashboardSupportThreads.map(thread => {
+                    const isReschedule = threadMatchesDashboardFilter(thread, 'reschedule');
+                    const isWaitlist = threadMatchesDashboardFilter(thread, 'waitlist');
+                    const category = isReschedule ? 'reschedules' : isWaitlist ? 'waitlist' : 'messages';
+                    return {
+                        id: `chat-${thread.id}`,
+                        kind: 'chat',
+                        category,
+                        iconKind: isReschedule ? 'reschedule' : 'chat',
+                        title: thread.clientName || 'Client chat',
+                        detail: thread.lastMessage || `${thread.serviceName || 'Booking'} thread is open.`,
+                        time: dateValueToMs(thread.lastMessageAt || thread.updatedAt || thread.createdAt),
+                        label: Number(thread.ownerUnread || 0) > 0 ? `${thread.ownerUnread} unread` : category === 'waitlist' ? 'Waitlist' : 'Chat',
+                        isUnread: Number(thread.ownerUnread || 0) > 0,
+                        source: thread
+                    };
+                }),
+                ...dashboardPortfolio.financeActivity.map(record => ({
+                    id: `payment-${record.title}-${record.updatedAtMs}-${record.amountLabel}`,
+                    kind: 'payment',
+                    category: 'payments',
+                    iconKind: 'payment',
+                    title: record.title || 'Payment activity',
+                    detail: record.detail || record.amountLabel || 'Finance update',
+                    time: Number(record.updatedAtMs || 0),
+                    label: record.amountLabel || 'Payment',
+                    isUnread: record.normalizedStatus !== 'paid',
+                    source: record
+                })),
+                ...dashboardPortfolio.periodActiveBookings.map(booking => {
+                    const status = String(booking.status || '').toLowerCase();
+                    const category = bookingMatchesDashboardFilter(booking, 'reschedule')
+                        ? 'reschedules'
+                        : status === 'waitlist'
+                            ? 'waitlist'
+                            : status === 'confirmed'
+                                ? 'confirmed'
+                                : 'requests';
+                    return {
+                        id: `booking-${booking.id}`,
+                        kind: 'booking',
+                        category,
+                        iconKind: category === 'reschedules' ? 'reschedule' : 'booking',
+                        title: booking.clientName || 'Booking',
+                        detail: `${booking.serviceName || 'Booking'} / ${booking.date || booking.dateKeyResolved || 'Date'} / ${booking.time || 'Time pending'}`,
+                        time: getBookingDashboardTime(booking),
+                        label: category === 'reschedules' ? 'Reschedule' : category === 'waitlist' ? 'Waitlist' : status || 'Booking',
+                        isUnread: status === 'pending' || status === 'waitlist' || category === 'reschedules',
+                        source: booking
+                    };
+                })
+            ], item => item.time).slice(0, 48);
+            const profileNotificationFilterOptions = [
+                { id: 'all', label: 'All' },
+                { id: 'requests', label: 'Requests' },
+                { id: 'messages', label: 'Messages' },
+                { id: 'reschedules', label: 'Reschedules' },
+                { id: 'waitlist', label: 'Waitlist' },
+                { id: 'payments', label: 'Payments' }
+            ].map(option => ({
+                ...option,
+                count: option.id === 'all'
+                    ? profileNotificationItems.length
+                    : profileNotificationItems.filter(item => item.category === option.id).length
+            }));
+            const filteredProfileNotifications = profileNotificationItems.filter(item => (
+                profileNotificationFilter === 'all' || item.category === profileNotificationFilter
+            ));
+            const profileSystemActivityItems = sortDashboardLatest([
+                {
+                    id: 'system-services',
+                    kind: 'system',
+                    category: 'services',
+                    iconKind: 'services',
+                    title: 'Service menu ready',
+                    detail: `${workspaceServices.length} services with duration, price, and booking-page display settings.`,
+                    time: dateValueToMs(settings.servicesUpdatedAt || settings.updatedAt) || Date.now() - 6 * 60 * 1000,
+                    label: 'Services'
+                },
+                {
+                    id: 'system-team',
+                    kind: 'system',
+                    category: 'team',
+                    iconKind: 'team',
+                    title: 'Team calendars connected',
+                    detail: `${displayStaffList.length} staff profiles available for bookings and schedule visibility.`,
+                    time: dateValueToMs(settings.staffUpdatedAt || settings.updatedAt) || Date.now() - 16 * 60 * 1000,
+                    label: 'Team'
+                },
+                {
+                    id: 'system-schedule',
+                    kind: 'system',
+                    category: 'schedule',
+                    iconKind: 'schedule',
+                    title: 'Schedule capacity synced',
+                    detail: `${dashboardPortfolio.capacity} slots in this period with ${dashboardPortfolio.reservedSlots} confirmed.`,
+                    time: dateValueToMs(settings.scheduleUpdatedAt || settings.updatedAt) || Date.now() - 29 * 60 * 1000,
+                    label: 'Schedule'
+                },
+                {
+                    id: 'system-editor',
+                    kind: 'system',
+                    category: 'editor',
+                    iconKind: 'editor',
+                    title: 'Booking page configured',
+                    detail: `${settings.brandName || 'Your booking page'} is using ${settings.serviceDisplayMode === 'dropdown' ? 'dropdown flow' : 'display flow'} with live theme settings.`,
+                    time: dateValueToMs(settings.editorUpdatedAt || settings.updatedAt) || Date.now() - 44 * 60 * 1000,
+                    label: 'Editor'
+                },
+                {
+                    id: 'system-finance',
+                    kind: 'system',
+                    category: 'finance',
+                    iconKind: 'payment',
+                    title: 'Finance desk aligned',
+                    detail: `${dashboardPortfolio.totalRevenueLabel} revenue and ${dashboardPortfolio.pendingRevenueLabel} pending across this view.`,
+                    time: dateValueToMs(settings.financeUpdatedAt || settings.updatedAt) || Date.now() - 61 * 60 * 1000,
+                    label: 'Finance'
+                },
+                {
+                    id: 'system-migration',
+                    kind: 'system',
+                    category: 'migration',
+                    iconKind: 'migration',
+                    title: 'Migration Studio available',
+                    detail: `${importedMigrationCounts.clients + importedMigrationCounts.bookings + importedMigrationCounts.financeRecords} imported records can be reviewed or cleared.`,
+                    time: Date.now() - 83 * 60 * 1000,
+                    label: 'Migration'
+                }
+            ], item => item.time);
+            const profileSystemFilterOptions = [
+                { id: 'all', label: 'All' },
+                { id: 'services', label: 'Services' },
+                { id: 'team', label: 'Team' },
+                { id: 'schedule', label: 'Schedule' },
+                { id: 'editor', label: 'Editor' },
+                { id: 'finance', label: 'Finance' }
+            ].map(option => ({
+                ...option,
+                count: option.id === 'all'
+                    ? profileSystemActivityItems.length
+                    : profileSystemActivityItems.filter(item => item.category === option.id).length
+            }));
+            const filteredProfileSystemActivity = profileSystemActivityItems.filter(item => (
+                profileSystemFilter === 'all' || item.category === profileSystemFilter
+            ));
+            const profileActivityRows = filteredProfileSystemActivity;
+            const profileActivityPrimaryCount = profileSystemActivityItems.length;
+            const profileActivitySecondaryCount = profileSystemFilterOptions.filter(option => option.id !== 'all' && option.count > 0).length;
+            const handleProfileActivityOpen = (item) => {
+                if (!item) return;
+                if (item.kind === 'notification') {
+                    if (item.source?.id && !item.source.read) markWorkspaceNotificationRead(item.source.id);
+                    openOwnerNotification(item.source);
+                    return;
+                }
+                if (item.kind === 'chat') {
+                    openDashboardSupportThread(item.source);
+                    return;
+                }
+                if (item.kind === 'payment') {
+                    navigateWorkspaceTab('finance');
+                    return;
+                }
+                if (item.kind === 'system') {
+                    if (item.category === 'services') navigateWorkspaceTab('services');
+                    if (item.category === 'team') navigateWorkspaceTab('staff');
+                    if (item.category === 'schedule') navigateWorkspaceTab('business');
+                    if (item.category === 'editor') navigateWorkspaceTab('editor');
+                    if (item.category === 'finance') navigateWorkspaceTab('finance');
+                    if (item.category === 'migration') setActiveProfileSection('migration');
+                    return;
+                }
+                if (item.kind === 'booking') {
+                    setBookingDeskPeriod(dashboardPeriod === 'all' ? 'all' : dashboardPeriod);
+                    setBookingFilter('all');
+                    setBookingSearch(item.source?.clientName || '');
+                    navigateWorkspaceTab('bookings');
+                }
+            };
             const profileSections = [
                 {
                     id: 'account',
@@ -6567,6 +7118,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     icon: Images,
                     meta: settings.slug || 'booking',
                     quick: ['Logo & banner', 'Venue gallery', 'Social links']
+                },
+                {
+                    id: 'activity',
+                    title: 'Activity Center',
+                    note: 'Internal changes, setup, and workspace health',
+                    icon: Settings2,
+                    meta: `${profileActivityPrimaryCount} signals`,
+                    quick: ['Services', 'Team', 'Schedule']
                 },
                 {
                     id: 'migration',
@@ -6640,10 +7199,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                 if (!clientPortalUser) {
                     return (
-                        <div className={`native-ui min-h-screen flex items-start sm:items-center justify-center px-6 pt-14 pb-10 sm:p-6 ${dashboardThemeMode === 'dark' ? 'dashboard-dark bg-[#050506] text-white' : 'bg-white text-black'}`}>
+                        <div className="native-ui min-h-screen flex items-start sm:items-center justify-center px-6 pt-14 pb-10 sm:p-6 bg-white text-black">
                             {authDialog}
                             <div className="max-w-md text-center">
-                                <BuildABookingBrand className="w-52 sm:w-60 mx-auto mb-8 sm:mb-10" variant={dashboardThemeMode === 'dark' ? 'light' : 'dark'} />
+                                <BuildABookingBrand className="w-52 sm:w-60 mx-auto mb-8 sm:mb-10" variant="dark" />
                                 <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-neutral-400 mb-4">Client Portal</p>
                                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 leading-tight">Sign in to stay close to your booking.</h1>
                                 <p className="text-neutral-500 leading-relaxed mb-7 text-base sm:text-lg">Use the same email you booked with to manage updates, request changes, and chat with the business.</p>
@@ -6662,12 +7221,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                 return (
                     <Suspense fallback={<LazySectionFallback label="Loading client portal" />}>
-                        <AppErrorBoundary compact label="Client Portal" resetKey={`${clientPortalUser?.uid || 'guest'}-${dashboardThemeMode}`}>
+                        <AppErrorBoundary compact label="Client Portal" resetKey={`${clientPortalUser?.uid || 'guest'}-light`}>
                             <ClientPortal
                                 appId={appId}
                                 db={clientGuestMode ? null : db}
                                 user={clientPortalUser}
-                                themeMode={dashboardThemeMode}
                                 isGuestPreview={clientGuestMode}
                                 onSignOut={clientGuestMode ? () => {
                                     setClientGuestMode(false);
@@ -6683,22 +7241,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             if (view === 'landing') {
                 return (
-                  <div className={`native-ui native-home min-h-screen font-sans selection:bg-black selection:text-white overflow-x-hidden ${dashboardThemeMode === 'dark' ? 'native-home-dark dashboard-dark bg-[#050506] text-white' : 'bg-white text-black'}`}>
+                  <div className="native-ui native-home min-h-screen font-sans selection:bg-black selection:text-white overflow-x-hidden bg-white text-black">
                     {/* Navigation */}
                     <nav className="fixed w-full z-50 bg-white/82 backdrop-blur-xl border-b border-neutral-200/50 transition-all native-home-nav">
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
                         <div className="flex items-center cursor-pointer" onClick={() => setView('landing')}>
-                          <BuildABookingBrand className="w-[156px] md:w-[188px] h-auto" variant={dashboardThemeMode === 'dark' ? 'light' : 'dark'} />
+                          <BuildABookingBrand className="w-[156px] md:w-[188px] h-auto" variant="dark" />
                         </div>
                         <div className="flex items-center gap-2 md:gap-6">
-                          <button
-                            type="button"
-                            onClick={() => setDashboardThemeMode(mode => (mode === 'dark' ? 'light' : 'dark'))}
-                            className="native-home-theme-toggle h-10 w-10 rounded-full bg-white border border-neutral-200 text-black flex items-center justify-center hover:border-black transition-colors"
-                            aria-label={dashboardThemeMode === 'dark' ? 'Switch home to light mode' : 'Switch home to dark mode'}
-                          >
-                            {dashboardThemeMode === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-                          </button>
                           <button onClick={() => openAuthPanel('signin', 'owner')} className="block text-[11px] md:text-sm font-semibold text-neutral-500 hover:text-black transition-colors">Sign In</button>
                         <button onClick={openClientPortal} className="hidden md:block text-sm font-semibold text-neutral-500 hover:text-black transition-colors">Client Login</button>
                           <button onClick={openGuestDashboard} className="hidden sm:block h-10 px-4 rounded-full bg-white border border-neutral-200 text-black font-bold text-[11px] hover:border-black transition-colors">Guest Mode</button>
@@ -6806,7 +7356,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             return (
                 <div
-                    className={`flex h-screen overflow-hidden font-sans relative native-ui ${dashboardThemeMode === 'dark' ? 'dashboard-dark' : 'dashboard-light'} ${sidebarCollapsed ? 'dashboard-sidebar-is-collapsed' : ''} ${activeTab === 'editor' ? 'dashboard-editor-active' : ''}`}
+                    className={`flex h-screen overflow-hidden font-sans relative native-ui dashboard-light ${sidebarCollapsed ? 'dashboard-sidebar-is-collapsed' : ''} ${activeTab === 'editor' ? 'dashboard-editor-active' : ''}`}
                 >
                 {/* Global Toast */}
                 {toast && (
@@ -6833,9 +7383,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 />
                 {showOwnerManual && (
                     <Suspense fallback={<LazySectionFallback label="Loading manual" />}>
-                        <AppErrorBoundary compact label="Owner Manual" resetKey={dashboardThemeMode}>
+                        <AppErrorBoundary compact label="Owner Manual" resetKey="light">
                             <OwnerManual
-                                themeMode={dashboardThemeMode}
                                 onClose={() => setShowOwnerManual(false)}
                                 onNavigate={(targetTab, targetEditorTab) => {
                                     if (!navigateWorkspaceTab(targetTab, targetEditorTab)) return;
@@ -6845,25 +7394,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         </AppErrorBoundary>
                     </Suspense>
                 )}
-                {(user || isGuestWorkspace) && !publicSlug && (
-                    <NotificationCenter
-                        title="Workspace Alerts"
-                        subtitle="Booking requests, chat messages, and birthday reminders."
-                        notifications={workspaceNotifications}
-                        permission={browserNotificationPermission}
-                        onRequestPermission={requestOwnerBrowserNotifications}
-                        onMarkRead={markWorkspaceNotificationRead}
-                        onMarkAllRead={markAllWorkspaceNotificationsRead}
-                        onOpenNotification={openOwnerNotification}
-                        compact
-                    />
-                )}
-
                 <div className={`dashboard-sidebar hidden md:flex transition-all duration-700 ease-in-out bg-white border-r border-neutral-100 flex-col relative z-50 shadow-sm ${sidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-80 p-8'}`}>
                     {!sidebarCollapsed && (
                     <>
                         <div className="flex items-center mb-8 px-2 cursor-pointer group" onClick={() => applyWorkspaceRoute({ view: 'landing' })}>
-                            <BuildABookingBrand className="w-[190px] h-auto transition-transform duration-300 group-hover:scale-[1.02]" variant={dashboardThemeMode === 'dark' ? 'light' : 'dark'} />
+                            <BuildABookingBrand className="w-[190px] h-auto transition-transform duration-300 group-hover:scale-[1.02]" variant="dark" />
                         </div>
                         {user && (
                             <div className="mb-6 rounded-lg border border-neutral-100 bg-neutral-50 p-3">
@@ -6911,15 +7446,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         })}
                         </nav>
                         <div className="mt-auto space-y-4 pt-6 border-t border-neutral-100">
-                            <button
-                                type="button"
-                                onClick={() => setDashboardThemeMode(mode => mode === 'dark' ? 'light' : 'dark')}
-                                className="w-full h-12 rounded-full border border-neutral-200 bg-white text-black text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:border-black transition-colors dashboard-theme-switch"
-                                aria-pressed={dashboardThemeMode === 'dark'}
-                            >
-                                {dashboardThemeMode === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                                {dashboardThemeMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                            </button>
                             {isGuestWorkspace ? (
                                 <div className="space-y-2">
                                     <ProButton onClick={() => openAuthPanel('signin', 'owner')} variant="neon" className="w-full py-4 text-[10px]">Sign In</ProButton>
@@ -7076,137 +7602,405 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             {dashboardPortfolio.period.title} / {dashboardPortfolio.period.rangeLabel}. Your most useful numbers, actions, and signals are ready.
                                         </p>
                                     </div>
-                                    <div className="dashboard-period-tabs schedule-scope-toggle inline-grid grid-cols-4 gap-1 rounded-lg bg-neutral-100 p-1">
-                                        {dashboardPortfolio.periods.map(period => (
-                                            <button
-                                                key={period.id}
-                                                onClick={() => setDashboardPeriod(period.id)}
-                                                className={`dashboard-period-tab h-10 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${dashboardPeriod === period.id ? 'is-active bg-[#39FF14] text-black shadow-lg shadow-[#39FF14]/20' : 'text-neutral-500 hover:text-black'}`}
-                                            >
-                                                {period.label}
-                                            </button>
-                                        ))}
-                                    </div>
+                                </div>
+                                <div className="dashboard-lumia-divider" aria-hidden="true" />
+                                <div className="dashboard-period-tabs schedule-scope-toggle inline-grid grid-cols-4 gap-1 rounded-lg bg-neutral-100 p-1">
+                                    {dashboardPortfolio.periods.map(period => (
+                                        <button
+                                            key={period.id}
+                                            onClick={() => {
+                                                setDashboardPeriod(period.id);
+                                                resetDashboardFeedPages();
+                                            }}
+                                            className={`dashboard-period-tab h-10 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${dashboardPeriod === period.id ? 'is-active bg-[#39FF14] text-black shadow-lg shadow-[#39FF14]/20' : 'text-neutral-500 hover:text-black'}`}
+                                        >
+                                            {period.label}
+                                        </button>
+                                    ))}
                                 </div>
 
-                                <div className="dashboard-lumia-grid">
-                                    {[
-                                        {
-                                            id: 'finance',
-                                            tone: 'finance',
-                                            icon: DollarSign,
-                                            eyebrow: 'Finance Overview',
-                                            title: 'Revenue moving',
-                                            value: dashboardPortfolio.totalRevenueLabel,
-                                            label: 'Paid revenue',
-                                            detail: `${dashboardPortfolio.totalRevenuePaidCount} paid ${dashboardPortfolio.totalRevenuePaidCount === 1 ? 'record' : 'records'} in view`,
-                                            metrics: [
-                                                ['Pending', dashboardPortfolio.pendingRevenueLabel],
-                                                ['Waiting', dashboardPortfolio.pendingFinanceCount],
-                                                ['Currency', settings.currency || 'ZAR']
-                                            ],
-                                            actions: [
-                                                { label: 'Open Finance', tab: 'finance', icon: ArrowRight },
-                                                { label: 'Payments', tab: 'finance', icon: DollarSign }
-                                            ]
-                                        },
-                                        {
-                                            id: 'bookings',
-                                            tone: 'bookings',
-                                            icon: BookOpenCheck,
-                                            eyebrow: 'Bookings Overview',
-                                            title: 'Queue under control',
-                                            value: dashboardPortfolio.activeBookings,
-                                            label: 'Active bookings',
-                                            detail: `${dashboardPortfolio.confirmed} confirmed / ${dashboardPortfolio.needsAttention} to review`,
-                                            metrics: [
-                                                ['Pending', dashboardPortfolio.pending],
-                                                ['Waitlist', dashboardPortfolio.waitlist],
-                                                ['No-show risk', dashboardPortfolio.noShowRisk]
-                                            ],
-                                            actions: [
-                                                { label: 'Review Queue', tab: 'bookings', icon: Bell },
-                                                { label: 'Add Booking', tab: 'bookings', icon: Plus }
-                                            ]
-                                        },
-                                        {
-                                            id: 'schedule',
-                                            tone: 'schedule',
-                                            icon: CalendarDays,
-                                            eyebrow: 'Schedule Overview',
-                                            title: 'Capacity stays clear',
-                                            value: dashboardPortfolio.openSlots,
-                                            label: 'Open slots',
-                                            detail: `${dashboardPortfolio.reservedSlots}/${dashboardPortfolio.capacity} booked for this view`,
-                                            metrics: [
-                                                ['Today', dashboardPortfolio.todayAvailable ? `${dashboardPortfolio.todayOpenSlots} open` : 'Closed'],
-                                                ['Default slots', (settings.availableTimes || []).length],
-                                                ['Capacity', dashboardPortfolio.capacity]
-                                            ],
-                                            actions: [
-                                                { label: 'Tune Schedule', tab: 'business', icon: Calendar },
-                                                { label: 'Team View', tab: 'business', icon: Users }
-                                            ]
-                                        },
-                                        {
-                                            id: 'chat',
-                                            tone: 'support',
-                                            icon: MessagesSquare,
-                                            eyebrow: 'Chat Overview',
-                                            title: 'Replies stay attached',
-                                            value: workspaceNotifications.filter(item => !item.read).length,
-                                            label: 'Unread alerts',
-                                            detail: `${workspaceNotifications.length} workspace signals across bookings, payments, and clients`,
-                                            metrics: [
-                                                ['Automations', `${dashboardPortfolio.emailAutomations}/${dashboardPortfolio.emailAutomationTotal}`],
-                                                ['Clients', dashboardPortfolio.clientCount],
-                                                ['Page ready', `${dashboardPortfolio.pageReadiness}%`]
-                                            ],
-                                            actions: [
-                                                { label: 'Open Inbox', tab: 'communications', icon: MessagesSquare },
-                                                { label: 'Client List', tab: 'clients', icon: Users }
-                                            ]
-                                        }
-                                    ].map(tile => {
-                                        const IconCmp = tile.icon;
-                                        return (
-                                            <article key={tile.id} className={`dashboard-lumia-tile dashboard-lumia-tile-${tile.tone}`}>
-                                                <div className="dashboard-lumia-tile-head">
-                                                    <span className="dashboard-lumia-icon"><IconCmp size={21} strokeWidth={2.4} /></span>
-                                                    <span className="dashboard-lumia-eyebrow">{tile.eyebrow}</span>
-                                                </div>
-                                                <div className="dashboard-lumia-tile-main">
-                                                    <div>
-                                                        <h3>{tile.title}</h3>
-                                                        <p>{tile.detail}</p>
-                                                    </div>
-                                                    <div className="dashboard-lumia-value">
-                                                        <strong className="metric-value">{tile.value}</strong>
-                                                        <span>{tile.label}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="dashboard-lumia-metrics">
-                                                    {tile.metrics.map(([label, value]) => (
-                                                        <div key={label}>
-                                                            <span>{label}</span>
-                                                            <strong className="metric-value">{value}</strong>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="dashboard-lumia-actions">
-                                                    {tile.actions.map(action => {
-                                                        const ActionIcon = action.icon;
-                                                        return (
-                                                            <button key={action.label} type="button" onClick={() => navigateWorkspaceTab(action.tab)}>
-                                                                <ActionIcon size={14} strokeWidth={2.45} />
-                                                                {action.label}
+                                <div className="dashboard-mobile-tile-switcher" aria-label="Dashboard sections">
+                                    <button
+                                        type="button"
+                                        className="dashboard-pager-arrow"
+                                        onClick={() => shiftDashboardMobileTile(-1)}
+                                        aria-label="Previous dashboard section"
+                                    >
+                                        <ChevronLeft size={18} strokeWidth={2.6} />
+                                    </button>
+                                    <span className="dashboard-pager-center">
+                                        <strong className="dashboard-pager-title">{dashboardActiveTile?.label || 'Dashboard'}</strong>
+                                        <span className="dashboard-pager-track" aria-hidden="true">
+                                            {dashboardMobileTiles.map((tile, index) => (
+                                                <span key={tile.id} className={index === dashboardActiveTileIndex ? 'is-active' : ''} />
+                                            ))}
+                                        </span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="dashboard-pager-arrow"
+                                        onClick={() => shiftDashboardMobileTile(1)}
+                                        aria-label="Next dashboard section"
+                                    >
+                                        <ChevronRight size={18} strokeWidth={2.6} />
+                                    </button>
+                                </div>
+
+                                <div
+                                    className="dashboard-command-grid"
+                                    onTouchStart={handleDashboardTileTouchStart}
+                                    onTouchEnd={handleDashboardTileTouchEnd}
+                                >
+                                    <article className={`dashboard-command-tile dashboard-command-tile-bookings ${dashboardMobileTile === 'bookings' ? 'is-mobile-active' : ''}`}>
+                                        <div className="dashboard-command-head">
+                                            <span className="dashboard-lumia-icon"><BookOpenCheck size={21} strokeWidth={2.4} /></span>
+                                        </div>
+                                        <div className="dashboard-command-summary">
+                                            <div>
+                                                <h3>Bookings</h3>
+                                                <p>{dashboardPortfolio.period.rangeLabel}</p>
+                                            </div>
+                                            <div className="dashboard-command-total">
+                                                <strong className="metric-value">{dashboardPortfolio.activeBookings}</strong>
+                                                <span>Total</span>
+                                            </div>
+                                        </div>
+                                        <div className="dashboard-command-filterbar">
+                                            {renderDashboardFilterControl('bookings')}
+                                        </div>
+                                        <div className="dashboard-activity-feed">
+                                            {(() => {
+                                                const bookingRows = sortDashboardLatest(
+                                                    dashboardPortfolio.periodActiveBookings.filter(booking => bookingMatchesDashboardFilter(booking, dashboardFeedFilters.bookings)),
+                                                    getBookingDashboardTime
+                                                );
+                                                const bookingPage = getDashboardPagedFeed('bookings', bookingRows);
+                                                return (
+                                                    <>
+                                                        {bookingPage.rows.map(booking => (
+                                                            <button
+                                                                key={booking.id}
+                                                                type="button"
+                                                                className="dashboard-activity-row"
+                                                                onClick={() => {
+                                                                    setBookingDeskPeriod(dashboardPeriod === 'all' ? 'all' : dashboardPeriod);
+                                                                    setBookingFilter('all');
+                                                                    setBookingSearch(booking.clientName || '');
+                                                                    navigateWorkspaceTab('bookings');
+                                                                }}
+                                                            >
+                                                                <span className={`dashboard-activity-dot is-${getBookingDashboardDot(booking)}`} />
+                                                                <span className="dashboard-activity-copy">
+                                                                    <strong>{booking.clientName || 'Client'}</strong>
+                                                                    <small>{booking.date || booking.dateKeyResolved || dashboardPortfolio.period.rangeLabel} / {booking.serviceName || 'Booking'} / {booking.time || 'Time pending'}</small>
+                                                                </span>
+                                                                <span className="dashboard-activity-action">Open</span>
                                                             </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </article>
-                                        );
-                                    })}
+                                                        ))}
+                                                        {!bookingRows.length && (
+                                                            <div className="dashboard-empty-row">No matching bookings in this period.</div>
+                                                        )}
+                                                        {renderDashboardFeedPager('bookings', bookingPage)}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </article>
+
+                                    <article className={`dashboard-command-tile dashboard-command-tile-support ${dashboardMobileTile === 'chats' ? 'is-mobile-active' : ''}`}>
+                                        <div className="dashboard-command-head">
+                                            <span className="dashboard-lumia-icon"><MessagesSquare size={21} strokeWidth={2.4} /></span>
+                                        </div>
+                                        <div className="dashboard-command-summary">
+                                            <div>
+                                                <h3>Chats</h3>
+                                                <p>Linked to bookings and client context.</p>
+                                            </div>
+                                            <div className="dashboard-command-total">
+                                                <strong className="metric-value">{dashboardSupportUnreadCount}</strong>
+                                                <span>Unread</span>
+                                            </div>
+                                        </div>
+                                        <div className="dashboard-command-filterbar">
+                                            {renderDashboardFilterControl('chats')}
+                                        </div>
+                                        <div className="dashboard-activity-feed">
+                                            {(() => {
+                                                const chatRows = sortDashboardLatest(
+                                                    dashboardSupportThreads
+                                                        .filter(thread => threadMatchesDashboardFilter(thread, dashboardFeedFilters.chats))
+                                                        .map(thread => {
+                                                            const linkedBooking = dashboardPortfolio.periodActiveBookings.find(booking => (
+                                                                booking.id === thread.bookingId ||
+                                                                booking.threadId === thread.id ||
+                                                                notificationEmailKey(booking.clientEmail || '') === notificationEmailKey(thread.clientEmail || '')
+                                                            )) || visibleBookings.find(booking => (
+                                                                booking.id === thread.bookingId ||
+                                                                booking.threadId === thread.id ||
+                                                                notificationEmailKey(booking.clientEmail || '') === notificationEmailKey(thread.clientEmail || '')
+                                                            ));
+                                                            return {
+                                                                id: thread.id,
+                                                                time: dateValueToMs(thread.lastMessageAt || thread.updatedAt || thread.createdAt),
+                                                                title: thread.clientName || 'Client',
+                                                                detail: thread.lastMessage || `${thread.serviceName || 'Booking'} thread is open.`,
+                                                                dot: getThreadDashboardDot(thread, linkedBooking),
+                                                                action: Number(thread.ownerUnread || 0) > 0 ? `${thread.ownerUnread}` : 'Chat',
+                                                                onClick: () => openDashboardSupportThread(thread)
+                                                            };
+                                                        }),
+                                                    item => item.time
+                                                );
+                                                const chatPage = getDashboardPagedFeed('chats', chatRows);
+                                                return (
+                                                    <>
+                                                        {chatPage.rows.map(item => (
+                                                            <button key={item.id} type="button" className="dashboard-activity-row" onClick={item.onClick}>
+                                                                <span className={`dashboard-activity-dot is-${item.dot}`} />
+                                                                <span className="dashboard-activity-copy">
+                                                                    <strong>{item.title}</strong>
+                                                                    <small>{item.detail}</small>
+                                                                </span>
+                                                                <span className="dashboard-activity-action">{item.action}</span>
+                                                            </button>
+                                                        ))}
+                                                        {!chatRows.length && (
+                                                            <div className="dashboard-empty-row">No matching chats in this period.</div>
+                                                        )}
+                                                        {renderDashboardFeedPager('chats', chatPage)}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </article>
+
+                                    <article className={`dashboard-command-tile dashboard-command-tile-schedule ${dashboardMobileTile === 'schedule' ? 'is-mobile-active' : ''}`}>
+                                        <div className="dashboard-command-head">
+                                            <span className="dashboard-lumia-icon"><CalendarDays size={21} strokeWidth={2.4} /></span>
+                                        </div>
+                                        <div className="dashboard-staff-toggle">
+                                            {[{ id: 'all', name: 'All', color: '#39FF14' }, ...displayStaffList].slice(0, 6).map(staff => (
+                                                <button
+                                                    key={staff.id}
+                                                    type="button"
+                                                    className={dashboardScheduleStaffId === staff.id ? 'is-active' : ''}
+                                                    onClick={() => {
+                                                        setDashboardScheduleStaffId(staff.id);
+                                                        resetDashboardFeedPage('schedule');
+                                                    }}
+                                                    style={{ '--staff-color': staff.color || '#39FF14' }}
+                                                >
+                                                    <span>{staff.id === 'all' ? 'All' : staff.name?.split(/\s+/).map(part => part[0]).join('').slice(0, 2) || 'ST'}</span>
+                                                    <strong>{staff.id === 'all' ? 'Team' : staff.name?.split(/\s+/)[0] || 'Staff'}</strong>
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="dashboard-schedule-tabs dashboard-segment-mini" aria-label="Schedule dashboard view">
+                                            {dashboardScheduleViewOptions.map(option => (
+                                                <button
+                                                    key={option.id}
+                                                    type="button"
+                                                    className={dashboardScheduleView === option.id ? 'is-active' : ''}
+                                                    onClick={() => {
+                                                        setDashboardScheduleView(option.id);
+                                                        resetDashboardFeedPage('schedule');
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {(() => {
+                                            const selectedStaff = dashboardScheduleStaffId === 'all'
+                                                ? null
+                                                : displayStaffList.find(staff => staff.id === dashboardScheduleStaffId);
+                                            const staffPool = selectedStaff ? [selectedStaff] : displayStaffList;
+                                            const matchesStaff = (booking) => (
+                                                !selectedStaff ||
+                                                booking.staffId === selectedStaff.id ||
+                                                (selectedStaff.id === 'owner' && (!booking.staffId || booking.staffId === 'owner'))
+                                            );
+                                            const bookingMatchesStaff = (booking, staff) => (
+                                                !staff ||
+                                                booking.staffId === staff.id ||
+                                                (staff.id === 'owner' && (!booking.staffId || booking.staffId === 'owner'))
+                                            );
+                                            const staffNameForBooking = (booking) => (
+                                                displayStaffList.find(staff => bookingMatchesStaff(booking, staff))?.name ||
+                                                displayStaffList.find(staff => staff.id === booking.staffId)?.name ||
+                                                'Team'
+                                            );
+                                            const pendingBookings = sortDashboardLatest(
+                                                dashboardPortfolio.periodActiveBookings.filter(booking => String(booking.status || '').toLowerCase() === 'pending' && matchesStaff(booking)),
+                                                getBookingDashboardTime
+                                            );
+                                            const confirmedBookings = sortDashboardLatest(
+                                                dashboardPortfolio.periodActiveBookings.filter(booking => String(booking.status || '').toLowerCase() === 'confirmed' && matchesStaff(booking)),
+                                                getBookingDashboardTime
+                                            );
+                                            const scheduleDates = sortDashboardLatest(
+                                                dashboardPortfolio.dateKeys.length ? dashboardPortfolio.dateKeys : [dashboardPortfolio.todayKey],
+                                                getDateKeyDashboardTime
+                                            ).slice(0, dashboardScheduleView === 'availability' ? 4 : 2);
+                                            const availableRows = scheduleDates.flatMap(dateKey => {
+                                                const daySchedule = settings.schedule?.[dateKey] || {};
+                                                const times = Array.isArray(daySchedule.times) ? daySchedule.times : dashboardPortfolio.defaultTimes;
+                                                if (daySchedule.available === false) return [];
+                                                const sortedTimes = [...times].sort((a, b) => {
+                                                    const aMs = new Date(`${dateKey}T${String(a).padStart(5, '0')}:00`).getTime();
+                                                    const bMs = new Date(`${dateKey}T${String(b).padStart(5, '0')}:00`).getTime();
+                                                    return bMs - aMs;
+                                                });
+                                                return sortedTimes.flatMap(time => (
+                                                    staffPool.filter(staff => !dashboardPortfolio.periodActiveBookings.some(booking => (
+                                                        String(booking.status || '').toLowerCase() === 'confirmed' &&
+                                                        booking.dateKeyResolved === dateKey &&
+                                                        booking.time === time &&
+                                                        bookingMatchesStaff(booking, staff)
+                                                    ))).map(staff => ({
+                                                        id: `open-${staff.id}-${dateKey}-${time}`,
+                                                        type: 'open',
+                                                        time: new Date(`${dateKey}T${String(time).padStart(5, '0')}:00`).getTime(),
+                                                        title: time,
+                                                        detail: `${staff.name || 'Staff'} / ${dateKey}`,
+                                                        staff
+                                                    }))
+                                                ));
+                                            });
+                                            const rows = dashboardScheduleView === 'pending'
+                                                ? pendingBookings.map(booking => ({
+                                                    id: `pending-${booking.id}`,
+                                                    type: 'pending',
+                                                    time: getBookingDashboardTime(booking),
+                                                    title: booking.time || 'Time pending',
+                                                    detail: `${booking.clientName || 'Client'} / ${booking.serviceName || 'Booking'} / ${staffNameForBooking(booking)}`,
+                                                    action: 'Review',
+                                                    booking
+                                                }))
+                                                : dashboardScheduleView === 'confirmed'
+                                                    ? confirmedBookings.map(booking => ({
+                                                        id: `confirmed-${booking.id}`,
+                                                        type: 'confirmed',
+                                                        time: getBookingDashboardTime(booking),
+                                                        title: booking.time || 'Time',
+                                                        detail: `${booking.clientName || 'Client'} / ${booking.serviceName || 'Booking'} / ${staffNameForBooking(booking)}`,
+                                                        action: 'Booked',
+                                                        booking
+                                                    }))
+                                                    : sortDashboardLatest(availableRows, row => row.time).map(row => ({
+                                                        ...row,
+                                                        action: 'Open'
+                                                    }));
+                                            const schedulePage = getDashboardPagedFeed('schedule', rows);
+                                            const scheduleTotal = dashboardScheduleView === 'pending'
+                                                ? pendingBookings.length
+                                                : dashboardScheduleView === 'confirmed'
+                                                    ? confirmedBookings.length
+                                                    : availableRows.length;
+                                            const scheduleTotalLabel = dashboardScheduleView === 'pending'
+                                                ? 'Pending'
+                                                : dashboardScheduleView === 'confirmed'
+                                                    ? 'Booked'
+                                                    : 'Open slots';
+                                            return (
+                                                <>
+                                                    <div className="dashboard-command-summary">
+                                                        <div>
+                                                            <h3>Schedule</h3>
+                                                            <p>{selectedStaff ? selectedStaff.name : 'Team schedule'} / {dashboardScheduleViewOptions.find(option => option.id === dashboardScheduleView)?.label}</p>
+                                                        </div>
+                                                        <div className="dashboard-command-total">
+                                                            <strong className="metric-value">{scheduleTotal}</strong>
+                                                            <span>{scheduleTotalLabel}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="dashboard-activity-feed dashboard-schedule-feed">
+                                                        {schedulePage.rows.map(row => {
+                                                            const rowContent = (
+                                                                <>
+                                                                    <span className={`dashboard-activity-dot is-${row.type}`} />
+                                                                    <span className="dashboard-activity-copy">
+                                                                        <strong>{row.title}</strong>
+                                                                        <small>{row.detail}</small>
+                                                                    </span>
+                                                                    <span className="dashboard-activity-action">{row.action}</span>
+                                                                </>
+                                                            );
+                                                            if (!row.booking) {
+                                                                return <div key={row.id} className="dashboard-activity-row is-static">{rowContent}</div>;
+                                                            }
+                                                            return (
+                                                                <button
+                                                                    key={row.id}
+                                                                    type="button"
+                                                                    className="dashboard-activity-row"
+                                                                    onClick={() => {
+                                                                        setBookingDeskPeriod(dashboardPeriod === 'all' ? 'all' : dashboardPeriod);
+                                                                        setBookingFilter('all');
+                                                                        setBookingSearch(row.booking.clientName || '');
+                                                                        navigateWorkspaceTab('bookings');
+                                                                    }}
+                                                                >
+                                                                    {rowContent}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        {!rows.length && <div className="dashboard-empty-row">No {scheduleTotalLabel.toLowerCase()} for this staff in this period.</div>}
+                                                        {renderDashboardFeedPager('schedule', schedulePage)}
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
+                                    </article>
+
+                                    <article className={`dashboard-command-tile dashboard-command-tile-finance ${dashboardMobileTile === 'finance' ? 'is-mobile-active' : ''}`}>
+                                        <div className="dashboard-command-head">
+                                            <span className="dashboard-lumia-icon"><DollarSign size={21} strokeWidth={2.4} /></span>
+                                        </div>
+                                        <div className="dashboard-command-summary">
+                                            <div>
+                                                <h3>Payments</h3>
+                                                <p>{dashboardPortfolio.totalRevenuePaidCount} paid / {dashboardPortfolio.pendingFinanceCount} pending.</p>
+                                            </div>
+                                            <div className="dashboard-command-total">
+                                                <strong className="metric-value">{dashboardPortfolio.totalRevenueLabel}</strong>
+                                                <span>Revenue</span>
+                                            </div>
+                                        </div>
+                                        <div className="dashboard-mini-stat-row">
+                                            <span><strong>{dashboardPortfolio.pendingRevenueLabel}</strong> Pending</span>
+                                            <span><strong>{settings.currency || 'ZAR'}</strong> Currency</span>
+                                        </div>
+                                        <div className="dashboard-activity-feed">
+                                            {(() => {
+                                                const financeRows = sortDashboardLatest(dashboardPortfolio.financeActivity, record => record.updatedAtMs);
+                                                const financePage = getDashboardPagedFeed('finance', financeRows);
+                                                return (
+                                                    <>
+                                                        {financePage.rows.map(record => (
+                                                            <button
+                                                                key={`${record.title}-${record.updatedAtMs}-${record.amountLabel}`}
+                                                                type="button"
+                                                                className="dashboard-activity-row"
+                                                                onClick={() => navigateWorkspaceTab('finance')}
+                                                            >
+                                                                <span className={`dashboard-activity-dot is-${record.normalizedStatus}`} />
+                                                                <span className="dashboard-activity-copy">
+                                                                    <strong>{record.title}</strong>
+                                                                    <small>{record.detail}</small>
+                                                                </span>
+                                                                <span className="dashboard-activity-action">{record.amountLabel}</span>
+                                                            </button>
+                                                        ))}
+                                                        {!financeRows.length && (
+                                                            <div className="dashboard-empty-row">No payment activity in this period.</div>
+                                                        )}
+                                                        {renderDashboardFeedPager('finance', financePage)}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </article>
                                 </div>
                             </section>
                         </div>
@@ -7216,20 +8010,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#F7F7F5]">
                             <div className="dashboard-action-strip max-w-6xl mb-4 md:mb-6">
                                     <div className="profile-header-actions">
-                                        <button
-                                            type="button"
-                                            aria-pressed={dashboardThemeMode === 'dark'}
-                                            aria-label={dashboardThemeMode === 'dark' ? 'Switch workspace to light mode' : 'Switch workspace to dark mode'}
-                                            onClick={() => setDashboardThemeMode(mode => mode === 'dark' ? 'light' : 'dark')}
-                                            className="profile-theme-toggle-pro"
-                                        >
-                                            <span className="profile-theme-toggle-orb">
-                                                {dashboardThemeMode === 'dark' ? <Sun size={16} strokeWidth={2.4} /> : <Moon size={16} strokeWidth={2.4} />}
-                                            </span>
-                                            <span className="profile-theme-toggle-copy">
-                                                <strong>{dashboardThemeMode === 'dark' ? 'Light mode' : 'Dark mode'}</strong>
-                                            </span>
-                                        </button>
                                         <div className="hidden md:flex flex-col sm:flex-row gap-3">
                                             <button onClick={() => setShowOwnerManual(true)} className="h-12 px-7 bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl shadow-black/5 hover:-translate-y-0.5 hover:border-black transition-all flex items-center justify-center gap-2">
                                                 <BookOpen size={14}/> Owner Manual
@@ -7468,6 +8248,100 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         )}
                                     </section>
                                 </div>
+
+                                <section className={`profile-section profile-section-activity ${activeProfileSection === 'activity' ? 'block' : 'hidden'}`}>
+                                    <div className="profile-activity-center">
+                                        <div className="profile-activity-hero">
+                                            <div className="profile-activity-title">
+                                                <span className="profile-activity-icon">
+                                                    <Settings2 size={18} />
+                                                </span>
+                                                <div>
+                                                    <p>Activity Center</p>
+                                                    <h3>System activity</h3>
+                                                </div>
+                                            </div>
+                                            <div className="profile-activity-stats">
+                                                <span>
+                                                    <strong>{profileActivityPrimaryCount}</strong>
+                                                    Signals
+                                                </span>
+                                                <span>
+                                                    <strong>{profileActivitySecondaryCount}</strong>
+                                                    Areas
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="profile-activity-summary">
+                                            <span><Settings2 size={14} /> Internal changes, team setup, services, schedule, editor, finance, and migration signals.</span>
+                                        </div>
+                                        <div className="profile-activity-filter-tabs" aria-label="System activity filters">
+                                            {profileSystemFilterOptions.map(option => {
+                                                const isActive = profileSystemFilter === option.id;
+                                                return (
+                                                    <button
+                                                        key={`system-${option.id}`}
+                                                        type="button"
+                                                        className={isActive ? 'is-active' : ''}
+                                                        onClick={() => setProfileSystemFilter(option.id)}
+                                                    >
+                                                        <span>{option.label}</span>
+                                                        <strong>{option.count}</strong>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="profile-activity-list">
+                                            {profileActivityRows.length ? profileActivityRows.map(item => {
+                                                const IconCmp = item.iconKind === 'chat'
+                                                    ? MessagesSquare
+                                                    : item.iconKind === 'payment'
+                                                        ? DollarSign
+                                                        : item.iconKind === 'booking'
+                                                            ? BookOpenCheck
+                                                            : item.iconKind === 'reschedule'
+                                                                ? RefreshCw
+                                                                : item.iconKind === 'services'
+                                                                    ? BriefcaseBusiness
+                                                                    : item.iconKind === 'team'
+                                                                        ? UsersRound
+                                                                        : item.iconKind === 'schedule'
+                                                                            ? CalendarDays
+                                                                            : item.iconKind === 'editor'
+                                                                                ? Palette
+                                                                                : item.iconKind === 'migration'
+                                                                                    ? FileText
+                                                                                    : Bell;
+                                                return (
+                                                    <button
+                                                        key={item.id}
+                                                        type="button"
+                                                        className={`profile-activity-row ${item.isUnread ? 'is-unread' : ''} is-${item.kind}`}
+                                                        onClick={() => handleProfileActivityOpen(item)}
+                                                    >
+                                                        <span className={`profile-activity-row-icon is-${item.iconKind || item.kind}`}>
+                                                            <IconCmp size={15} />
+                                                        </span>
+                                                        <span className="profile-activity-row-copy">
+                                                            <strong>{item.title}</strong>
+                                                            <small>{item.detail}</small>
+                                                        </span>
+                                                        <span className="profile-activity-row-meta">
+                                                            <span>{item.label}</span>
+                                                            <small>{formatNotificationTime(item.time)}</small>
+                                                        </span>
+                                                    </button>
+                                                );
+                                            }) : (
+                                                <div className="profile-activity-empty">
+                                                    <span><Inbox size={22} /></span>
+                                                    <strong>Nothing waiting</strong>
+                                                    <small>System changes and internal workspace updates will collect here.</small>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </section>
 
                                 <section className={`profile-section profile-section-migration ${activeProfileSection === 'migration' ? 'block' : 'hidden'}`}>
                                     <Suspense fallback={<LazySectionFallback label="Loading migration studio" />}>
@@ -7755,7 +8629,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     {activeTab === 'business' && (
                         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#FBFBFB]">
                             <Suspense fallback={<LazySectionFallback label="Loading schedule" />}>
-                                <AppErrorBoundary compact label="Schedule" resetKey={`${activeTab}-${workspaceOwnerId}-${dashboardThemeMode}`}>
+                                <AppErrorBoundary compact label="Schedule" resetKey={`${activeTab}-${workspaceOwnerId}`}>
                                     <BusinessCalendar
                                         settings={settings}
                                         setSettings={setSettings}
@@ -7840,7 +8714,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     {activeTab === 'finance' && (
                         <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
                             <Suspense fallback={<LazySectionFallback label="Loading finance" />}>
-                                <AppErrorBoundary compact label="Finance" resetKey={`${workspaceOwnerId}-${dashboardThemeMode}`}>
+                                <AppErrorBoundary compact label="Finance" resetKey={workspaceOwnerId}>
                                     <FinancePaymentSettings
                                         appId={appId}
                                         businessId={workspaceOwnerId}

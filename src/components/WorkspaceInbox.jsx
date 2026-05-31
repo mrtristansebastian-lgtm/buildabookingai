@@ -81,7 +81,6 @@ export function WorkspaceInbox({
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
-  const [chatFullscreen, setChatFullscreen] = useState(false);
   const [actionDialog, setActionDialog] = useState(null);
   const [clientFileOpen, setClientFileOpen] = useState(false);
   const [supportToolsOpen, setSupportToolsOpen] = useState(false);
@@ -719,9 +718,9 @@ export function WorkspaceInbox({
 
   return (
     <>
-    <section data-tour="client-inbox" className={`support-inbox-card support-inbox-pro support-desk-shell saas-card overflow-hidden bg-white ${chatFullscreen ? 'fixed inset-3 z-[80] flex flex-col rounded-[1.25rem] shadow-2xl' : ''}`}>
+    <section data-tour="client-inbox" className="support-inbox-card support-inbox-pro support-desk-shell saas-card overflow-hidden bg-white">
       <div className="h-1 native-gradient-line" />
-      <div className={`support-workspace-grid grid grid-cols-1 xl:grid-cols-12 ${chatFullscreen ? 'min-h-0 flex-1' : 'min-h-[520px] xl:min-h-[640px]'}`}>
+      <div className="support-workspace-grid grid grid-cols-1 xl:grid-cols-12 min-h-[520px] xl:min-h-[640px]">
         <aside className={`support-thread-list ${mobileChatOpen ? 'hidden xl:block' : ''} xl:col-span-4 border-b xl:border-b-0 xl:border-r border-neutral-100 bg-neutral-50/45`}>
           <div className="support-thread-search p-3 md:p-4 border-b border-neutral-100 bg-white/70">
             <div className="support-rail-head flex items-center justify-between gap-3 mb-3">
@@ -887,9 +886,6 @@ export function WorkspaceInbox({
                     <div className="support-chat-tools-popover md:hidden">
                       <button type="button" aria-label="Open client file" title="Client file" onClick={() => { setClientFileOpen(true); setSupportToolsOpen(false); }} className="support-chat-action">
                         <Info size={15} />
-                      </button>
-                      <button type="button" aria-label={chatFullscreen ? 'Exit full screen chat' : 'Open full screen chat'} title={chatFullscreen ? 'Exit full screen' : 'Full screen'} onClick={() => { setChatFullscreen(value => !value); setSupportToolsOpen(false); }} className="support-chat-icon-action">
-                        {chatFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
                       </button>
                       <button onClick={() => { setQuickBookingOpen(true); setSupportToolsOpen(false); }} className="support-chat-action-primary" aria-label="Add booking from chat" title="Add booking">
                         <Plus size={15} />

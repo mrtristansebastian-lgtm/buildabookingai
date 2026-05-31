@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { formatServiceDuration, formatServicePrice, normalizeService, normalizeServiceList } from '../utils/services';
 
-const blankService = (overrides = {}) => normalizeService({
+const blankService = (initialValues = {}) => normalizeService({
   name: 'New Service',
   category: '',
   description: '',
@@ -28,7 +28,7 @@ const blankService = (overrides = {}) => normalizeService({
   staffIds: [],
   imageUrls: [],
   active: true,
-  ...overrides
+  ...initialValues
 });
 
 const priceTypes = [
@@ -209,18 +209,9 @@ export const ServicesStudio = ({
   const selectedServiceExists = services.some(service => service.id === draft.id);
 
   return (
-    <div className="services-studio space-y-5">
-      <header className="dashboard-page-header mb-4 md:mb-6">
-        <div>
-          <h2 className="text-4xl md:text-4xl font-bold tracking-tight text-black">Services</h2>
-          <p className="text-neutral-500 text-sm md:text-base mt-2 max-w-2xl">
-            Build the bookable menu clients choose from. Manage prices, durations, categories, galleries, and the staff who can deliver each service.
-          </p>
-        </div>
-      </header>
-
-      <section className="service-desk-shell rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-        <div className="p-4 md:p-5 border-b border-neutral-100 space-y-3">
+    <div className="services-studio">
+      <section className="service-desk-shell">
+        <div className="service-desk-command">
           <div className="flex flex-col xl:flex-row gap-3">
             <label className="service-search-field h-12 rounded-xl bg-neutral-50 border border-neutral-200 px-4 flex items-center gap-2 flex-1 min-w-0">
               <Search size={16} className="text-neutral-400 shrink-0" />
@@ -265,8 +256,8 @@ export const ServicesStudio = ({
             })}
           </div>
 
-          <div className="grid xl:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-3">
+          <div className="service-scope-grid">
+            <div className="service-scope-panel">
               <div className="flex items-center gap-2 mb-2">
                 <Tag size={14} />
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-400">Categories</p>
@@ -297,7 +288,7 @@ export const ServicesStudio = ({
               </div>
             </div>
 
-            <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-3">
+            <div className="service-scope-panel">
               <div className="flex items-center gap-2 mb-2">
                 <Users size={14} />
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-400">Staff</p>

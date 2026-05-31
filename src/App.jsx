@@ -3133,6 +3133,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             };
             const renderDashboardFeedPager = (section, pageData) => {
                 if (!pageData || pageData.totalRows <= DASHBOARD_FEED_PAGE_SIZE) return null;
+                const startRow = pageData.page * (dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE) + 1;
+                const endRow = Math.min(pageData.totalRows, startRow + (dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE) - 1);
                 return (
                     <div className="dashboard-feed-pager" aria-label={`${section} pages`}>
                         <button
@@ -3143,7 +3145,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         >
                             <ChevronLeft size={14} strokeWidth={2.6} />
                         </button>
-                        <span>{pageData.page + 1} / {pageData.totalPages}</span>
+                        <span>{startRow}-{endRow} / {pageData.totalRows}</span>
                         <label className="dashboard-feed-size">
                             <span>Show</span>
                             <select
@@ -8007,7 +8009,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'profile' && (
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#F7F7F5]">
+                        <div className="profile-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#F7F7F5]">
                             <div className="dashboard-action-strip max-w-6xl mb-4 md:mb-6">
                                     <div className="profile-header-actions">
                                         <div className="hidden md:flex flex-col sm:flex-row gap-3">
@@ -8627,7 +8629,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'business' && (
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#FBFBFB]">
+                        <div className="schedule-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#FBFBFB]">
                             <Suspense fallback={<LazySectionFallback label="Loading schedule" />}>
                                 <AppErrorBoundary compact label="Schedule" resetKey={`${activeTab}-${workspaceOwnerId}`}>
                                     <BusinessCalendar
@@ -8685,7 +8687,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'services' && (
-                        <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                        <div className="services-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
                             <Suspense fallback={<LazySectionFallback label="Loading service studio" />}>
                                 <AppErrorBoundary compact label="Services" resetKey={`${workspaceOwnerId}-${settings.serviceIndustry || 'services'}`}>
                                     <ServicesStudio
@@ -8712,7 +8714,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'finance' && (
-                        <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                        <div className="finance-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
                             <Suspense fallback={<LazySectionFallback label="Loading finance" />}>
                                 <AppErrorBoundary compact label="Finance" resetKey={workspaceOwnerId}>
                                     <FinancePaymentSettings
@@ -8731,54 +8733,57 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'clients' && (
-                        <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
-                            <div className="dashboard-action-strip mb-4 md:mb-6 flex justify-end">
-                                <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
-                                    <button
-                                        type="button"
-                                        onClick={() => { setSelectedClientId(null); setClientMobileView('add'); }}
-                                        className="h-10 md:h-11 px-4 md:px-5 rounded-lg bg-white border border-neutral-200 text-black text-[10px] md:text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:border-black transition-colors shadow-xl shadow-black/5"
-                                    >
-                                        <Plus size={15}/> Client
-                                    </button>
-                                    <button onClick={() => { saveClients(clientRecords); showToast("Client book saved"); }} className="h-10 md:h-11 px-4 md:px-5 rounded-lg bg-black text-white text-[10px] md:text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-800 transition-colors shadow-xl shadow-black/10">
-                                        <Check size={15}/> Save
-                                    </button>
-                                </div>
-                            </div>
-
+                        <div className="clients-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
                             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                                 <section className={`${activeClient ? 'xl:col-span-5' : 'xl:col-span-12'} space-y-4 md:space-y-6 ${clientMobileView === 'directory' || clientMobileView === 'add' ? '' : 'hidden md:block'}`}>
                                     <div data-tour="clients-directory" className={`saas-card client-directory-card overflow-hidden ${clientMobileView === 'add' ? 'hidden md:block' : ''}`}>
                                         <div className="client-directory-command p-4 md:p-5 border-b border-neutral-100">
                                             <div className="client-directory-tools">
-                                            <div className="client-search-wrap relative">
-                                                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300" />
-                                                <input
-                                                    value={clientSearch}
-                                                    onChange={(event) => setClientSearch(event.target.value)}
-                                                    placeholder="Search name, phone, label"
-                                                    aria-label="Search clients"
-                                                    className="client-search-input w-full h-11 md:h-12 bg-white border border-neutral-200 rounded-xl pl-11 pr-4 text-sm font-bold outline-none text-black focus:bg-white focus:border-black transition-colors"
-                                                />
-                                            </div>
-                                            <div className="client-filter-tabs mt-3 grid grid-cols-3 gap-1.5">
-                                                {clientDeskFilters.map(filter => {
-                                                    const FilterIcon = filter.icon || Users;
-                                                    return (
+                                                <div className="client-directory-topline">
+                                                    <div className="client-search-wrap relative">
+                                                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300" />
+                                                        <input
+                                                            value={clientSearch}
+                                                            onChange={(event) => setClientSearch(event.target.value)}
+                                                            placeholder="Search name, phone, label"
+                                                            aria-label="Search clients"
+                                                            className="client-search-input w-full h-11 md:h-12 bg-white border border-neutral-200 rounded-xl pl-11 pr-4 text-sm font-bold outline-none text-black focus:bg-white focus:border-black transition-colors"
+                                                        />
+                                                    </div>
+                                                    <div className="client-directory-actions">
                                                         <button
-                                                            key={filter.id}
                                                             type="button"
-                                                            onClick={() => setClientDeskFilter(filter.id)}
-                                                            className={`client-filter-tab h-10 rounded-lg border text-[9px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${clientDeskFilter === filter.id ? 'is-active bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white border-transparent text-neutral-500 hover:text-black hover:bg-white'}`}
+                                                            onClick={() => { setSelectedClientId(null); setClientMobileView('add'); }}
+                                                            className="client-directory-action"
                                                         >
-                                                            <FilterIcon size={13} />
-                                                            <span>{filter.label}</span>
-                                                            <span className={`client-filter-count rounded-full px-2 py-0.5 ${clientDeskFilter === filter.id ? 'bg-white/15 text-white' : 'bg-neutral-100 text-neutral-500'}`}>{filter.count}</span>
+                                                            <Plus size={15}/> Client
                                                         </button>
-                                                    );
-                                                })}
-                                            </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { saveClients(clientRecords); showToast("Client book saved"); }}
+                                                            className="client-directory-action is-primary"
+                                                        >
+                                                            <Check size={15}/> Save
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="client-filter-tabs mt-3 grid grid-cols-3 gap-1.5">
+                                                    {clientDeskFilters.map(filter => {
+                                                        const FilterIcon = filter.icon || Users;
+                                                        return (
+                                                            <button
+                                                                key={filter.id}
+                                                                type="button"
+                                                                onClick={() => setClientDeskFilter(filter.id)}
+                                                                className={`client-filter-tab h-10 rounded-lg border text-[9px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${clientDeskFilter === filter.id ? 'is-active bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white border-transparent text-neutral-500 hover:text-black hover:bg-white'}`}
+                                                            >
+                                                                <FilterIcon size={13} />
+                                                                <span>{filter.label}</span>
+                                                                <span className={`client-filter-count rounded-full px-2 py-0.5 ${clientDeskFilter === filter.id ? 'bg-white/15 text-white' : 'bg-neutral-100 text-neutral-500'}`}>{filter.count}</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="max-h-[58vh] md:max-h-[640px] overflow-y-auto divide-y divide-neutral-100">
@@ -9130,8 +9135,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         })() : null;
 
                         return (
-                        <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
-                            <section data-tour="team-roster" className="saas-card p-4 md:p-6 overflow-hidden">
+                        <div className="team-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                            <section data-tour="team-roster" className="team-roster-shell saas-card p-4 md:p-6 overflow-hidden">
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6">
                                     <div>
                                         <h3 className="text-xl md:text-2xl font-bold tracking-tight text-black">Team Roster</h3>
@@ -9176,7 +9181,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                             <section className="mt-6">
                                 {teamPanelMode === 'add' ? (
-                                    <div className="saas-panel p-5 md:p-6 max-w-2xl">
+                                    <div className="team-add-panel saas-panel p-5 md:p-6 max-w-2xl">
                                         <div className="flex items-start justify-between gap-4 mb-6">
                                             <div>
                                                 <h3 className="text-2xl font-bold tracking-tight text-black">Add Teammate</h3>
@@ -9230,7 +9235,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         </form>
                                     </div>
                                 ) : teamPanelMode === 'file' && selectedStaffFile ? (
-                                    <div className="saas-card p-5 md:p-6 overflow-hidden relative">
+                                    <div className="team-file-panel saas-card p-5 md:p-6 overflow-hidden relative">
                                         <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#39FF14,#7dd3fc,#c4b5fd,#f9a8d4)]" />
                                         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-6">
                                             <div className="flex items-start gap-4 min-w-0">
@@ -9271,7 +9276,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="saas-card p-8 md:p-10 text-center">
+                                    <div className="team-empty-state saas-card p-8 md:p-10 text-center">
                                         <div className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4 text-neutral-400"><Users size={22}/></div>
                                         <h3 className="text-xl font-bold tracking-tight text-black">Choose a teammate</h3>
                                         <p className="text-sm text-neutral-500 mt-2">Open a staff file from the row above, or tap the plus icon to invite someone.</p>
@@ -10187,7 +10192,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'bookings' && (
-                    <div className="flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                    <div className="bookings-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
                         {manualBookingOpen && (
                             <div className="manual-booking-overlay fixed inset-0 z-[220] bg-black/45 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-6">
                                 <form onSubmit={handleManualBookingSubmit} className="manual-booking-sheet w-full md:max-w-5xl max-h-[94dvh] overflow-y-auto bg-white rounded-t-[1.6rem] md:rounded-2xl border border-neutral-100 shadow-2xl shadow-black/30">

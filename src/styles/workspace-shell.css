@@ -1,0 +1,1116 @@
+/* Workspace shell
+   Source of truth for the app frame, attached navigation, dashboard feed fit,
+   Finance command layout, and seamless Services desk. */
+
+@media (min-width: 768px) {
+  html body .native-ui .dashboard-main > div:not(.mobile-editor-shell) {
+    padding: clamp(1.35rem, 2vw, 2rem) clamp(1.6rem, 2.4vw, 2.4rem) 2rem clamp(6.3rem, 6.9vw, 7.1rem) !important;
+    background: #f6f7f9 !important;
+  }
+
+  html body .native-ui .dashboard-main > div.dashboard-overview-page:not(.mobile-editor-shell) {
+    padding-left: clamp(6.3rem, 6.9vw, 7.1rem) !important;
+  }
+
+  html body .native-ui .dashboard-main > div.communications-page:not(.mobile-editor-shell) {
+    padding: 0 0 0 5.2rem !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .dashboard-main > div.bookings-page:not(.mobile-editor-shell) {
+    padding: 0 0 0 5.2rem !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .dashboard-main > div.services-page:not(.mobile-editor-shell) {
+    padding: 0 0 0 5.2rem !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .dashboard-main > div.clients-page:not(.mobile-editor-shell) {
+    padding: 0 0 0 5.2rem !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .dashboard-main > div.finance-page:not(.mobile-editor-shell) {
+    padding: 0 0 0 5.2rem !important;
+    overflow-y: auto !important;
+  }
+
+  html body .native-ui .desktop-bottom-nav {
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 5.2rem !important;
+    height: 100dvh !important;
+    transform: none !important;
+  }
+
+  html body .native-ui .desktop-nav-dock {
+    height: 100% !important;
+    padding: 0.45rem 0.42rem !important;
+    gap: 0.16rem !important;
+    border-width: 0 1px 0 0 !important;
+    border-style: solid !important;
+    border-color: rgba(15, 23, 42, 0.075) !important;
+    border-radius: 0 !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.68) !important;
+  }
+
+  html body .native-ui .desktop-nav-tab {
+    border-radius: 0.52rem !important;
+  }
+
+  html body .native-ui .desktop-nav-tab.is-active {
+    box-shadow: inset 0 0 0 1px rgba(5, 5, 5, 0.07) !important;
+  }
+
+  html body .native-ui .desktop-nav-tab-icon {
+    width: 2.52rem !important;
+    height: 2.52rem !important;
+  }
+
+  html body .native-ui .communications-page .support-page-shell,
+  html body .native-ui .communications-page .support-desk-shell,
+  html body .native-ui .communications-page .support-workspace-grid {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+
+  html body .native-ui.dashboard-light .communications-page .support-inbox-card.support-desk-shell.saas-card {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+  }
+
+  html body .native-ui .bookings-page .booking-desk-shell {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+  }
+
+  html body .native-ui .bookings-page .booking-record-list {
+    max-height: calc(100dvh - 14.55rem) !important;
+  }
+
+  html body .native-ui .services-page .service-desk-shell {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .services-page .service-desk-command {
+    padding: 1.08rem 1.25rem !important;
+  }
+
+  html body .native-ui .services-page .service-desk-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+
+  html body .native-ui .clients-page .client-directory-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .clients-page .client-directory-command {
+    padding: 1.08rem 1.25rem !important;
+  }
+
+  html body .native-ui .clients-page .client-directory-card > div:last-child {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
+  align-content: start !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile {
+  min-height: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile.is-mobile-active .dashboard-activity-feed,
+html body .native-ui .dashboard-overview-page .dashboard-activity-feed {
+  gap: 0.44rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
+  letter-spacing: 0.04em !important;
+}
+
+@media (min-width: 768px) {
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
+    gap: clamp(0.82rem, 1.2vw, 1rem) !important;
+    padding-bottom: 3.5rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+    font-size: clamp(2.35rem, 3.65vw, 4rem) !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+    margin-top: 0.56rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-summary {
+    padding: 0.68rem 0 0.82rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-total strong {
+    font-size: clamp(2.2rem, 4.4vw, 4.55rem) !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-row,
+  html body .native-ui .dashboard-overview-page .dashboard-empty-row {
+    min-height: 3.22rem !important;
+  }
+}
+
+@media (min-width: 768px) and (max-height: 780px) {
+  html body .native-ui .dashboard-overview-page {
+    padding-top: 1.35rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
+    gap: 0.52rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting {
+    min-height: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+    font-size: clamp(2rem, 3vw, 3rem) !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+    margin-top: 0.34rem !important;
+    font-size: 0.86rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-divider {
+    margin-top: 0 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page > .dashboard-lumia-board > .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board > .dashboard-period-tabs {
+    min-height: 2.5rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-period-tab {
+    min-height: 2rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher .dashboard-pager-arrow {
+    width: 2.6rem !important;
+    height: 2.6rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-pager-title {
+    font-size: 1.02rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip {
+    padding: 0.18rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-chip {
+    min-height: 1.46rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-summary {
+    padding: 0.42rem 0 0.54rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-total strong {
+    font-size: clamp(2rem, 3.8vw, 3.65rem) !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-row,
+  html body .native-ui .dashboard-overview-page .dashboard-empty-row {
+    min-height: 2.82rem !important;
+    padding-block: 0.42rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager {
+    margin-top: 0.46rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  html body .native-ui .finance-studio,
+  html body .native-ui .support-page-shell,
+  html body .native-ui .services-studio,
+  html body .native-ui .client-directory-card,
+  html body .native-ui .booking-desk-shell,
+  html body .native-ui .finance-hero,
+  html body .native-ui .finance-desk {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  html body .native-ui .finance-studio {
+    padding: 1.25rem 0 0 !important;
+  }
+
+  html body .native-ui .finance-hero,
+  html body .native-ui .finance-desk,
+  html body .native-ui .booking-desk-shell,
+  html body .native-ui .support-inbox-card.support-desk-shell:not(.fixed),
+  html body .native-ui .schedule-calendar-card,
+  html body .native-ui .schedule-team-card,
+  html body .native-ui .client-directory-card {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .native-ui .finance-hero-accent,
+  html body .native-ui .support-inbox-card > .native-gradient-line {
+    display: none !important;
+  }
+
+  html body .native-ui .finance-hero-head,
+  html body .native-ui .finance-desk-head,
+  html body .native-ui .finance-desk-controls,
+  html body .native-ui .booking-desk-command,
+  html body .native-ui .client-directory-command,
+  html body .native-ui .schedule-calendar-command {
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .native-ui .finance-hero-head,
+  html body .native-ui .finance-hero-body,
+  html body .native-ui .finance-desk-head,
+  html body .native-ui .finance-desk-controls {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+
+  html body .native-ui .finance-timeline-chart {
+    display: grid !important;
+    grid-template-columns: minmax(18rem, 0.34fr) minmax(0, 0.66fr) !important;
+    align-items: stretch !important;
+    gap: clamp(1rem, 1.7vw, 1.35rem) !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .native-ui .finance-timeline-statbar {
+    height: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.72rem !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  html body .native-ui .finance-timeline-statbar > div,
+  html body .native-ui .finance-timeline-statbar > div:first-child {
+    min-height: 7.2rem !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    border: 0 !important;
+    border-radius: 0.72rem !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(250, 251, 252, 0.58)) !important;
+    color: #050505 !important;
+    padding: clamp(1rem, 1.35vw, 1.25rem) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78) !important;
+  }
+
+  html body .native-ui .finance-timeline-statbar > div:first-child {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.12)),
+      var(--native-accent-button-gradient) !important;
+    background-size: 100% 100%, 420% 420% !important;
+    background-position: 0 0, var(--native-accent-x) 50% !important;
+  }
+
+  html body .native-ui .finance-timeline-statbar > div p {
+    text-align: left !important;
+  }
+
+  html body .native-ui .finance-timeline-statbar > div p:first-child {
+    color: rgba(15, 23, 42, 0.5) !important;
+    font-size: 0.58rem !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  html body .native-ui .finance-timeline-statbar > div p:nth-child(2),
+  html body .native-ui .finance-timeline-statbar > div:first-child p:nth-child(2) {
+    color: #050505 !important;
+    font-size: clamp(1.95rem, 2.8vw, 3.1rem) !important;
+    line-height: 0.92 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  html body .native-ui .finance-chart-module {
+    min-height: min(34rem, calc(100dvh - 14rem)) !important;
+    border-radius: 0.72rem !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(250, 251, 252, 0.62)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+  }
+
+  html body .native-ui .finance-timeline-canvas {
+    height: 100% !important;
+    min-height: min(34rem, calc(100dvh - 14rem)) !important;
+    border: 0 !important;
+    border-radius: 0.72rem !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .native-ui .finance-desk {
+    margin-top: 1.25rem !important;
+  }
+
+  html body .native-ui .finance-desk-head {
+    display: grid !important;
+    grid-template-columns: minmax(16rem, 1fr) auto !important;
+    align-items: end !important;
+    gap: 1rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 1rem !important;
+  }
+
+  html body .native-ui .finance-desk-head-actions {
+    justify-content: end !important;
+  }
+
+  html body .native-ui .finance-desk-controls {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.22fr) minmax(12rem, 0.22fr) !important;
+    gap: 0.72rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  html body .native-ui .finance-desk-list {
+    max-height: min(42rem, calc(100dvh - 13.6rem)) !important;
+    overflow-y: auto !important;
+  }
+}
+
+html body .native-ui .services-studio {
+  width: 100%;
+}
+
+html body .native-ui .service-desk-shell {
+  width: 100%;
+  min-height: calc(100dvh - 4rem);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+html body .native-ui .service-desk-command {
+  display: grid;
+  gap: 0.76rem;
+  padding: 1.08rem 1.25rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: #ffffff;
+}
+
+html body .native-ui .service-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.72rem;
+}
+
+html body .native-ui .service-scope-panel {
+  padding: 0.84rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 0.72rem;
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 14px 34px -34px rgba(15, 23, 42, 0.32);
+}
+
+html body .native-ui .service-desk-list {
+  margin-top: 0;
+  border-top: 0;
+  background: #ffffff;
+}
+
+html body .native-ui .service-desk-row {
+  background: #ffffff;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html body .native-ui .service-desk-row:hover,
+html body .native-ui .service-desk-row-active {
+  background: #fafafa;
+}
+
+html body .native-ui .clients-page .client-directory-card,
+html body .native-ui .team-page .team-roster-shell,
+html body .native-ui .team-page .team-empty-state,
+html body .native-ui .schedule-page .schedule-team-card,
+html body .native-ui .schedule-page .schedule-calendar-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .clients-page .client-directory-command,
+html body .native-ui .schedule-page .schedule-calendar-command {
+  padding-inline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .clients-page .client-directory-command {
+  position: relative;
+  z-index: 1;
+  padding-inline: 1.25rem !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.065) !important;
+}
+
+html body .native-ui .clients-page .client-directory-tools {
+  display: grid;
+  gap: 0.76rem;
+}
+
+html body .native-ui .clients-page .client-directory-topline {
+  display: flex;
+  align-items: center;
+  gap: 0.72rem;
+}
+
+html body .native-ui .clients-page .client-search-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+html body .native-ui .clients-page .client-directory-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  flex: 0 0 auto;
+}
+
+html body .native-ui .clients-page .client-directory-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-width: 5.3rem;
+  height: 3rem;
+  padding: 0 0.94rem;
+  border: 1px solid rgba(15, 23, 42, 0.075);
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: #050505;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 34px -32px rgba(15, 23, 42, 0.48), inset 0 1px 0 rgba(255,255,255,0.92);
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+html body .native-ui .clients-page .client-directory-action:hover {
+  border-color: rgba(5, 5, 5, 0.38);
+  transform: translateY(-1px);
+}
+
+html body .native-ui .clients-page .client-directory-action.is-primary {
+  border-color: #050505;
+  background: #050505;
+  color: #ffffff;
+  box-shadow: 0 18px 40px -30px rgba(5, 5, 5, 0.45);
+}
+
+html body .native-ui .clients-page .client-directory-card > div:last-child {
+  margin-top: 0;
+  border-top: 0;
+  background: #ffffff;
+}
+
+html body .native-ui .clients-page .client-directory-row {
+  background: #ffffff;
+}
+
+html body .native-ui .clients-page .client-directory-row:hover {
+  background: #fafafa;
+}
+
+html body .native-ui .finance-desk {
+  background: transparent !important;
+}
+
+html body .native-ui .finance-desk-head > div:first-child > p {
+  display: none !important;
+}
+
+html body .native-ui .finance-desk-head h3 {
+  margin: 0 !important;
+  font-size: clamp(1.45rem, 2.1vw, 2.1rem) !important;
+  letter-spacing: 0 !important;
+}
+
+html body .native-ui .finance-desk-head-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.56rem !important;
+}
+
+html body .native-ui .finance-desk-icon-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.42rem !important;
+}
+
+html body .native-ui .finance-desk-icon-button {
+  width: 2.92rem !important;
+  height: 2.92rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.075) !important;
+  border-radius: 0.86rem !important;
+  background: #ffffff !important;
+  color: #050505 !important;
+  box-shadow: 0 14px 34px -32px rgba(15, 23, 42, 0.48), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+}
+
+html body .native-ui .finance-desk-icon-button.is-primary {
+  border-color: transparent !important;
+  background: var(--native-accent-button-gradient) !important;
+  background-size: 420% 420% !important;
+  background-position: var(--native-accent-x) 50% !important;
+}
+
+html body .native-ui .finance-desk-tabs {
+  gap: 0.42rem !important;
+  min-width: min(100%, 26rem) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .finance-desk-tabs button {
+  min-height: 2.92rem !important;
+  height: 2.92rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.075) !important;
+  border-radius: 0.86rem !important;
+  background: #ffffff !important;
+  color: #667085 !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.035em !important;
+  box-shadow: 0 14px 34px -32px rgba(15, 23, 42, 0.48), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+}
+
+html body .native-ui .finance-desk-tabs button.bg-black,
+html body .native-ui .finance-desk-tabs button.text-white {
+  border-color: #050505 !important;
+  background: #050505 !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 40px -30px rgba(5, 5, 5, 0.42) !important;
+}
+
+html body .native-ui .finance-desk-controls input,
+html body .native-ui .finance-desk-controls .booking-desk-select-face {
+  height: 3rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.075) !important;
+  border-radius: 0.9rem !important;
+  background: #ffffff !important;
+  color: #050505 !important;
+  font-weight: 780 !important;
+  box-shadow: 0 14px 34px -32px rgba(15, 23, 42, 0.48), inset 0 1px 0 rgba(255,255,255,0.92) !important;
+}
+
+html body .native-ui .finance-desk-controls input::placeholder {
+  color: #98a2b3 !important;
+}
+
+html body .native-ui .finance-desk-list {
+  margin-top: 0 !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.06) !important;
+  background: #ffffff !important;
+}
+
+html body .native-ui .finance-desk-row {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  background: #ffffff !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .finance-desk-row:hover {
+  background: #fafafa !important;
+}
+
+html body .native-ui .finance-desk-row .finance-gateway-mark {
+  border-radius: 0.72rem !important;
+  background: #f6f7f9 !important;
+}
+
+html body .native-ui .communications-page .support-desk-shell .support-thread-row,
+html body .native-ui .communications-page .support-desk-shell .support-thread-row:hover,
+html body .native-ui .communications-page .support-desk-shell .support-thread-row.is-active {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+}
+
+html body .native-ui .communications-page .support-desk-shell .support-thread-search {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+}
+
+html body .native-ui .team-page .team-roster-shell {
+  padding: 0 0 1rem !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .team-page .team-roster-card {
+  border-radius: 0.72rem !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .team-page .team-empty-state {
+  margin-top: 1rem;
+  padding-block: clamp(2.4rem, 7vw, 5rem) !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .team-page .team-add-panel,
+html body .native-ui .team-page .team-file-panel {
+  border-radius: 0.72rem !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-team-card {
+  padding: 0 0 1rem !important;
+  margin-bottom: clamp(1rem, 1.6vw, 1.35rem) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-command {
+  padding-bottom: 1rem !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-scroll-zone {
+  padding: 1rem 0 0 !important;
+  background: transparent !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-grid {
+  border-radius: 0.72rem !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .profile-page .profile-command-grid {
+  gap: 0.82rem !important;
+}
+
+html body .native-ui .profile-page .profile-command-card {
+  border-radius: 0.72rem !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .profile-page .profile-command-meta {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  html body .native-ui .profile-page .dashboard-action-strip,
+  html body .native-ui .profile-page .profile-mobile-hub {
+    max-width: none !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: clamp(1rem, 1.35vw, 1.35rem) !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-card {
+    min-height: clamp(15rem, 32dvh, 18.5rem) !important;
+    grid-template-columns: 3.45rem minmax(0, 1fr) 2.35rem !important;
+    gap: 0.62rem 1.05rem !important;
+    padding: clamp(1.12rem, 1.5vw, 1.55rem) !important;
+    align-content: center !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-icon {
+    width: 3.08rem !important;
+    height: 3.08rem !important;
+    border-radius: 0.96rem !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-copy {
+    padding-right: 3.2rem !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-copy > span {
+    font-size: clamp(1.45rem, 1.68vw, 1.72rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-quick {
+    gap: 0.34rem !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-quick button,
+  html body .native-ui .profile-page .profile-command-quick span {
+    min-height: 1.62rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-arrow {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .dashboard-main > div:not(.mobile-editor-shell) {
+    padding: 0.78rem 0.82rem calc(5.35rem + env(safe-area-inset-bottom)) !important;
+    background: #f6f7f9 !important;
+  }
+
+  html body .native-ui .dashboard-main > div.communications-page:not(.mobile-editor-shell) {
+    padding: 0 0 calc(4.55rem + env(safe-area-inset-bottom)) !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .dashboard-overview-page {
+    padding: 0.72rem 0.78rem max(8.6rem, calc(env(safe-area-inset-bottom) + 8.6rem)) !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
+    gap: 0.68rem !important;
+    padding-bottom: max(8.6rem, calc(env(safe-area-inset-bottom) + 8.6rem)) !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+    font-size: clamp(2rem, 8.2vw, 2.72rem) !important;
+    line-height: 0.91 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+    margin-top: 0.54rem !important;
+    font-size: 0.84rem !important;
+    line-height: 1.32 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-divider {
+    margin-top: 0 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page > .dashboard-lumia-board > .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board > .dashboard-period-tabs {
+    min-height: 2.62rem !important;
+    width: 100% !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-period-tab {
+    min-height: 2.06rem !important;
+    font-size: 0.58rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher {
+    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem !important;
+    gap: 0.42rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher .dashboard-pager-arrow {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-pager-title {
+    font-size: 0.98rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-tile {
+    min-height: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip {
+    padding: 0.18rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-chip {
+    min-height: 1.42rem !important;
+    padding: 0 0.46rem !important;
+    font-size: 0.42rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-summary {
+    padding: 0.48rem 0 0.6rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-total strong {
+    font-size: clamp(1.95rem, 9.2vw, 2.85rem) !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-total span {
+    font-size: 0.46rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-row,
+  html body .native-ui .dashboard-overview-page .dashboard-empty-row {
+    min-height: 3.05rem !important;
+    border-radius: 0.88rem !important;
+    padding: 0.48rem 0.54rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-copy strong {
+    font-size: 0.8rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-copy small {
+    font-size: 0.66rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager {
+    margin-top: 0.52rem !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
+    grid-template-columns: 2rem minmax(4.2rem, 1fr) auto 2rem !important;
+    gap: 0.34rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager button,
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
+    min-height: 2rem !important;
+    height: 2rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
+    padding: 0 0.56rem !important;
+    font-size: 0.56rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-size {
+    min-height: 2rem !important;
+    gap: 0.28rem !important;
+    padding: 0 0.3rem 0 0.52rem !important;
+    font-size: 0.5rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-size select {
+    height: 1.48rem !important;
+    min-width: 2.6rem !important;
+    padding: 0 0.34rem !important;
+  }
+
+  html body .native-ui .mobile-bottom-nav {
+    height: calc(4.7rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  html body .native-ui .mobile-nav-dock {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    min-height: calc(4.55rem + env(safe-area-inset-bottom)) !important;
+    padding: 0.38rem 0.48rem calc(0.38rem + env(safe-area-inset-bottom)) !important;
+    border-width: 1px 0 0 !important;
+    border-radius: 0 !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html body .native-ui .mobile-nav-tab {
+    min-height: 3.25rem !important;
+    border-radius: 0.48rem !important;
+  }
+
+  html body .native-ui .mobile-nav-more-sheet {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(4.55rem + env(safe-area-inset-bottom)) !important;
+    border-radius: 0.82rem 0.82rem 0 0 !important;
+  }
+
+  html body .native-ui .communications-page .support-page-shell,
+  html body .native-ui .communications-page .support-desk-shell,
+  html body .native-ui .communications-page .support-workspace-grid,
+  html body .native-ui .communications-page .support-thread-list {
+    width: 100% !important;
+    height: calc(100dvh - 4.55rem - env(safe-area-inset-bottom)) !important;
+    min-height: calc(100dvh - 4.55rem - env(safe-area-inset-bottom)) !important;
+  }
+
+  html body .native-ui.dashboard-light .communications-page .support-inbox-card.support-desk-shell.saas-card {
+    height: calc(100dvh - 4.55rem - env(safe-area-inset-bottom)) !important;
+    min-height: calc(100dvh - 4.55rem - env(safe-area-inset-bottom)) !important;
+    max-height: none !important;
+  }
+
+  html body .native-ui .communications-page .support-desk-shell .support-thread-row,
+  html body .native-ui .communications-page .support-desk-shell .support-thread-row:hover,
+  html body .native-ui .communications-page .support-desk-shell .support-thread-row.is-active {
+    padding-left: 0.88rem !important;
+    padding-right: 0.88rem !important;
+  }
+
+  html body .native-ui .communications-page .support-desk-shell .support-thread-search {
+    padding: 0.88rem 0.88rem 0.78rem !important;
+  }
+
+  html body .native-ui .finance-hero-head,
+  html body .native-ui .finance-hero-body {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  html body .native-ui .finance-timeline-chart {
+    display: grid !important;
+    gap: 0.9rem !important;
+  }
+
+  html body .native-ui .finance-timeline-statbar {
+    order: 1 !important;
+  }
+
+  html body .native-ui .finance-chart-module {
+    order: 2 !important;
+  }
+
+  html body .native-ui .service-desk-shell {
+    display: block !important;
+    min-height: calc(100dvh - 6.1rem);
+  }
+
+  html body .native-ui .service-desk-command {
+    padding: 0.88rem 0.82rem 0.8rem;
+    background: #ffffff;
+  }
+
+  html body .native-ui .service-scope-grid {
+    grid-template-columns: 1fr;
+    gap: 0.62rem;
+  }
+
+  html body .native-ui .service-scope-panel {
+    padding: 0.68rem;
+    border-radius: 0.62rem;
+  }
+
+  html body .native-ui .service-desk-list {
+    margin-top: 0;
+    background: #ffffff;
+  }
+
+  html body .native-ui .clients-page .client-directory-card {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  html body .native-ui .clients-page .client-directory-command {
+    padding: 0.88rem 0.82rem 0.8rem !important;
+    background: #ffffff !important;
+  }
+
+  html body .native-ui .clients-page .client-directory-topline {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.62rem;
+  }
+
+  html body .native-ui .clients-page .client-directory-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  html body .native-ui .clients-page .client-directory-action {
+    min-width: 0;
+    height: 2.7rem;
+    border-radius: 0.82rem;
+    font-size: 0.62rem;
+    padding-inline: 0.7rem;
+  }
+
+  html body .native-ui .clients-page .client-directory-card > div:last-child {
+    max-height: none !important;
+    margin-top: 0;
+    background: #ffffff;
+  }
+
+  html body .native-ui .finance-desk-row {
+    padding-left: 0.88rem !important;
+    padding-right: 0.88rem !important;
+  }
+
+  html body .native-ui .team-page .team-roster-shell {
+    padding-bottom: 0.78rem !important;
+  }
+
+  html body .native-ui .team-page .team-roster-shell > div:first-child {
+    margin-bottom: 0.78rem !important;
+  }
+
+  html body .native-ui .team-page .team-empty-state {
+    margin-top: 0.78rem;
+    padding: 2.2rem 0.9rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-card {
+    padding-bottom: 0.78rem !important;
+    margin-bottom: 0.78rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-calendar-command {
+    padding-bottom: 0.78rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-calendar-scroll-zone {
+    padding-top: 0.78rem !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-card {
+    min-height: 0 !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-copy > span {
+    font-size: 1.08rem !important;
+  }
+
+  html body .native-ui .profile-page .profile-command-quick button,
+  html body .native-ui .profile-page .profile-command-quick span {
+    font-size: 0.68rem !important;
+  }
+}

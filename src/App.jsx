@@ -1334,6 +1334,8 @@ const safeJsonParse = (value, fallback = null) => {
   }
 };
 
+const asArray = (value) => (Array.isArray(value) ? value : []);
+
 const areJsonEqual = (left, right) => {
   if (left === right) return true;
   try {
@@ -1771,7 +1773,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [bookingInfoDialog, setBookingInfoDialog] = useState(null);
             const [manualBookingOpen, setManualBookingOpen] = useState(false);
             const [manualBookingServiceId, setManualBookingServiceId] = useState('custom');
-            const [clientRecords, setClientRecords] = useState(() => getInitialGuestWorkspace()?.clientRecords || []);
+            const [clientRecords, setClientRecords] = useState(() => asArray(getInitialGuestWorkspace()?.clientRecords));
             const [clientSearch, setClientSearch] = useState('');
             const [clientDeskFilter, setClientDeskFilter] = useState('all');
             const [selectedClientId, setSelectedClientId] = useState(null);
@@ -2025,11 +2027,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 });
             }, []);
 
-            const [bookings, setBookings] = useState(() => getInitialGuestWorkspace()?.bookings || []);
-            const [financeImports, setFinanceImports] = useState(() => getInitialGuestWorkspace()?.financeImports || []);
+            const [bookings, setBookings] = useState(() => asArray(getInitialGuestWorkspace()?.bookings));
+            const [financeImports, setFinanceImports] = useState(() => asArray(getInitialGuestWorkspace()?.financeImports));
             const [financePaymentAttempts, setFinancePaymentAttempts] = useState([]);
             const [bookingsReady, setBookingsReady] = useState(() => Boolean(getInitialGuestWorkspace()) || !isFirebaseConfigured);
-            const [staffList, setStaffList] = useState(() => getInitialGuestWorkspace()?.staffList || [{id: 'owner', name: 'Admin', color: '#39FF14'}]);
+            const [staffList, setStaffList] = useState(() => asArray(getInitialGuestWorkspace()?.staffList).length ? asArray(getInitialGuestWorkspace()?.staffList) : [{id: 'owner', name: 'Admin', color: '#39FF14'}]);
             const [accountProfileOverride, setAccountProfileOverride] = useState(() => getInitialGuestWorkspace()?.settings?.accountProfiles?.['guest-workspace'] || {});
             const [communications, setCommunications] = useState(() => getInitialGuestWorkspace()?.communications || createDefaultCommunications());
             const referralUrl = useMemo(() => `${window.location.origin}/ref/${user?.uid?.substring(0,6) || '10X'}`, [user?.uid]);
@@ -2053,6 +2055,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     ...workspaceAccess
                 ].filter((workspace, index, list) => list.findIndex(item => item.ownerId === workspace.ownerId) === index);
             }, [settings.brandName, user, workspaceAccess]);
+            const safeStaffList = useMemo(() => asArray(staffList), [staffList]);
+            const safeClientRecords = useMemo(() => asArray(clientRecords), [clientRecords]);
+            const safeFinanceImports = useMemo(() => asArray(financeImports), [financeImports]);
+            const visibleBookings = useMemo(() => asArray(bookings), [bookings]);
             const editorDraftOwnerKey = workspaceOwnerId || user?.uid || (isGuestWorkspace ? 'guest' : 'local');
             const setBookingsAndCache = (updater) => {
                 setBookings(prev => {
@@ -2125,11 +2131,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 clearEditorDraftVersions('guest');
                 const demoWorkspace = initialGuestWorkspaceRef.current || createGuestDemoWorkspace();
                 setSettings(demoWorkspace.settings);
-                setBookings(demoWorkspace.bookings);
-                setFinanceImports(demoWorkspace.financeImports || []);
+                setBookings(asArray(demoWorkspace.bookings));
+                setFinanceImports(asArray(demoWorkspace.financeImports));
                 setBookingsReady(true);
-                setStaffList(demoWorkspace.staffList);
-                setClientRecords(demoWorkspace.clientRecords);
+                setStaffList(asArray(demoWorkspace.staffList).length ? asArray(demoWorkspace.staffList) : [{ id: 'owner', name: 'Admin', color: '#39FF14' }]);
+                setClientRecords(asArray(demoWorkspace.clientRecords));
                 setCommunications(demoWorkspace.communications);
                 setAccountProfileOverride(demoWorkspace.settings.accountProfiles?.['guest-workspace'] || {});
                 setEditorDraftVersions([]);
@@ -2327,7 +2333,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const displayStaffList = useMemo(() => {
                 const emailKey = normalizeEmail(user?.email || '');
                 const profileEmailKey = normalizeEmail(personalProfile.email || '');
-                return (staffList || []).map(staff => {
+                return safeStaffList.map(staff => {
                     const isCurrentPerson = (
                         (user?.uid && staff.uid === user.uid) ||
                         (emailKey && normalizeEmail(staff.email || '') === emailKey) ||
@@ -2343,7 +2349,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         photoURL: personalProfile.photoURL || staff.photoURL || ''
                     };
                 });
-            }, [isWorkspaceOwner, personalDisplayName, personalProfile.email, personalProfile.mobile, personalProfile.photoURL, staffList, user?.email, user?.uid]);
+            }, [isWorkspaceOwner, personalDisplayName, personalProfile.email, personalProfile.mobile, personalProfile.photoURL, safeStaffList, user?.email, user?.uid]);
             const activeStaffProfile = useMemo(() => {
                 if (!user) return displayStaffList.find(staff => staff.id === 'owner') || null;
                 const emailKey = normalizeEmail(user.email || '');
@@ -2358,7 +2364,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 return String(source).trim().split(/\s+/)[0] || 'Builder';
             }, [activeStaffProfile?.name, personalDisplayName, settings.brandName, user?.displayName, user?.email]);
 
-            const visibleBookings = bookings;
             const exampleBooking = useMemo(() => ({
                 id: 'example-booking',
                 clientName: 'Mina Patel',
@@ -2529,7 +2534,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         booking.servicePrice,
                         booking.serviceDuration,
                         booking.staffName,
-                        staffList.find(staff => staff.id === booking.staffId)?.name
+                        safeStaffList.find(staff => staff.id === booking.staffId)?.name
                     ].filter(Boolean).join(' ').toLowerCase().includes(normalizedSearch))
                     : periodRecords;
                 const paymentFilteredRecords = searchedRecords.filter(booking => {
@@ -2603,7 +2608,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         { label: 'History', value: historyRecords.length, hint: `${declinedRecords.length} declined`, icon: History }
                     ]
                 };
-            }, [bookingDeskPeriod, bookingFilter, bookingSearch, bookingPaymentFilter, bookingSort, visibleBookings, staffList, bookingCustomRange]);
+            }, [bookingDeskPeriod, bookingFilter, bookingSearch, bookingPaymentFilter, bookingSort, visibleBookings, safeStaffList, bookingCustomRange]);
 
             const filteredBookings = bookingDesk.filteredRows;
             const showBookingExample = isGuestWorkspace && bookingsReady && visibleBookings.length === 0;
@@ -2612,7 +2617,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 if (!isGuestWorkspace) return [];
                 const recentBooking = visibleBookings.find(booking => booking.status === 'pending' || booking.status === 'waitlist') || visibleBookings[0] || exampleBooking;
                 const paidBooking = visibleBookings.find(booking => String(booking.paymentStatus || '').toLowerCase().includes('paid')) || visibleBookings[1] || recentBooking;
-                const birthdayClient = clientRecords.find(client => client.birthday) || null;
+                const birthdayClient = safeClientRecords.find(client => client.birthday) || null;
                 return [
                     makeOwnerNotification({
                         type: NOTIFICATION_TYPES.BOOKING_REQUEST,
@@ -2659,7 +2664,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     read: guestNotificationReadIds.has(`guest-alert-${index}`),
                     createdAtMs: Date.now() - (index * 11 * 60 * 1000)
                 }));
-            }, [clientRecords, exampleBooking, guestNotificationReadIds, isGuestWorkspace, visibleBookings]);
+            }, [safeClientRecords, exampleBooking, guestNotificationReadIds, isGuestWorkspace, visibleBookings]);
             const workspaceNotifications = isGuestWorkspace ? guestOwnerNotifications : ownerNotifications;
             const workspaceSupportThreads = useMemo(() => {
                 if (!isGuestWorkspace) return workspaceClientThreads;
@@ -2752,7 +2757,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const clientDirectory = useMemo(() => {
                 const clients = new Map(bookingClients.map(client => [client.id, client]));
 
-                clientRecords.forEach(record => {
+                safeClientRecords.forEach(record => {
                     const id = record.id || buildClientKey(record.name, record.phone);
                     const bookingProfile = clients.get(id);
                     clients.set(id, {
@@ -2780,7 +2785,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     (b.lastBooking?.timestamp || b.updatedAt || b.createdAt || 0) -
                     (a.lastBooking?.timestamp || a.updatedAt || a.createdAt || 0)
                 ));
-            }, [bookingClients, clientRecords]);
+            }, [bookingClients, safeClientRecords]);
 
             const clientMetrics = useMemo(() => ({
                 total: clientDirectory.length,
@@ -2790,13 +2795,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             }), [clientDirectory]);
 
             const importedMigrationCounts = useMemo(() => ({
-                clients: clientRecords.filter(client => client.importedViaCsv).length,
-                bookings: bookings.filter(booking => booking.importedViaCsv).length,
+                clients: safeClientRecords.filter(client => client.importedViaCsv).length,
+                bookings: visibleBookings.filter(booking => booking.importedViaCsv).length,
                 financeRecords: (
-                    financeImports.filter(record => record.importedViaCsv).length +
-                    bookings.filter(booking => booking.importedViaCsv && Number(booking.amountInCents || booking.amountPaidInCents || 0) > 0).length
+                    safeFinanceImports.filter(record => record.importedViaCsv).length +
+                    visibleBookings.filter(booking => booking.importedViaCsv && Number(booking.amountInCents || booking.amountPaidInCents || 0) > 0).length
                 )
-            }), [bookings, clientRecords, financeImports]);
+            }), [visibleBookings, safeClientRecords, safeFinanceImports]);
 
             const createOwnerNotification = async (payload, options = {}) => {
                 const ownerId = payload?.ownerId || workspaceOwnerId;
@@ -3823,7 +3828,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const staffRef = FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'staff');
                 const unsubStaff = FirebaseSDK.onSnapshot(staffRef, (docSnap) => { 
                     if (docSnap.exists()) {
-                        const nextStaff = docSnap.data().list || [];
+                        const nextStaff = asArray(docSnap.data().list);
                         setStaffList(prev => areJsonEqual(prev, nextStaff) ? prev : nextStaff);
                     } else if (isWorkspaceOwner) {
                         const ownerProfile = [createOwnerStaffProfile({
@@ -3853,7 +3858,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const clientsRef = FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'config', 'clients');
                 const unsubClients = FirebaseSDK.onSnapshot(clientsRef, (docSnap) => { 
                     if (docSnap.exists()) {
-                        const nextClients = docSnap.data().list || [];
+                        const nextClients = asArray(docSnap.data().list);
                         setClientRecords(prev => areJsonEqual(prev, nextClients) ? prev : nextClients);
                     } else {
                         setClientRecords(prev => prev.length ? [] : prev);
@@ -3863,7 +3868,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const financeImportsRef = FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'finance', 'imports');
                 const unsubFinanceImports = FirebaseSDK.onSnapshot(financeImportsRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        const nextImports = docSnap.data().list || [];
+                        const nextImports = asArray(docSnap.data().list);
                         setFinanceImports(prev => areJsonEqual(prev, nextImports) ? prev : nextImports);
                     } else {
                         setFinanceImports(prev => prev.length ? [] : prev);
@@ -4236,7 +4241,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     updatedAt: Date.now()
                 };
                 const nextList = [
-                    ...staffList.filter(staff => normalizeEmail(staff.email) !== emailKey),
+                    ...safeStaffList.filter(staff => normalizeEmail(staff.email) !== emailKey),
                     nextStaff
                 ];
                 await saveStaff(nextList, staffList);
@@ -4274,7 +4279,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const incomingClients = Array.isArray(payload.clients) ? payload.clients : [];
                 const incomingBookings = Array.isArray(payload.bookings) ? payload.bookings : [];
                 const incomingFinanceRecords = Array.isArray(payload.financeRecords) ? payload.financeRecords : [];
-                const existingClientKeys = new Set(clientRecords.map(getImportedClientKey));
+                const existingClientKeys = new Set(safeClientRecords.map(getImportedClientKey));
                 const incomingClientKeys = new Set();
                 const importedClients = incomingClients
                     .map(client => ({
@@ -4333,7 +4338,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const financeIds = new Set(importedFinance.map(record => record.id));
                 const nextFinanceImports = [
                     ...importedFinance,
-                    ...financeImports.filter(record => !financeIds.has(record.id))
+                    ...safeFinanceImports.filter(record => !financeIds.has(record.id))
                 ];
 
                 try {
@@ -4369,11 +4374,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     showToast('Only owners and admins can delete uploaded data.');
                     return { clients: 0, bookings: 0, financeRecords: 0 };
                 }
-                const importedClientCount = clientRecords.filter(client => client.importedViaCsv).length;
-                const importedBookingCount = bookings.filter(booking => booking.importedViaCsv).length;
-                const importedFinanceCount = financeImports.filter(record => record.importedViaCsv).length;
-                const nextClients = clientRecords.filter(client => !client.importedViaCsv);
-                const nextFinanceImports = financeImports.filter(record => !record.importedViaCsv);
+                const importedClientCount = safeClientRecords.filter(client => client.importedViaCsv).length;
+                const importedBookingCount = visibleBookings.filter(booking => booking.importedViaCsv).length;
+                const importedFinanceCount = safeFinanceImports.filter(record => record.importedViaCsv).length;
+                const nextClients = safeClientRecords.filter(client => !client.importedViaCsv);
+                const nextFinanceImports = safeFinanceImports.filter(record => !record.importedViaCsv);
                 setBookingsAndCache(prev => prev.filter(booking => !booking.importedViaCsv));
 
                 try {
@@ -4400,7 +4405,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             const upsertClientRecord = (clientId, updates) => {
                 const bookingProfile = clientDirectory.find(client => client.id === clientId);
-                const existingRecord = clientRecords.find(client => client.id === clientId);
+                const existingRecord = safeClientRecords.find(client => client.id === clientId);
                 const nextRecord = {
                     id: clientId,
                     name: updates.name ?? existingRecord?.name ?? bookingProfile?.name ?? 'Unnamed Client',
@@ -4414,7 +4419,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     createdAt: existingRecord?.createdAt || bookingProfile?.createdAt || Date.now(),
                     updatedAt: Date.now()
                 };
-                saveClients([nextRecord, ...clientRecords.filter(client => client.id !== clientId)]);
+                saveClients([nextRecord, ...safeClientRecords.filter(client => client.id !== clientId)]);
             };
 
             const toggleClientLabel = (client, label) => {
@@ -5878,7 +5883,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const updateBooking = async (bookingId, updates) => {
                 const existingBooking = visibleBookings.find(booking => booking.id === bookingId);
                 const nextStaffId = updates.staffId ?? existingBooking?.staffId ?? '';
-                const nextAssignedStaff = nextStaffId ? staffList.find(staff => staff.id === nextStaffId) : null;
+                const nextAssignedStaff = nextStaffId ? safeStaffList.find(staff => staff.id === nextStaffId) : null;
                 if (!isFirebaseConfigured || !user) {
                     setBookingsAndCache(prev => prev.map(b => b.id === bookingId ? { ...b, ...updates } : b));
                     return;
@@ -6075,7 +6080,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         const threadSnap = await FirebaseSDK.getDoc(threadRef);
                         const clientPhotoURL = getBookingClientAvatar(booking);
                         if (!threadSnap.exists()) {
-                            const assignedStaff = booking.staffId ? staffList.find(staff => staff.id === booking.staffId) : null;
+                            const assignedStaff = booking.staffId ? safeStaffList.find(staff => staff.id === booking.staffId) : null;
                             await FirebaseSDK.setDoc(threadRef, {
                                 ownerId: workspaceOwnerId,
                                 clientEmail: emailKey,
@@ -6733,7 +6738,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const bookingInfoDetails = bookingInfoDialog ? (() => {
                 const booking = bookingInfoDialog;
                 const serviceDetails = getBookingService(booking);
-                const assignedStaff = staffList.find(staff => staff.id === booking.staffId);
+                const assignedStaff = safeStaffList.find(staff => staff.id === booking.staffId);
                 const serviceName = serviceDetails?.name || booking.serviceName || 'Not set';
                 const serviceDuration = formatServiceDuration(serviceDetails?.duration || booking.duration);
                 const servicePrice = formatServicePrice(serviceDetails || booking);
@@ -7018,7 +7023,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     category: 'finance',
                     iconKind: 'payment',
                     title: 'Finance desk aligned',
-                    detail: `${financeImports.length + financePaymentAttempts.length} finance records and payment attempts available for review.`,
+                    detail: `${safeFinanceImports.length + financePaymentAttempts.length} finance records and payment attempts available for review.`,
                     time: dateValueToMs(settings.financeUpdatedAt || settings.updatedAt) || Date.now() - 61 * 60 * 1000,
                     label: 'Finance'
                 },
@@ -8787,7 +8792,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                     </div>
                                                     <div className="divide-y divide-neutral-100">
                                                         {activeClient.bookings.length ? activeClient.bookings.map(booking => {
-                                                            const assignedStaff = staffList.find(staff => staff.id === booking.staffId);
+                                                            const assignedStaff = safeStaffList.find(staff => staff.id === booking.staffId);
                                                             const serviceDetails = getBookingService(booking);
                                                             const statusStyle = booking.status === 'confirmed'
                                                                 ? 'bg-[#39FF14] text-black'
@@ -8968,7 +8973,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {selectedStaffFile.id !== 'owner' && canManageTeam && (
-                                                    <button onClick={() => { saveStaff(staffList.filter(s => s.id !== selectedStaffFile.id)); setSelectedStaffFileId(null); setTeamPanelMode('roster'); }} className="h-10 px-4 rounded-lg border border-red-100 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                                    <button onClick={() => { saveStaff(safeStaffList.filter(s => s.id !== selectedStaffFile.id)); setSelectedStaffFileId(null); setTeamPanelMode('roster'); }} className="h-10 px-4 rounded-lg border border-red-100 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
                                                         <Trash2 size={14}/> Remove
                                                     </button>
                                                 )}
@@ -10043,7 +10048,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         <p className="text-sm text-neutral-500">{bookingDesk.searchActive ? 'Try a different client name, phone, email, or note.' : 'Try another category or wait for new booking requests.'}</p>
                                     </div>
                                 ) : bookingRows.map(b => {
-                                    const assignedStaff = staffList.find(s => s.id === b.staffId);
+                                    const assignedStaff = safeStaffList.find(s => s.id === b.staffId);
                                     const isExampleBooking = Boolean(b.isExample);
                                     const clientAvatar = getBookingClientAvatar(b);
                                     const serviceDetails = getBookingService(b);

@@ -5224,6 +5224,40 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 setAuthError('');
                 setAuthPanelOpen(true);
             };
+            const openOwnerAuth = (mode = 'signin') => {
+                openAuthPanel(mode, 'owner');
+            };
+            const readableAuthError = (error, fallback = 'Could not sign in.') => {
+                const code = error?.code || '';
+                if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+                    return 'Email or password does not match an account yet.';
+                }
+                if (code === 'auth/email-already-in-use') {
+                    return 'That email already has an account. Switch to Sign In instead.';
+                }
+                if (code === 'auth/weak-password') {
+                    return 'Use a password with at least 6 characters.';
+                }
+                if (code === 'auth/too-many-requests') {
+                    return 'Too many attempts. Wait a moment, then try again.';
+                }
+                if (code === 'auth/network-request-failed') {
+                    return 'Network connection dropped before sign-in finished.';
+                }
+                if (code === 'auth/operation-not-allowed') {
+                    return 'This sign-in method is not enabled in Firebase Authentication yet.';
+                }
+                if (code === 'auth/unauthorized-domain') {
+                    return 'This domain is not allowed for Firebase sign-in yet.';
+                }
+                if (code === 'auth/popup-closed-by-user') {
+                    return 'Google sign-in was closed before it finished.';
+                }
+                if (code === 'auth/invalid-api-key') {
+                    return 'This build has an invalid Firebase API key. Check the Firebase config and redeploy.';
+                }
+                return error?.message || fallback;
+            };
             const openClientPortal = () => {
                 if (!isFirebaseConfigured || user) {
                     setClientGuestMode(false);
@@ -5301,7 +5335,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     showToast(authMode === 'signup' ? 'Account created' : 'Signed in');
                 } catch (error) {
                     console.error(error);
-                    setAuthError(error.message || 'Could not sign in.');
+                    setAuthError(readableAuthError(error, authMode === 'signup' ? 'Could not create account.' : 'Could not sign in.'));
                 } finally {
                     setAuthBusy(false);
                 }
@@ -5352,7 +5386,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             return;
                         } catch (redirectError) {
                             console.error(redirectError);
-                            setAuthError(redirectError.message || 'Could not start Google sign-in.');
+                            setAuthError(readableAuthError(redirectError, 'Could not start Google sign-in.'));
                             return;
                         }
                     }
@@ -5364,7 +5398,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 ? 'This build has an invalid Firebase API key. Check the Firebase config and redeploy.'
                         : error?.code === 'auth/popup-closed-by-user'
                             ? 'Google sign-in was closed before it finished.'
-                            : error.message || 'Could not sign in with Google.';
+                            : readableAuthError(error, 'Could not sign in with Google.');
                     setAuthError(message);
                 } finally {
                     setAuthBusy(false);
@@ -6233,6 +6267,24 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }
                 return 'I could not reach the live Butler just now. The Firebase function is wired, but the provider call needs to be available before I can answer from OpenRouter.';
             };
+            const isButlerAuthError = (error) => (
+                error?.code === 'functions/unauthenticated' ||
+                error?.code === 'unauthenticated' ||
+                error?.code === 'functions/permission-denied' ||
+                error?.code === 'permission-denied'
+            );
+            const buildButlerAuthResponse = (prompt, error) => {
+                const messageId = `butler-auth-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                return {
+                    id: messageId,
+                    role: 'assistant',
+                    body: buildButlerSetupMessage(error),
+                    actions: [
+                        { id: `${messageId}-signin`, label: 'Sign in', type: 'auth', mode: 'signin' },
+                        { id: `${messageId}-signup`, label: 'Create account', type: 'auth', mode: 'signup' }
+                    ]
+                };
+            };
 
             const sendButlerPrompt = async (promptOverride = '') => {
                 const prompt = String(promptOverride || butlerInput || '').trim();
@@ -6276,7 +6328,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     setButlerMessages(prev => prev.map(message => message.id === pendingId ? assistantMessage : message));
                 } catch (error) {
                     console.error('Butler request failed', error);
-                    const assistantMessage = buildButlerResponse(prompt, buildButlerSetupMessage(error));
+                    const assistantMessage = isButlerAuthError(error)
+                        ? buildButlerAuthResponse(prompt, error)
+                        : buildButlerResponse(prompt, buildButlerSetupMessage(error));
                     setButlerMessages(prev => prev.map(message => message.id === pendingId ? assistantMessage : message));
                 } finally {
                     setButlerSending(false);
@@ -6290,6 +6344,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             };
 
             const handleButlerAction = (action = {}) => {
+                if (action.type === 'auth') {
+                    openOwnerAuth(action.mode || 'signin');
+                    return;
+                }
                 if (action.type === 'draft-reply') {
                     setButlerMessages(prev => ([
                         ...prev,
@@ -6621,6 +6679,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             {authMode === 'signup' ? 'Already have an account?' : 'Need an account? Create one'}
                         </button>
                     </form>
+                </div>
+            );
+
+            const guestAuthQuickAccess = isGuestWorkspace && (
+                <div className="guest-auth-quick-access" aria-label="Guest account actions">
+                    <span>Guest workspace</span>
+                    <button type="button" onClick={() => openOwnerAuth('signin')}>Sign In</button>
+                    <button type="button" onClick={() => openOwnerAuth('signup')}>Create Account</button>
                 </div>
             );
 
@@ -7288,6 +7354,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     </div>
                 )}
                 {authDialog}
+                {guestAuthQuickAccess}
                 {legalDialog}
                 {confirmActionDialog}
                 {bookingInfoDialogView}
@@ -7581,12 +7648,25 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             <div className="dashboard-action-strip max-w-6xl mb-4 md:mb-6">
                                     <div className="profile-header-actions">
                                         <div className="hidden md:flex flex-col sm:flex-row gap-3">
-                                            <button onClick={() => setShowOwnerManual(true)} className="h-12 px-7 bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl shadow-black/5 hover:-translate-y-0.5 hover:border-black transition-all flex items-center justify-center gap-2">
-                                                <BookOpen size={14}/> Owner Manual
-                                            </button>
-                                            <button onClick={saveProfileChanges} className="h-12 px-7 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl shadow-black/10 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
-                                                <Check size={14}/> Save Profile
-                                            </button>
+                                            {isGuestWorkspace ? (
+                                                <>
+                                                    <button onClick={() => openOwnerAuth('signin')} className="h-12 px-7 bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl shadow-black/5 hover:-translate-y-0.5 hover:border-black transition-all flex items-center justify-center gap-2">
+                                                        <ShieldCheck size={14}/> Sign In
+                                                    </button>
+                                                    <button onClick={() => openOwnerAuth('signup')} className="h-12 px-7 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl shadow-black/10 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+                                                        <ArrowRight size={14}/> Create Account
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => setShowOwnerManual(true)} className="h-12 px-7 bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl shadow-black/5 hover:-translate-y-0.5 hover:border-black transition-all flex items-center justify-center gap-2">
+                                                        <BookOpen size={14}/> Owner Manual
+                                                    </button>
+                                                    <button onClick={saveProfileChanges} className="h-12 px-7 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl shadow-black/10 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+                                                        <Check size={14}/> Save Profile
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                             </div>
@@ -7682,6 +7762,19 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             </div>
                                         </div>
                                         <div className="lg:col-span-7 p-5 md:p-8">
+                                            {isGuestWorkspace && (
+                                                <div className="guest-profile-auth-card mb-5">
+                                                    <div>
+                                                        <span>Guest workspace</span>
+                                                        <strong>Save this setup to a real account.</strong>
+                                                        <p>Sign in or create an owner account to keep your page, services, schedule, and Butler access beyond this local preview.</p>
+                                                    </div>
+                                                    <div>
+                                                        <button type="button" onClick={() => openOwnerAuth('signin')}>Sign In</button>
+                                                        <button type="button" onClick={() => openOwnerAuth('signup')}>Create Account</button>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <div className="mb-5 flex items-start justify-between gap-4">
                                                 <div>
                                                     <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-300 mb-2">Personal Profile</p>

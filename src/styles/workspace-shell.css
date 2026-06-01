@@ -1311,6 +1311,149 @@ html body .native-ui .client-chat-canvas {
   background: #ffffff !important;
 }
 
+html body .native-ui .guest-auth-quick-access {
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  z-index: 90 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  padding: 0.35rem !important;
+  border: 1px solid rgba(5, 5, 5, 0.08) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.25) !important;
+  backdrop-filter: blur(18px) saturate(1.25) !important;
+  box-shadow:
+    0 24px 60px -42px rgba(5, 5, 5, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+}
+
+html body .native-ui .guest-auth-quick-access span {
+  padding: 0 0.62rem 0 0.72rem !important;
+  color: #7b818a !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+html body .native-ui .guest-auth-quick-access button {
+  height: 2.28rem !important;
+  padding: 0 0.92rem !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  background: #f4f4f5 !important;
+  color: #050505 !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+html body .native-ui .guest-auth-quick-access button:last-child {
+  background: #050505 !important;
+  color: #ffffff !important;
+}
+
+html body .native-ui .guest-profile-auth-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+  border: 1px solid rgba(5, 5, 5, 0.08) !important;
+  border-radius: 1rem !important;
+  background:
+    linear-gradient(135deg, rgba(57, 255, 20, 0.09), rgba(255, 255, 255, 0) 48%),
+    #ffffff !important;
+  box-shadow: 0 22px 64px -48px rgba(5, 5, 5, 0.32) !important;
+}
+
+html body .native-ui .guest-profile-auth-card span {
+  display: block !important;
+  margin-bottom: 0.32rem !important;
+  color: #8a9099 !important;
+  font-size: 0.58rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+html body .native-ui .guest-profile-auth-card strong {
+  display: block !important;
+  color: #050505 !important;
+  font-size: 1rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.01em !important;
+}
+
+html body .native-ui .guest-profile-auth-card p {
+  max-width: 34rem !important;
+  margin-top: 0.28rem !important;
+  color: #68707b !important;
+  font-size: 0.8rem !important;
+  font-weight: 620 !important;
+  line-height: 1.45 !important;
+}
+
+html body .native-ui .guest-profile-auth-card > div:last-child {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+html body .native-ui .guest-profile-auth-card button {
+  height: 2.65rem !important;
+  padding: 0 1rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #f4f4f5 !important;
+  color: #050505 !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+html body .native-ui .guest-profile-auth-card button:last-child {
+  background: #050505 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .guest-auth-quick-access {
+    top: auto !important;
+    right: 0.82rem !important;
+    bottom: max(5.85rem, calc(5.35rem + env(safe-area-inset-bottom))) !important;
+    left: 0.82rem !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  html body .native-ui .guest-auth-quick-access span {
+    display: none !important;
+  }
+
+  html body .native-ui .guest-auth-quick-access button {
+    width: 100% !important;
+  }
+
+  html body .native-ui .guest-profile-auth-card {
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+
+  html body .native-ui .guest-profile-auth-card > div:last-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
 /* Schedule planner: timeline-first, calendar as a compact navigation layer. */
 html body .native-ui .schedule-page > .max-w-7xl {
   max-width: 86rem !important;

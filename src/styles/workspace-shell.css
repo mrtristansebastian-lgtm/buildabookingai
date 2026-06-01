@@ -2189,14 +2189,12 @@ html body .native-ui .schedule-page .schedule-slot-plan-row {
 
 /* Dashboard butler integrated AI home pass. */
 html body .native-ui .dashboard-butler-page {
-  padding: clamp(1rem, 2.2vw, 2rem) clamp(1rem, 3vw, 3.25rem) max(5.6rem, calc(4rem + env(safe-area-inset-bottom))) !important;
-  background:
-    radial-gradient(circle at 50% 18%, rgba(57, 255, 20, 0.055), transparent 28rem),
-    #ffffff !important;
+  padding: 2rem clamp(1rem, 3vw, 3.25rem) max(5.6rem, calc(4rem + env(safe-area-inset-bottom))) !important;
+  background: #ffffff !important;
 }
 
 html body .native-ui .dashboard-main > .dashboard-butler-page:not(.mobile-editor-shell) {
-  padding: clamp(1rem, 2.2vw, 2rem) clamp(1rem, 3vw, 3.25rem) max(5.6rem, calc(4rem + env(safe-area-inset-bottom))) !important;
+  padding: 2rem clamp(1rem, 3vw, 3.25rem) max(5.6rem, calc(4rem + env(safe-area-inset-bottom))) !important;
   padding-left: clamp(1rem, 3vw, 3.25rem) !important;
   padding-right: clamp(1rem, 3vw, 3.25rem) !important;
 }
@@ -2207,19 +2205,29 @@ html body .native-ui .dashboard-main > div.dashboard-overview-page.dashboard-but
 }
 
 html body .native-ui .dashboard-butler-shell {
-  width: min(100%, 62rem) !important;
-  min-height: calc(100dvh - 7.2rem) !important;
+  width: min(100%, 58rem) !important;
+  min-height: calc(100dvh - 8.4rem) !important;
   margin: 0 auto !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   align-items: center !important;
-  gap: clamp(1.2rem, 2vw, 1.8rem) !important;
+  gap: 1.75rem !important;
+  padding-top: clamp(4.5rem, 9vh, 7rem) !important;
+}
+
+html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell[data-tour="dashboard-hero"] {
+  padding-top: clamp(4.5rem, 9vh, 7rem) !important;
 }
 
 html body .native-ui .dashboard-butler-shell.has-thread {
   justify-content: flex-start !important;
-  padding-top: clamp(0.5rem, 1.4vw, 1.2rem) !important;
+  gap: 1.25rem !important;
+  padding-top: clamp(0.75rem, 2vh, 1.4rem) !important;
+}
+
+html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell.has-thread[data-tour="dashboard-hero"] {
+  padding-top: clamp(0.75rem, 2vh, 1.4rem) !important;
 }
 
 html body .native-ui .dashboard-butler-hero {
@@ -2254,9 +2262,9 @@ html body .native-ui .dashboard-butler-kicker {
 html body .native-ui .dashboard-butler-title h2 {
   max-width: 16ch !important;
   margin-top: 0.72rem !important;
-  font-size: clamp(2.8rem, 6vw, 5.8rem) !important;
+  font-size: 4.85rem !important;
   font-weight: 880 !important;
-  line-height: 0.94 !important;
+  line-height: 0.96 !important;
   text-align: center !important;
 }
 
@@ -2264,17 +2272,18 @@ html body .native-ui .dashboard-butler-title p {
   max-width: 34rem !important;
   margin-top: 0.82rem !important;
   color: #70757d !important;
-  font-size: clamp(0.98rem, 1.2vw, 1.16rem) !important;
+  font-size: 1.06rem !important;
   font-weight: 650 !important;
+  line-height: 1.55 !important;
   text-align: center !important;
 }
 
 html body .native-ui .dashboard-butler-chat {
-  width: min(100%, 54rem) !important;
+  width: min(100%, 50rem) !important;
   min-height: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: clamp(0.9rem, 1.6vw, 1.25rem) !important;
+  gap: 1rem !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
@@ -2284,7 +2293,7 @@ html body .native-ui .dashboard-butler-chat {
 
 html body .native-ui .dashboard-butler-shell.has-thread .dashboard-butler-chat {
   flex: 1 1 auto !important;
-  width: min(100%, 58rem) !important;
+  width: min(100%, 54rem) !important;
 }
 
 html body .native-ui .dashboard-butler-thread {
@@ -2344,6 +2353,8 @@ html body .native-ui .dashboard-butler-composer-stack {
 }
 
 html body .native-ui .dashboard-butler-prompts {
+  display: flex !important;
+  align-items: center !important;
   justify-content: center !important;
   flex-wrap: wrap !important;
   gap: 0.5rem !important;
@@ -2359,6 +2370,7 @@ html body .native-ui .dashboard-butler-message-actions button {
   justify-content: center !important;
   gap: 0.34rem !important;
   min-height: 2.28rem !important;
+  max-width: 100% !important;
   padding: 0 0.9rem !important;
   border: 0 !important;
   border-radius: 999px !important;
@@ -2367,6 +2379,8 @@ html body .native-ui .dashboard-butler-message-actions button {
   box-shadow: none !important;
   font-size: 0.72rem !important;
   font-weight: 720 !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
 }
 
 html body .native-ui .dashboard-butler-prompts button:hover,
@@ -2460,41 +2474,116 @@ html body .native-ui .dashboard-butler-composer button:disabled {
   transform: none !important;
 }
 
-@media (max-width: 767px) {
-  html body .native-ui .dashboard-butler-page {
-    padding: 1rem 0.9rem max(7.4rem, calc(6.2rem + env(safe-area-inset-bottom))) !important;
+@media (max-width: 1100px) {
+  html body .native-ui .dashboard-butler-shell {
+    padding-top: 3.5rem !important;
   }
 
-  html body .native-ui .dashboard-butler-shell {
-    min-height: calc(100dvh - 8.6rem) !important;
-    gap: 1.1rem !important;
+  html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell[data-tour="dashboard-hero"] {
+    padding-top: 3.5rem !important;
   }
 
   html body .native-ui .dashboard-butler-title h2 {
-    max-width: 11ch !important;
-    font-size: clamp(2.35rem, 13vw, 4rem) !important;
+    font-size: 4rem !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .dashboard-butler-page {
+    padding: 1.15rem 0.95rem max(7.8rem, calc(6.5rem + env(safe-area-inset-bottom))) !important;
+  }
+
+  html body .native-ui .dashboard-butler-shell {
+    width: 100% !important;
+    min-height: auto !important;
+    gap: 1.05rem !important;
+    padding-top: clamp(2.4rem, 9vh, 4.4rem) !important;
+    padding-bottom: 0.5rem !important;
+    justify-content: flex-start !important;
+  }
+
+  html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell[data-tour="dashboard-hero"] {
+    padding-top: clamp(2.4rem, 9vh, 4.4rem) !important;
+  }
+
+  html body .native-ui .dashboard-butler-shell.has-thread {
+    padding-top: 0.7rem !important;
+  }
+
+  html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell.has-thread[data-tour="dashboard-hero"] {
+    padding-top: 0.7rem !important;
+  }
+
+  html body .native-ui .dashboard-butler-title h2 {
+    max-width: 12ch !important;
+    margin-top: 0.62rem !important;
+    font-size: 2.7rem !important;
+    line-height: 1 !important;
+  }
+
+  html body .native-ui .dashboard-main > div.dashboard-overview-page.dashboard-butler-page:not(.mobile-editor-shell) section.dashboard-butler-shell[data-tour="dashboard-hero"] .dashboard-butler-title h2 {
+    max-width: 12ch !important;
+    font-size: 2.7rem !important;
+    line-height: 1 !important;
   }
 
   html body .native-ui .dashboard-butler-title p {
     max-width: 21rem !important;
-    font-size: 0.9rem !important;
+    margin-top: 0.74rem !important;
+    font-size: 0.93rem !important;
+    line-height: 1.48 !important;
+  }
+
+  html body .native-ui .dashboard-main > div.dashboard-overview-page.dashboard-butler-page:not(.mobile-editor-shell) section.dashboard-butler-shell[data-tour="dashboard-hero"] .dashboard-butler-title p {
+    max-width: 21rem !important;
+    font-size: 0.93rem !important;
+    line-height: 1.48 !important;
+  }
+
+  html body .native-ui .dashboard-butler-chat {
+    width: 100% !important;
+    gap: 0.86rem !important;
   }
 
   html body .native-ui .dashboard-butler-thread {
     max-height: calc(100dvh - 22rem) !important;
+    padding: 0 !important;
   }
 
   html body .native-ui .dashboard-butler-prompts {
-    flex-wrap: nowrap !important;
-    justify-content: flex-start !important;
-    overflow-x: auto !important;
-    padding-bottom: 0.05rem !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    overflow: visible !important;
+    gap: 0.45rem !important;
+    padding: 0 !important;
+  }
+
+  html body .native-ui .dashboard-butler-prompts::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  html body .native-ui .dashboard-butler-prompts button {
+    flex: 0 1 auto !important;
+    max-width: 100% !important;
+    min-height: 2.35rem !important;
+    padding: 0 0.82rem !important;
+    white-space: nowrap !important;
+  }
+
+  html body .native-ui .dashboard-main > div.dashboard-overview-page.dashboard-butler-page:not(.mobile-editor-shell) .dashboard-butler-prompts button {
+    min-height: 2.35rem !important;
   }
 
   html body .native-ui .dashboard-butler-composer {
     min-height: 3.7rem !important;
     grid-template-columns: minmax(0, 1fr) 2.5rem !important;
-    padding-left: 1rem !important;
+    gap: 0.5rem !important;
+    padding: 0.42rem 0.48rem 0.42rem 0.95rem !important;
+  }
+
+  html body .native-ui .dashboard-butler-composer input {
+    min-height: 2.5rem !important;
+    font-size: 0.9rem !important;
   }
 
   html body .native-ui .dashboard-butler-composer button {

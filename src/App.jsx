@@ -6154,10 +6154,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             };
 
             const butlerQuickPrompts = [
-                'Draft a warm reply for a reschedule request.',
-                'Generate a colour scheme from my logo.',
-                'Make my booking page feel like a luxury studio.',
-                'Help me set up a better weekly schedule.'
+                'Draft a client reply',
+                'Generate colour direction',
+                'Refine page design',
+                'Improve weekly schedule'
             ];
 
             const buildButlerResponse = (prompt, liveBody = '') => {
@@ -7631,7 +7631,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                 value={butlerInput}
                                                 onChange={(event) => setButlerInput(event.target.value)}
                                                 onKeyDown={handleButlerKeyDown}
-                                                placeholder={butlerSending ? 'Butler is thinking...' : 'Ask for a client reply, colour scheme, page direction, or workspace action...'}
+                                                placeholder={butlerSending ? 'Butler is thinking...' : 'Message the Butler...'}
                                             />
                                             <button
                                                 type="button"

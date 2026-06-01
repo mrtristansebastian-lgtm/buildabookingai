@@ -973,20 +973,6 @@ const dateValueToMs = (value) => {
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
-const formatDashboardMoney = (amountInCents = 0, currency = 'ZAR') => {
-  const code = /^[A-Z]{3}$/.test(String(currency || '').toUpperCase()) ? String(currency).toUpperCase() : 'ZAR';
-  const amount = Math.max(0, Math.round(Number(amountInCents) || 0)) / 100;
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: code,
-      maximumFractionDigits: amount % 1 ? 2 : 0
-    }).format(amount);
-  } catch {
-    return `${code} ${amount.toFixed(amount % 1 ? 2 : 0)}`;
-  }
-};
-
 const getBannerDisplay = (settings = {}) => {
   const bannerDisplay = settings.bannerDisplay || {};
   const height = Number(bannerDisplay.height);
@@ -1735,7 +1721,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [publicError, setPublicError] = useState('');
             const [publicReloadKey, setPublicReloadKey] = useState(0);
             const [activeTab, setActiveTab] = useState(initialWorkspaceRoute.activeTab);
-            const [dashboardPeriod, setDashboardPeriod] = useState('today');
+            const [butlerInput, setButlerInput] = useState('');
+            const [butlerMessages, setButlerMessages] = useState(() => ([
+            ]));
+            const [butlerSending, setButlerSending] = useState(false);
             const [editorTab, setEditorTab] = useState(initialWorkspaceRoute.editorTab);
             const [editorStudioModal, setEditorStudioModal] = useState(null);
             const editorStudioAudioRef = useRef(null);
@@ -1776,25 +1765,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [bookingSearch, setBookingSearch] = useState('');
             const [bookingSort, setBookingSort] = useState('newest');
             const [bookingPaymentFilter, setBookingPaymentFilter] = useState('all');
-            const [dashboardScheduleStaffId, setDashboardScheduleStaffId] = useState('all');
-            const [dashboardScheduleView, setDashboardScheduleView] = useState('availability');
-            const [dashboardFeedPages, setDashboardFeedPages] = useState({
-                bookings: 0,
-                chats: 0,
-                schedule: 0,
-                finance: 0
-            });
-            const [dashboardFeedPageSizes, setDashboardFeedPageSizes] = useState({
-                bookings: 5,
-                chats: 5,
-                schedule: 5,
-                finance: 5
-            });
-            const [dashboardFeedFilters, setDashboardFeedFilters] = useState({
-                bookings: 'all',
-                chats: 'all'
-            });
-            const [dashboardMobileTile, setDashboardMobileTile] = useState('bookings');
+
             const [profileNotificationFilter, setProfileNotificationFilter] = useState('all');
             const [profileSystemFilter, setProfileSystemFilter] = useState('all');
             const [bookingInfoDialog, setBookingInfoDialog] = useState(null);
@@ -1840,14 +1811,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [supportThreadFocus, setSupportThreadFocus] = useState(null);
             const [legalPanel, setLegalPanel] = useState(null);
             const [ownerNotifications, setOwnerNotifications] = useState([]);
-            const [dashboardClientThreads, setDashboardClientThreads] = useState([]);
+            const [workspaceClientThreads, setWorkspaceClientThreads] = useState([]);
             const [guestNotificationReadIds, setGuestNotificationReadIds] = useState(() => new Set());
             const [browserNotificationPermission, setBrowserNotificationPermission] = useState(getBrowserNotificationPermission);
             const toastTimerRef = useRef(null);
             const unsavedWorkspaceChangesRef = useRef(false);
             const ownerNotificationSeenRef = useRef(new Set());
             const ownerNotificationsReadyRef = useRef(false);
-            const dashboardTileTouchRef = useRef(null);
             
             const showToast = (msg) => {
                 window.clearTimeout(toastTimerRef.current);
@@ -1895,7 +1865,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 if (activeTab !== 'profile') setActiveProfileSection('');
                 setMobileNavOpen(false);
             }, [activeTab]);
-
             useEffect(() => {
                 const syncPublicRoute = () => setPublicSlug(getPublicBookingSlug());
                 window.addEventListener('popstate', syncPublicRoute);
@@ -2692,8 +2661,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }));
             }, [clientRecords, exampleBooking, guestNotificationReadIds, isGuestWorkspace, visibleBookings]);
             const workspaceNotifications = isGuestWorkspace ? guestOwnerNotifications : ownerNotifications;
-            const dashboardSupportThreads = useMemo(() => {
-                if (!isGuestWorkspace) return dashboardClientThreads;
+            const workspaceSupportThreads = useMemo(() => {
+                if (!isGuestWorkspace) return workspaceClientThreads;
                 const seenClients = new Set();
                 return visibleBookings
                     .filter(booking => ['pending', 'confirmed', 'waitlist'].includes(String(booking.status || '').toLowerCase()))
@@ -2726,9 +2695,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     })
                     .sort((a, b) => dateValueToMs(b.lastMessageAt || b.updatedAt) - dateValueToMs(a.lastMessageAt || a.updatedAt))
                     .slice(0, 40);
-            }, [dashboardClientThreads, isGuestWorkspace, visibleBookings]);
-            const dashboardSupportUnreadCount = dashboardSupportThreads.reduce((sum, thread) => sum + Number(thread.ownerUnread || 0), 0);
-
+            }, [workspaceClientThreads, isGuestWorkspace, visibleBookings]);
             const clientLabelOptions = ['VIP', 'Needs Follow-up', 'Prefers Chat', 'High Value', 'No-show Risk'];
             const buildClientKey = (name, phone) => {
                 const phoneKey = (phone || '').replace(/\D/g, '');
@@ -2928,512 +2895,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 ? () => setGuestNotificationReadIds(prev => new Set([...prev, ...guestOwnerNotifications.map(notification => notification.id)]))
                 : markAllOwnerNotificationsRead;
 
-            const dashboardPortfolio = useMemo(() => {
-                const today = new Date();
-                const todayKey = getLocalDateStr(today);
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowKey = getLocalDateStr(tomorrow);
-                const weekEnd = new Date(today);
-                weekEnd.setDate(weekEnd.getDate() + 6);
-                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                const monthLookup = {
-                    jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
-                    may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
-                    sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11
-                };
-                const addDays = (date, amount) => {
-                    const nextDate = new Date(date);
-                    nextDate.setDate(nextDate.getDate() + amount);
-                    return nextDate;
-                };
-                const formatRangeDate = (date) => date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                const parseBookingDate = (booking) => {
-                    if (booking.dateKey) return booking.dateKey;
-                    const rawDate = String(booking.date || '').trim();
-                    if (!rawDate) return null;
-                    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) return rawDate;
-                    if (/^today$/i.test(rawDate)) return todayKey;
-                    if (/^tomorrow$/i.test(rawDate)) return tomorrowKey;
-                    const dayMonthMatch = rawDate.match(/(?:mon|tue|wed|thu|fri|sat|sun)?[a-z]*,?\s*(\d{1,2})\s+([a-z]+)(?:\s+(\d{4}))?/i);
-                    if (dayMonthMatch) {
-                        const day = Number(dayMonthMatch[1]);
-                        const month = monthLookup[dayMonthMatch[2].toLowerCase()];
-                        const year = Number(dayMonthMatch[3]) || today.getFullYear();
-                        if (!Number.isNaN(day) && month !== undefined) return getLocalDateStr(new Date(year, month, day));
-                    }
-                    const parsed = new Date(rawDate);
-                    return Number.isNaN(parsed.getTime()) ? null : getLocalDateStr(parsed);
-                };
-                const periodConfig = {
-                    all: {
-                        id: 'all',
-                        label: 'All time',
-                        title: 'All time overview',
-                        rangeLabel: 'All time',
-                        start: null,
-                        end: null,
-                        emptyTitle: 'No bookings yet',
-                        emptyText: 'Your full booking history will appear here once clients start booking.'
-                    },
-                    today: {
-                        id: 'today',
-                        label: 'Today',
-                        title: 'Today at a glance',
-                        rangeLabel: today.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }),
-                        start: today,
-                        end: today,
-                        emptyTitle: 'No bookings today',
-                        emptyText: 'Today is clear. New requests will appear here as clients book.'
-                    },
-                    week: {
-                        id: 'week',
-                        label: 'Week',
-                        title: 'This week',
-                        rangeLabel: `${formatRangeDate(today)} - ${formatRangeDate(weekEnd)}`,
-                        start: today,
-                        end: weekEnd,
-                        emptyTitle: 'No bookings this week',
-                        emptyText: 'This week is open. Confirmed bookings and requests will appear here.'
-                    },
-                    month: {
-                        id: 'month',
-                        label: 'Month',
-                        title: 'This month',
-                        rangeLabel: today.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
-                        start: monthStart,
-                        end: monthEnd,
-                        emptyTitle: 'No bookings this month',
-                        emptyText: 'Monthly activity will populate as real clients book.'
-                    }
-                };
-                const activePeriod = periodConfig[dashboardPeriod] || periodConfig.today;
-                const isDashboardAllTime = activePeriod.id === 'all';
-                const startKey = isDashboardAllTime ? '' : getLocalDateStr(activePeriod.start);
-                const endKey = isDashboardAllTime ? '9999-12-31' : getLocalDateStr(activePeriod.end);
-                const defaultTimes = settings.availableTimes || [];
-                const dateKeys = [];
-                if (!isDashboardAllTime) {
-                    for (let cursor = new Date(activePeriod.start), guard = 0; cursor <= activePeriod.end && guard < 45; cursor = addDays(cursor, 1), guard += 1) {
-                        dateKeys.push(getLocalDateStr(cursor));
-                    }
-                }
-                const periodCapacity = dateKeys.reduce((total, dateKey) => {
-                    const daySchedule = settings.schedule?.[dateKey] || {};
-                    const dayAvailable = daySchedule.available ?? true;
-                    if (!dayAvailable) return total;
-                    const dayTimes = Array.isArray(daySchedule.times) ? daySchedule.times : defaultTimes;
-                    return total + dayTimes.length;
-                }, 0);
-
-                const bookingsWithDates = visibleBookings.map(booking => {
-                    const dateKeyResolved = parseBookingDate(booking);
-                    const timeMatch = String(booking.time || '').match(/\b(\d{1,2}):(\d{2})\b/);
-                    const normalizedTime = timeMatch ? `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}` : '00:00';
-                    const scheduledMs = dateKeyResolved ? new Date(`${dateKeyResolved}T${normalizedTime}:00`).getTime() : 0;
-                    return {
-                        ...booking,
-                        dateKeyResolved,
-                        dashboardSortMs: scheduledMs || dateValueToMs(booking.updatedAt || booking.timestamp || booking.createdAt) || 0
-                    };
-                });
-                const activeBookings = bookingsWithDates.filter(booking => booking.status !== 'declined');
-                const periodBookings = isDashboardAllTime
-                    ? bookingsWithDates
-                    : bookingsWithDates.filter(booking => booking.dateKeyResolved && booking.dateKeyResolved >= startKey && booking.dateKeyResolved <= endKey);
-                const periodActiveBookings = periodBookings.filter(booking => booking.status !== 'declined');
-                const pending = periodActiveBookings.filter(booking => booking.status === 'pending').length;
-                const waitlist = periodActiveBookings.filter(booking => booking.status === 'waitlist').length;
-                const confirmed = periodActiveBookings.filter(booking => booking.status === 'confirmed').length;
-                const declined = periodBookings.filter(booking => booking.status === 'declined').length;
-                const reservedSlots = periodActiveBookings.filter(booking => booking.status !== 'waitlist' && booking.time !== 'Waitlist').length;
-                const openSlots = Math.max(0, periodCapacity - reservedSlots);
-                const bookingRate = periodActiveBookings.length ? Math.round((confirmed / periodActiveBookings.length) * 100) : 0;
-                const dashboardManualGateways = new Set(['manual_eft', 'cash']);
-                const financePeriodStartMs = isDashboardAllTime ? 0 : new Date(`${startKey}T00:00:00`).getTime();
-                const financePeriodEndMs = isDashboardAllTime ? Number.POSITIVE_INFINITY : addDays(new Date(`${endKey}T00:00:00`), 1).getTime();
-                const normalizeFinanceStatus = (value = '', amountInCents = 0) => {
-                    const clean = String(value || '').trim().toLowerCase();
-                    if (clean.includes('unpaid') || clean.includes('not paid') || clean.includes('not_paid')) return 'manual_pending';
-                    if ((clean.includes('paid') && !clean.includes('unpaid')) || clean.includes('settled') || clean.includes('complete') || clean.includes('success')) return 'paid';
-                    if (clean.includes('pending') || clean.includes('manual') || clean.includes('open')) return 'manual_pending';
-                    return Number(amountInCents || 0) > 0 ? 'paid' : 'manual_pending';
-                };
-                const financeRecordMsFromBooking = (booking) => (
-                    dateValueToMs(booking.paidAt || booking.updatedAt || booking.timestamp || booking.createdAt) ||
-                    (booking.dateKeyResolved ? new Date(`${booking.dateKeyResolved}T00:00:00`).getTime() : 0)
-                );
-                const financeRecordsForDashboard = [
-                    ...bookingsWithDates
-                        .filter((booking) => {
-                            if (!booking || booking.isExample) return false;
-                            const method = booking.paymentGateway || booking.paymentMethod || '';
-                            return isGuestWorkspace || dashboardManualGateways.has(method) || booking.paymentStatus === 'manual_pending';
-                        })
-                        .map((booking) => {
-                            const amountInCents = Number(booking.amountInCents || booking.amountPaidInCents || 0) || parseAmountToCents(booking.total || booking.servicePrice || booking.price || booking.deposit || 0);
-                            return {
-                                status: booking.paymentStatus === 'paid' ? 'paid' : 'manual_pending',
-                                amountInCents,
-                                currency: booking.currency || settings.currency || 'ZAR',
-                                updatedAtMs: financeRecordMsFromBooking(booking),
-                                title: booking.clientName || 'Client payment',
-                                detail: booking.serviceName || booking.service || 'Booking payment'
-                            };
-                        }),
-                    ...financeImports
-                        .filter((record) => record && !record.isExample)
-                        .map((record) => {
-                            const amountInCents = Number(record.amountInCents || record.amountPaidInCents || 0) || parseAmountToCents(record.amount || record.total || record.price || 0);
-                            return {
-                                status: normalizeFinanceStatus(record.status || record.paymentStatus, amountInCents),
-                                amountInCents,
-                                currency: record.currency || settings.currency || 'ZAR',
-                                updatedAtMs: dateValueToMs(record.updatedAtMs || record.updatedAt || record.paidAt || record.createdAt),
-                                title: record.clientName || record.name || record.reference || 'Finance row',
-                                detail: record.serviceName || record.gateway || record.paymentMethod || 'Imported payment'
-                            };
-                        }),
-                    ...financePaymentAttempts
-                        .filter((record) => record && !record.isExample)
-                        .map((record) => ({
-                            status: record.status || 'initiated',
-                            amountInCents: Number(record.amountInCents || record.amountPaidInCents || 0),
-                            currency: record.currency || settings.currency || 'ZAR',
-                            updatedAtMs: dateValueToMs(record.paidAt || record.updatedAtMs || record.updatedAt || record.createdAt),
-                            title: record.clientName || record.customerName || 'Payment attempt',
-                            detail: record.gateway || record.provider || record.status || 'Gateway activity'
-                        }))
-                ];
-                const paidFinanceRecords = financeRecordsForDashboard.filter(record => (
-                    normalizeFinanceStatus(record.status, record.amountInCents) === 'paid' &&
-                    record.updatedAtMs >= financePeriodStartMs &&
-                    record.updatedAtMs < financePeriodEndMs
-                ));
-                const pendingFinanceRecords = financeRecordsForDashboard.filter(record => (
-                    normalizeFinanceStatus(record.status, record.amountInCents) !== 'paid' &&
-                    record.updatedAtMs >= financePeriodStartMs &&
-                    record.updatedAtMs < financePeriodEndMs
-                ));
-                const totalRevenueInCents = paidFinanceRecords.reduce((sum, record) => sum + Number(record.amountInCents || 0), 0);
-                const pendingRevenueInCents = pendingFinanceRecords.reduce((sum, record) => sum + Number(record.amountInCents || 0), 0);
-                const currencyCounts = financeRecordsForDashboard.reduce((acc, record) => {
-                    const code = String(record.currency || '').toUpperCase();
-                    if (/^[A-Z]{3}$/.test(code)) acc[code] = (acc[code] || 0) + 1;
-                    return acc;
-                }, {});
-                const financeCurrencyStorageKey = `build-a-booking-finance-currency-${String(workspaceOwnerId || (isGuestWorkspace ? 'guest' : 'local')).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
-                const storedFinanceCurrency = String(safeLocalGet(financeCurrencyStorageKey) || '').toUpperCase();
-                const dominantFinanceCurrency = Object.entries(currencyCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
-                const dashboardRevenueCurrency = /^[A-Z]{3}$/.test(storedFinanceCurrency)
-                    ? storedFinanceCurrency
-                    : (dominantFinanceCurrency || settings.currency || 'ZAR');
-                const totalRevenueLabel = formatDashboardMoney(totalRevenueInCents, dashboardRevenueCurrency);
-                const pendingRevenueLabel = formatDashboardMoney(pendingRevenueInCents, dashboardRevenueCurrency);
-                const totalRevenueHint = `${paidFinanceRecords.length} paid ${paidFinanceRecords.length === 1 ? 'record' : 'records'}`;
-                const financeActivity = financeRecordsForDashboard
-                    .filter(record => record.updatedAtMs >= financePeriodStartMs && record.updatedAtMs < financePeriodEndMs)
-                    .sort((a, b) => Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0))
-                    .slice(0, 24)
-                    .map(record => ({
-                        ...record,
-                        amountLabel: formatDashboardMoney(Number(record.amountInCents || 0), record.currency || dashboardRevenueCurrency),
-                        normalizedStatus: normalizeFinanceStatus(record.status, record.amountInCents)
-                    }));
-                const periodClientIds = new Set(periodActiveBookings.map(booking => buildClientKey(booking.clientName, booking.clientPhone)));
-                const firstTimers = Array.from(periodClientIds).filter(id => {
-                    const client = clientDirectory.find(profile => profile.id === id);
-                    return !client || client.bookingCount <= 1 || client.autoLabels?.includes('First Time');
-                }).length;
-                const periodNoShowRisk = periodActiveBookings.filter(booking => booking.noShowHistory).length;
-                const todaySchedule = settings.schedule?.[todayKey] || {};
-                const todayTimes = Array.isArray(todaySchedule.times) ? todaySchedule.times : defaultTimes;
-                const todayAvailable = todaySchedule.available ?? true;
-                const todayBookings = bookingsWithDates.filter(booking => booking.dateKeyResolved === todayKey && booking.status !== 'declined');
-                const todayReserved = todayBookings.filter(booking => booking.status !== 'waitlist' && booking.time !== 'Waitlist').length;
-                const todayOpenSlots = todayAvailable ? Math.max(0, todayTimes.length - todayReserved) : 0;
-                const upcomingBookings = activeBookings.filter(booking => !booking.dateKeyResolved || booking.dateKeyResolved >= todayKey);
-                const emailAutomations = emailMessageKeys.filter(key => communications[key]?.active).length;
-                const emailAutomationTotal = emailMessageKeys.length;
-                const pageReadinessItems = [
-                    Boolean(settings.brandName),
-                    Boolean(settings.slug),
-                    defaultTimes.length > 0,
-                    Boolean(settings.welcomeMessage),
-                    communications.confirmed?.active
-                ];
-                const pageReadiness = Math.round((pageReadinessItems.filter(Boolean).length / pageReadinessItems.length) * 100);
-                const clientEnrichmentRate = clientMetrics.total ? Math.round((clientMetrics.enriched / clientMetrics.total) * 100) : 0;
-                const hour = today.getHours();
-                const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-                const needsAttention = pending + waitlist;
-
-                return {
-                    greeting,
-                    periods: Object.values(periodConfig).map(period => ({ id: period.id, label: period.label })),
-                    period: activePeriod,
-                    startKey,
-                    endKey,
-                    periodBookings,
-                    periodActiveBookings,
-                    dateKeys,
-                    todayKey,
-                    defaultTimes,
-                    activityList: periodActiveBookings.length ? periodActiveBookings : [],
-                    upcomingBookings,
-                    todayBookings,
-                    todayOpenSlots,
-                    todayCapacity: todayAvailable ? todayTimes.length : 0,
-                    todayAvailable,
-                    bookingRate,
-                    totalRevenueLabel,
-                    totalRevenueHint,
-                    totalRevenueInCents,
-                    totalRevenuePaidCount: paidFinanceRecords.length,
-                    pendingRevenueLabel,
-                    pendingFinanceCount: pendingFinanceRecords.length,
-                    financeActivity,
-                    pending,
-                    waitlist,
-                    confirmed,
-                    declined,
-                    reservedSlots,
-                    openSlots,
-                    capacity: periodCapacity,
-                    needsAttention,
-                    firstTimers,
-                    clientCount: periodClientIds.size,
-                    noShowRisk: periodNoShowRisk,
-                    pageReadiness,
-                    clientEnrichmentRate,
-                    emailAutomations,
-                    emailAutomationTotal,
-                    activeBookings: periodActiveBookings.length,
-                    allActiveBookings: activeBookings.length
-                };
-            }, [visibleBookings, financeImports, financePaymentAttempts, dashboardPeriod, settings.schedule, settings.availableTimes, settings.brandName, settings.slug, settings.welcomeMessage, settings.currency, communications, clientMetrics, clientDirectory, isGuestWorkspace, workspaceOwnerId]);
-
-            const dashboardFeedFilterOptions = [
-                { id: 'all', label: 'All' },
-                { id: 'pending', label: 'Requests' },
-                { id: 'waitlist', label: 'Waitlist' },
-                { id: 'confirmed', label: 'Confirmed' },
-                { id: 'reschedule', label: 'Reschedule' }
-            ];
-            const sortDashboardLatest = (items, getTime) => (
-                [...(items || [])].sort((a, b) => {
-                    const aTime = Number(getTime(a) || 0);
-                    const bTime = Number(getTime(b) || 0);
-                    return bTime - aTime;
-                })
-            );
-            const getDashboardFilterText = (item) => ([
-                item?.status,
-                item?.type,
-                item?.kind,
-                item?.requestType,
-                item?.rescheduleStatus,
-                item?.bookingStatus,
-                item?.title,
-                item?.body,
-                item?.detail,
-                item?.clientName,
-                item?.serviceName,
-                item?.clientNote,
-                item?.note,
-                item?.notes,
-                item?.lastMessage,
-                item?.message
-            ].filter(Boolean).join(' ').toLowerCase());
-            const bookingMatchesDashboardFilter = (booking, filter) => {
-                if (!filter || filter === 'all') return true;
-                const status = String(booking?.status || '').toLowerCase();
-                const text = getDashboardFilterText(booking);
-                if (filter === 'pending') return status === 'pending' || text.includes('request') || text.includes('review');
-                if (filter === 'waitlist') return status === 'waitlist';
-                if (filter === 'confirmed') return status === 'confirmed';
-                if (filter === 'reschedule') {
-                    return text.includes('reschedule') || text.includes('rescheduled') || text.includes('change time') || text.includes('move');
-                }
-                return true;
-            };
-            const notificationMatchesDashboardFilter = (notification, filter) => {
-                if (!filter || filter === 'all') return true;
-                const text = getDashboardFilterText(notification);
-                if (filter === 'pending') return text.includes('request') || text.includes('review') || text.includes('ready');
-                if (filter === 'waitlist') return text.includes('waitlist') || text.includes('spot opens') || text.includes('spot opened');
-                if (filter === 'confirmed') return text.includes('confirmed');
-                if (filter === 'reschedule') return text.includes('reschedule') || text.includes('rescheduled') || text.includes('change time') || text.includes('move');
-                return true;
-            };
-            const threadMatchesDashboardFilter = (thread, filter) => {
-                if (!filter || filter === 'all') return true;
-                const status = String(thread?.bookingStatus || thread?.status || '').toLowerCase();
-                const rescheduleStatus = String(thread?.rescheduleStatus || '').toLowerCase();
-                const text = getDashboardFilterText(thread);
-                if (filter === 'pending') return ['pending', 'requested'].includes(status) || text.includes('request') || text.includes('review');
-                if (filter === 'waitlist') return status === 'waitlist' || text.includes('waitlist') || text.includes('spot opens');
-                if (filter === 'confirmed') return status === 'confirmed';
-                if (filter === 'reschedule') {
-                    return ['requested', 'countered'].includes(rescheduleStatus) || text.includes('reschedule') || text.includes('rescheduled') || text.includes('change time') || text.includes('move');
-                }
-                return true;
-            };
-            const getBookingDashboardDot = (booking) => (
-                booking?.status === 'waitlist'
-                    ? 'waitlist'
-                    : booking?.status === 'confirmed' && booking?.paymentStatus === 'paid'
-                        ? 'paid-confirmed'
-                        : booking?.status === 'confirmed'
-                            ? 'confirmed-unpaid'
-                            : (booking?.status || 'pending')
-            );
-            const getThreadDashboardDot = (thread, linkedBooking = null) => {
-                const status = String(thread?.bookingStatus || thread?.status || '').toLowerCase();
-                if (linkedBooking) return getBookingDashboardDot(linkedBooking);
-                if (threadMatchesDashboardFilter(thread, 'reschedule')) return 'reschedule';
-                if (status === 'waitlist') return 'waitlist';
-                if (status === 'confirmed' && String(thread?.paymentStatus || '').toLowerCase() === 'paid') return 'paid-confirmed';
-                if (status === 'confirmed') return 'confirmed-unpaid';
-                return Number(thread?.ownerUnread || 0) > 0 ? 'unread' : 'pending';
-            };
-            const renderDashboardFilterControl = (section) => (
-                <div className="dashboard-filter-strip" aria-label={`${section} filter`}>
-                    {dashboardFeedFilterOptions.map(option => (
-                        <button
-                            key={`${section}-${option.id}`}
-                            type="button"
-                            className={`dashboard-filter-chip ${dashboardFeedFilters[section] === option.id ? 'is-active' : ''}`}
-                            onClick={() => {
-                                setDashboardFeedFilters(prev => ({ ...prev, [section]: option.id }));
-                                resetDashboardFeedPage(section);
-                            }}
-                        >
-                            {option.label}
-                        </button>
-                    ))}
-                </div>
-            );
-            const getBookingDashboardTime = (booking) => (
-                Number(booking?.dashboardSortMs || 0) ||
-                dateValueToMs(booking?.updatedAt || booking?.timestamp || booking?.createdAt)
-            );
-            const getNotificationDashboardTime = (notification) => (
-                dateValueToMs(notification?.createdAtMs || notification?.createdAt || notification?.updatedAt) ||
-                Number(notification?.createdAtMs || notification?.updatedAtMs || 0)
-            );
-            const getDateKeyDashboardTime = (dateKey) => (
-                dateKey ? new Date(`${dateKey}T00:00:00`).getTime() : 0
-            );
-            const renderDashboardActivityAction = (label = 'Open') => {
-                const normalizedLabel = String(label || '').trim();
-                if (normalizedLabel.toLowerCase() === 'open') {
-                    return (
-                        <span className="dashboard-activity-action is-arrow" aria-label="Open">
-                            <ArrowUpRight size={13} strokeWidth={2.8} />
-                        </span>
-                    );
-                }
-                return <span className="dashboard-activity-action">{normalizedLabel}</span>;
-            };
-            const dashboardMobileTiles = [
-                { id: 'bookings', label: 'Bookings', icon: BookOpenCheck, value: dashboardPortfolio.activeBookings, hint: 'Total', badgeValue: dashboardPortfolio.activeBookings },
-                { id: 'chats', label: 'Chats', icon: MessagesSquare, value: dashboardSupportUnreadCount, hint: 'Unread', badgeValue: dashboardSupportUnreadCount },
-                { id: 'schedule', label: 'Schedule', icon: CalendarDays, value: dashboardPortfolio.openSlots, hint: 'Open', badgeValue: dashboardPortfolio.openSlots },
-                { id: 'finance', label: 'Payments', icon: DollarSign, value: dashboardPortfolio.totalRevenueLabel, hint: 'Revenue', badgeValue: dashboardPortfolio.pendingFinanceCount }
-            ];
-            const dashboardActiveTileIndex = Math.max(0, dashboardMobileTiles.findIndex(tile => tile.id === dashboardMobileTile));
-            const dashboardActiveTile = dashboardMobileTiles[dashboardActiveTileIndex] || dashboardMobileTiles[0];
-            const dashboardScheduleViewOptions = [
-                { id: 'availability', label: 'Availability' },
-                { id: 'pending', label: 'Pending Requests' },
-                { id: 'confirmed', label: 'Confirmed Bookings' }
-            ];
-            const DASHBOARD_FEED_PAGE_SIZE = 5;
-            const DASHBOARD_FEED_PAGE_SIZE_OPTIONS = [5, 10, 15];
-            const resetDashboardFeedPage = (section) => {
-                setDashboardFeedPages(prev => ({ ...prev, [section]: 0 }));
-            };
-            const resetDashboardFeedPages = () => {
-                setDashboardFeedPages({
-                    bookings: 0,
-                    chats: 0,
-                    schedule: 0,
-                    finance: 0
-                });
-            };
-            const setDashboardFeedPageSize = (section, pageSize) => {
-                const safeSize = DASHBOARD_FEED_PAGE_SIZE_OPTIONS.includes(Number(pageSize))
-                    ? Number(pageSize)
-                    : DASHBOARD_FEED_PAGE_SIZE;
-                setDashboardFeedPageSizes(prev => ({ ...prev, [section]: safeSize }));
-                resetDashboardFeedPage(section);
-            };
-            const getDashboardPagedFeed = (section, rows, pageSize = dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE) => {
-                const safeRows = Array.isArray(rows) ? rows : [];
-                const totalPages = Math.max(1, Math.ceil(safeRows.length / pageSize));
-                const requestedPage = Number(dashboardFeedPages[section] || 0);
-                const page = Math.min(Math.max(requestedPage, 0), totalPages - 1);
-                return {
-                    rows: safeRows.slice(page * pageSize, page * pageSize + pageSize),
-                    page,
-                    totalPages,
-                    totalRows: safeRows.length
-                };
-            };
-            const shiftDashboardFeedPage = (section, direction, totalPages) => {
-                setDashboardFeedPages(prev => {
-                    const pageCount = Math.max(1, Number(totalPages || 1));
-                    const current = Math.min(Math.max(Number(prev[section] || 0), 0), pageCount - 1);
-                    return { ...prev, [section]: (current + direction + pageCount) % pageCount };
-                });
-            };
-            const renderDashboardFeedPager = (section, pageData) => {
-                if (!pageData || pageData.totalRows <= DASHBOARD_FEED_PAGE_SIZE) return null;
-                const startRow = pageData.page * (dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE) + 1;
-                const endRow = Math.min(pageData.totalRows, startRow + (dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE) - 1);
-                return (
-                    <div className="dashboard-feed-pager" aria-label={`${section} pages`}>
-                        <button
-                            type="button"
-                            onClick={() => shiftDashboardFeedPage(section, -1, pageData.totalPages)}
-                            aria-label={`Previous ${section} page`}
-                            disabled={pageData.totalPages <= 1}
-                        >
-                            <ChevronLeft size={14} strokeWidth={2.6} />
-                        </button>
-                        <span>{startRow}-{endRow} of {pageData.totalRows}</span>
-                        <button
-                            type="button"
-                            onClick={() => shiftDashboardFeedPage(section, 1, pageData.totalPages)}
-                            aria-label={`Next ${section} page`}
-                            disabled={pageData.totalPages <= 1}
-                        >
-                            <ChevronRight size={14} strokeWidth={2.6} />
-                        </button>
-                    </div>
-                );
-            };
-            const shiftDashboardMobileTile = (direction = 1) => {
-                setDashboardMobileTile(current => {
-                    const currentIndex = Math.max(0, dashboardMobileTiles.findIndex(tile => tile.id === current));
-                    const nextIndex = (currentIndex + direction + dashboardMobileTiles.length) % dashboardMobileTiles.length;
-                    return dashboardMobileTiles[nextIndex]?.id || 'bookings';
-                });
-            };
-            const handleDashboardTileTouchStart = (event) => {
-                dashboardTileTouchRef.current = event.touches?.[0]?.clientX ?? null;
-            };
-            const handleDashboardTileTouchEnd = (event) => {
-                const startX = dashboardTileTouchRef.current;
-                dashboardTileTouchRef.current = null;
-                const endX = event.changedTouches?.[0]?.clientX;
-                if (!Number.isFinite(startX) || !Number.isFinite(endX)) return;
-                const delta = endX - startX;
-                if (Math.abs(delta) < 44) return;
-                shiftDashboardMobileTile(delta < 0 ? 1 : -1);
-            };
+            const dashboardGreeting = useMemo(() => {
+                const hour = new Date().getHours();
+                if (hour < 12) return 'Good morning';
+                if (hour < 18) return 'Good afternoon';
+                return 'Good evening';
+            }, []);
 
             const filteredClients = useMemo(() => {
                 const query = clientSearch.trim().toLowerCase();
@@ -3560,7 +3027,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
             useEffect(() => {
                 if (!isFirebaseConfigured || !db || !user || !workspaceOwnerId || publicSlug || isGuestWorkspace) {
-                    setDashboardClientThreads([]);
+                    setWorkspaceClientThreads([]);
                     return undefined;
                 }
                 const threadsQuery = FirebaseSDK.query(
@@ -3575,8 +3042,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             dateValueToMs(a.lastMessageAt || a.updatedAt || a.createdAt)
                         ))
                         .slice(0, 40);
-                    setDashboardClientThreads(nextThreads);
-                }, (error) => console.error('Dashboard client threads sync failed', error));
+                    setWorkspaceClientThreads(nextThreads);
+                }, (error) => console.error('Workspace client threads sync failed', error));
                 return () => unsubscribe();
             }, [user?.uid, workspaceOwnerId, publicSlug, isGuestWorkspace]);
 
@@ -5010,6 +4477,22 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 { id: 'style', number: '04', icon: Sparkles, title: 'Style System' },
                 { id: 'form', number: '05', icon: FileText, title: 'Client Form' }
             ];
+            const editorRoomAliases = {
+                action: 'style',
+                banner: 'style',
+                buttons: 'style',
+                calendar: 'style',
+                copy: 'introduction',
+                faq: 'style',
+                features: 'form',
+                identity: 'introduction',
+                logo: 'style',
+                services: 'style',
+                social: 'style',
+                time: 'style',
+                venue: 'style',
+                visuals: 'style'
+            };
             const roomTabMap = {
                 introduction: 'identity',
                 logo: 'visuals',
@@ -5026,9 +4509,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 social: 'features'
             };
             const openEditorRoom = (roomId) => {
-                const normalizedRoomId = roomId === 'identity'
-                    ? 'introduction'
-                    : (roomId === 'logo' || roomId === 'banner' ? 'style' : roomId);
+                const normalizedRoomId = editorRoomAliases[roomId]
+                    || (editorRoomScenes.some(scene => scene.id === roomId) ? roomId : 'style');
                 setEditorStudioModal(normalizedRoomId);
                 setEditorTab(roomTabMap[normalizedRoomId] || 'identity');
                 playEditorStudioSound('step');
@@ -5096,17 +4578,17 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     logo: 'style',
                     banner: 'style',
                     services: 'style',
-                    calendar: 'calendar',
-                    time: 'time',
-                    faq: 'faq',
-                    features: 'faq',
+                    calendar: 'style',
+                    time: 'style',
+                    faq: 'style',
+                    features: 'form',
                     form: 'form',
-                    social: 'social',
-                    venue: 'venue',
-                    action: 'buttons',
-                    buttons: 'buttons',
+                    social: 'style',
+                    venue: 'style',
+                    action: 'style',
+                    buttons: 'style',
                     copy: 'introduction',
-                    visuals: 'calendar'
+                    visuals: 'style'
                 };
                 openEditorRoom(inspectRoomMap[tab] || tab);
             };
@@ -6613,7 +6095,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 setActiveTab('communications');
             };
 
-            const openDashboardSupportThread = (thread) => {
+            const openWorkspaceSupportThread = (thread) => {
                 const linkedBooking = visibleBookings.find(booking => (
                     booking.id === thread?.bookingId ||
                     booking.threadId === thread?.id ||
@@ -6630,6 +6112,214 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 if (!confirmLeavingUnsavedChanges()) return;
                 setSupportThreadFocus({ threadId: thread.id, bookingId: thread.bookingId || '', requestId: Date.now() });
                 setActiveTab('communications');
+            };
+
+            const butlerQuickPrompts = [
+                'Draft a warm reply for a reschedule request.',
+                'Generate a colour scheme from my logo.',
+                'Make my booking page feel like a luxury studio.',
+                'Help me set up a better weekly schedule.'
+            ];
+
+            const buildButlerResponse = (prompt, liveBody = '') => {
+                const lowerPrompt = prompt.toLowerCase();
+                const messageId = `butler-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                const withLiveBody = (message) => liveBody ? { ...message, body: liveBody } : message;
+                if (/(reply|client|chat|message|reschedule|late|follow)/.test(lowerPrompt)) {
+                    return withLiveBody({
+                        id: messageId,
+                        role: 'assistant',
+                        body: `I would handle this from the client conversation first. Keep it warm, short, and decisive: acknowledge the request, offer the next clear option, and protect your schedule boundaries.`,
+                        actions: [
+                            { id: `${messageId}-draft`, label: 'Draft reply', type: 'draft-reply' },
+                            { id: `${messageId}-open-comms`, label: 'Open chats', type: 'navigate', tab: 'communications' }
+                        ]
+                    });
+                }
+                if (/(logo|colour|color|palette|scheme|brand)/.test(lowerPrompt)) {
+                    const palettePhrase = detectedThemePalette
+                        ? `${themePaletteLabel(detectedThemePalette)} is already reading as the strongest direction.`
+                        : settings.logo || settings.bannerImage
+                            ? 'I can read the uploaded brand media and push that signal into Colour Direction.'
+                            : 'Upload a logo or banner in the editor first, then I can read a stronger brand signal.';
+                    return withLiveBody({
+                        id: messageId,
+                        role: 'assistant',
+                        body: `${palettePhrase} For the premium light UI, I would keep white as the canvas, black for structure, one confident accent, and a softer tint only for selected states.`,
+                        actions: [
+                            { id: `${messageId}-read-logo`, label: 'Read logo colours', type: 'detect-palette' },
+                            { id: `${messageId}-open-colours`, label: 'Open colours', type: 'navigate', tab: 'editor', editorTab: 'themes', room: 'colours' }
+                        ]
+                    });
+                }
+                if (/(design|theme|style|premium|luxury|page|booking page|look)/.test(lowerPrompt)) {
+                    const directionId = lowerPrompt.includes('luxury') || lowerPrompt.includes('premium') || lowerPrompt.includes('luxe')
+                        ? 'editorial-luxe'
+                        : lowerPrompt.includes('fast') || lowerPrompt.includes('simple') || lowerPrompt.includes('clean')
+                            ? 'native-precision'
+                            : 'studio-glass';
+                    const direction = getEditorStyleDirection(directionId);
+                    return withLiveBody({
+                        id: messageId,
+                        role: 'assistant',
+                        body: `I would start with ${direction.label}. It gives ${settings.brandName || 'the page'} a stronger visual opinion while keeping the booking journey locked and low-friction.`,
+                        actions: [
+                            { id: `${messageId}-apply-style`, label: `Apply ${direction.label}`, type: 'apply-style', directionId },
+                            { id: `${messageId}-open-style`, label: 'Open style system', type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'style' }
+                        ]
+                    });
+                }
+                if (/(schedule|hours|availability|time|slot|week)/.test(lowerPrompt)) {
+                    return withLiveBody({
+                        id: messageId,
+                        role: 'assistant',
+                        body: 'The clean move is to tighten availability first: define the days you truly want clients to book, protect buffer time, then let the booking page expose only confident slots.',
+                        actions: [
+                            { id: `${messageId}-schedule`, label: 'Open schedule', type: 'navigate', tab: 'business' },
+                            { id: `${messageId}-bookings`, label: 'Review bookings', type: 'navigate', tab: 'bookings' }
+                        ]
+                    });
+                }
+                if (/(service|price|duration|menu|offer)/.test(lowerPrompt)) {
+                    return withLiveBody({
+                        id: messageId,
+                        role: 'assistant',
+                        body: 'Services should read like clean buying decisions. I would reduce vague names, tighten durations, and make each price feel attached to a clear outcome.',
+                        actions: [
+                            { id: `${messageId}-services`, label: 'Open services', type: 'navigate', tab: 'services' },
+                            { id: `${messageId}-editor-services`, label: 'Preview service layout', type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'style' }
+                        ]
+                    });
+                }
+                return withLiveBody({
+                    id: messageId,
+                    role: 'assistant',
+                    body: 'I can work from that. The strongest next move is to pick the workspace area this affects, then I can help with copy, design direction, client wording, or the exact place to make the change.',
+                    actions: [
+                        { id: `${messageId}-editor`, label: 'Editor', type: 'navigate', tab: 'editor' },
+                        { id: `${messageId}-clients`, label: 'Clients', type: 'navigate', tab: 'clients' },
+                        { id: `${messageId}-schedule`, label: 'Schedule', type: 'navigate', tab: 'business' }
+                    ]
+                });
+            };
+
+            const buildButlerContext = () => ({
+                workspaceName: settings.brandName || settings.businessName || 'Build A Booking',
+                workspaceRole,
+                activeArea: activeTab,
+                bookingPageStyle: getEditorStyleDirection(settings.interfaceStyleDirection || 'native-precision')?.label || '',
+                colourDirection: detectedThemePalette ? themePaletteLabel(detectedThemePalette) : '',
+                businessType: settings.serviceIndustry || settings.industry || '',
+                services: workspaceServices.slice(0, 8).map(service => ({
+                    name: service.name || service.title || '',
+                    price: service.price || service.priceLabel || '',
+                    duration: service.duration || service.durationLabel || ''
+                }))
+            });
+
+            const buildButlerSetupMessage = (error) => {
+                const message = String(error?.message || '');
+                if (message.includes('AI is not configured yet')) {
+                    return 'AI is not configured yet. Add the OPENROUTER_API_KEY Firebase Functions secret, deploy the function, then I can answer with the live Butler.';
+                }
+                if (error?.code === 'functions/resource-exhausted') {
+                    return 'OpenRouter is temporarily out of credits or rate-limited. Check the OpenRouter account, then try again.';
+                }
+                if (error?.code === 'functions/unauthenticated' || error?.code === 'unauthenticated') {
+                    return 'Sign in first, then I can use the live Butler for this workspace.';
+                }
+                if (error?.code === 'functions/permission-denied' || error?.code === 'permission-denied') {
+                    return 'This account does not have Butler access for the current workspace. Switch to the owner workspace or ask an admin for access.';
+                }
+                return 'I could not reach the live Butler just now. The Firebase function is wired, but the provider call needs to be available before I can answer from OpenRouter.';
+            };
+
+            const sendButlerPrompt = async (promptOverride = '') => {
+                const prompt = String(promptOverride || butlerInput || '').trim();
+                if (!prompt || butlerSending) return;
+                const existingMessages = butlerMessages;
+                const userMessage = {
+                    id: `butler-user-${Date.now()}`,
+                    role: 'user',
+                    body: prompt
+                };
+                const pendingId = `butler-pending-${Date.now()}`;
+                const pendingMessage = {
+                    id: pendingId,
+                    role: 'assistant',
+                    body: 'Thinking through the workspace...',
+                    pending: true
+                };
+                setButlerMessages(prev => [...prev, userMessage, pendingMessage]);
+                setButlerInput('');
+                setButlerSending(true);
+                try {
+                    if (!user) {
+                        throw { code: 'unauthenticated', message: 'Sign in to use the live Butler.' };
+                    }
+                    if (!isFirebaseConfigured || !functions || !FirebaseSDK.httpsCallable) {
+                        throw new Error('AI is not configured yet.');
+                    }
+                    const runButlerPrompt = FirebaseSDK.httpsCallable(functions, 'runButlerPrompt');
+                    const result = await runButlerPrompt({
+                        appId,
+                        ownerId: workspaceOwnerId,
+                        prompt,
+                        context: buildButlerContext(),
+                        messages: existingMessages
+                            .filter(message => !message.pending)
+                            .slice(-8)
+                            .map(message => ({ role: message.role, body: message.body }))
+                    });
+                    const liveReply = String(result.data?.reply || '').trim();
+                    const assistantMessage = buildButlerResponse(prompt, liveReply || 'I have the request, but the live Butler returned an empty response.');
+                    setButlerMessages(prev => prev.map(message => message.id === pendingId ? assistantMessage : message));
+                } catch (error) {
+                    console.error('Butler request failed', error);
+                    const assistantMessage = buildButlerResponse(prompt, buildButlerSetupMessage(error));
+                    setButlerMessages(prev => prev.map(message => message.id === pendingId ? assistantMessage : message));
+                } finally {
+                    setButlerSending(false);
+                }
+            };
+
+            const handleButlerKeyDown = (event) => {
+                if (event.key !== 'Enter' || event.shiftKey) return;
+                event.preventDefault();
+                sendButlerPrompt();
+            };
+
+            const handleButlerAction = (action = {}) => {
+                if (action.type === 'draft-reply') {
+                    setButlerMessages(prev => ([
+                        ...prev,
+                        {
+                            id: `butler-draft-${Date.now()}`,
+                            role: 'assistant',
+                            body: 'Draft: Thanks for letting me know. We can absolutely look at a better time. I have a few clean options available, and I will keep the booking simple so you do not have to restart the whole process.',
+                            actions: [
+                                { id: `butler-draft-open-${Date.now()}`, label: 'Open chats', type: 'navigate', tab: 'communications' }
+                            ]
+                        }
+                    ]));
+                    return;
+                }
+                if (action.type === 'detect-palette') {
+                    handleAutoDetectThemePalette();
+                    navigateWorkspaceTab('editor', 'themes');
+                    openEditorRoom('colours');
+                    return;
+                }
+                if (action.type === 'apply-style') {
+                    applyEditorStyleDirection(action.directionId || 'native-precision');
+                    navigateWorkspaceTab('editor', 'visuals');
+                    openEditorRoom('style');
+                    return;
+                }
+                if (action.type === 'navigate') {
+                    if (!navigateWorkspaceTab(action.tab || 'overview', action.editorTab)) return;
+                    if (action.tab === 'editor' && action.room) openEditorRoom(action.room);
+                }
             };
 
             const approveBooking = async (booking) => {
@@ -7155,7 +6845,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 if (text.includes('request') || text.includes('booking')) return 'requests';
                 return 'alerts';
             };
-            const profileNotificationItems = sortDashboardLatest([
+            const sortProfileLatest = (items, getTime = item => item?.time) => (
+                [...(items || [])].sort((a, b) => {
+                    const aTime = Number(getTime(a) || 0);
+                    const bTime = Number(getTime(b) || 0);
+                    return bTime - aTime;
+                })
+            );
+            const profileNotificationItems = sortProfileLatest([
                 ...workspaceNotifications.map(notification => {
                     const category = classifyWorkspaceNotification(notification);
                     return {
@@ -7171,9 +6868,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         source: notification
                     };
                 }),
-                ...dashboardSupportThreads.map(thread => {
-                    const isReschedule = threadMatchesDashboardFilter(thread, 'reschedule');
-                    const isWaitlist = threadMatchesDashboardFilter(thread, 'waitlist');
+                ...workspaceSupportThreads.map(thread => {
+                    const status = String(thread.bookingStatus || thread.status || '').toLowerCase();
+                    const rescheduleStatus = String(thread.rescheduleStatus || '').toLowerCase();
+                    const threadText = [thread.lastMessage, thread.serviceName, thread.clientName].filter(Boolean).join(' ').toLowerCase();
+                    const isReschedule = ['requested', 'countered'].includes(rescheduleStatus) || threadText.includes('reschedule') || threadText.includes('change time') || threadText.includes('move');
+                    const isWaitlist = status === 'waitlist' || threadText.includes('waitlist') || threadText.includes('spot opens');
                     const category = isReschedule ? 'reschedules' : isWaitlist ? 'waitlist' : 'messages';
                     return {
                         id: `chat-${thread.id}`,
@@ -7186,40 +6886,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         label: Number(thread.ownerUnread || 0) > 0 ? `${thread.ownerUnread} unread` : category === 'waitlist' ? 'Waitlist' : 'Chat',
                         isUnread: Number(thread.ownerUnread || 0) > 0,
                         source: thread
-                    };
-                }),
-                ...dashboardPortfolio.financeActivity.map(record => ({
-                    id: `payment-${record.title}-${record.updatedAtMs}-${record.amountLabel}`,
-                    kind: 'payment',
-                    category: 'payments',
-                    iconKind: 'payment',
-                    title: record.title || 'Payment activity',
-                    detail: record.detail || record.amountLabel || 'Finance update',
-                    time: Number(record.updatedAtMs || 0),
-                    label: record.amountLabel || 'Payment',
-                    isUnread: record.normalizedStatus !== 'paid',
-                    source: record
-                })),
-                ...dashboardPortfolio.periodActiveBookings.map(booking => {
-                    const status = String(booking.status || '').toLowerCase();
-                    const category = bookingMatchesDashboardFilter(booking, 'reschedule')
-                        ? 'reschedules'
-                        : status === 'waitlist'
-                            ? 'waitlist'
-                            : status === 'confirmed'
-                                ? 'confirmed'
-                                : 'requests';
-                    return {
-                        id: `booking-${booking.id}`,
-                        kind: 'booking',
-                        category,
-                        iconKind: category === 'reschedules' ? 'reschedule' : 'booking',
-                        title: booking.clientName || 'Booking',
-                        detail: `${booking.serviceName || 'Booking'} / ${booking.date || booking.dateKeyResolved || 'Date'} / ${booking.time || 'Time pending'}`,
-                        time: getBookingDashboardTime(booking),
-                        label: category === 'reschedules' ? 'Reschedule' : category === 'waitlist' ? 'Waitlist' : status || 'Booking',
-                        isUnread: status === 'pending' || status === 'waitlist' || category === 'reschedules',
-                        source: booking
                     };
                 })
             ], item => item.time).slice(0, 48);
@@ -7239,7 +6905,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const filteredProfileNotifications = profileNotificationItems.filter(item => (
                 profileNotificationFilter === 'all' || item.category === profileNotificationFilter
             ));
-            const profileSystemActivityItems = sortDashboardLatest([
+            const profileSystemActivityItems = sortProfileLatest([
                 {
                     id: 'system-services',
                     kind: 'system',
@@ -7266,7 +6932,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     category: 'schedule',
                     iconKind: 'schedule',
                     title: 'Schedule capacity synced',
-                    detail: `${dashboardPortfolio.capacity} slots in this period with ${dashboardPortfolio.reservedSlots} confirmed.`,
+                    detail: `${Object.keys(settings.schedule || {}).length} custom schedule days and ${(settings.availableTimes || []).length} default times configured.`,
                     time: dateValueToMs(settings.scheduleUpdatedAt || settings.updatedAt) || Date.now() - 29 * 60 * 1000,
                     label: 'Schedule'
                 },
@@ -7286,7 +6952,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     category: 'finance',
                     iconKind: 'payment',
                     title: 'Finance desk aligned',
-                    detail: `${dashboardPortfolio.totalRevenueLabel} revenue and ${dashboardPortfolio.pendingRevenueLabel} pending across this view.`,
+                    detail: `${financeImports.length + financePaymentAttempts.length} finance records and payment attempts available for review.`,
                     time: dateValueToMs(settings.financeUpdatedAt || settings.updatedAt) || Date.now() - 61 * 60 * 1000,
                     label: 'Finance'
                 },
@@ -7328,7 +6994,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     return;
                 }
                 if (item.kind === 'chat') {
-                    openDashboardSupportThread(item.source);
+                    openWorkspaceSupportThread(item.source);
                     return;
                 }
                 if (item.kind === 'payment') {
@@ -7345,7 +7011,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     return;
                 }
                 if (item.kind === 'booking') {
-                    setBookingDeskPeriod(dashboardPeriod === 'all' ? 'all' : dashboardPeriod);
+                    setBookingDeskPeriod('all');
                     setBookingFilter('all');
                     setBookingSearch(item.source?.clientName || '');
                     navigateWorkspaceTab('bookings');
@@ -7846,196 +7512,70 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                 <div className={`dashboard-main relative z-10 flex-1 flex overflow-hidden md:pb-0 ${activeTab === 'editor' && mobileNavCollapsed ? 'mobile-nav-space-collapsed' : ''}`}>
                     {activeTab === 'overview' && (
-                        <div className="dashboard-overview-page flex-1 overflow-y-auto bg-white p-4 sm:p-6 md:p-10 lg:p-12">
-                            <section data-tour="dashboard-hero" className="dashboard-lumia-board">
-                                <div className="dashboard-lumia-topline">
-                                    <div className="dashboard-lumia-greeting">
-                                        <div className="dashboard-lumia-live">
-                                            <span />
-                                            Live Workspace
-                                        </div>
-                                        <h2>{dashboardPortfolio.greeting}, {dashboardGreetingName}</h2>
-                                        <p>
-                                            {dashboardPortfolio.period.title} / {dashboardPortfolio.period.rangeLabel}. Your most useful numbers, actions, and signals are ready.
-                                        </p>
+                        <div className="dashboard-overview-page dashboard-butler-page flex-1 overflow-y-auto bg-white">
+                            <section data-tour="dashboard-hero" className={`dashboard-butler-shell ${butlerMessages.length ? 'has-thread' : 'is-empty'}`} aria-label="Build A Booking Butler">
+                                <header className="dashboard-butler-hero">
+                                    <div className="dashboard-butler-title">
+                                        <span className="dashboard-butler-kicker">
+                                            <Sparkles size={14} strokeWidth={2.6} />
+                                            Build A Booking Butler
+                                        </span>
+                                        <h2>{dashboardGreeting}, {dashboardGreetingName}</h2>
+                                        <p>Tell me what you want the platform to do, design, write, or improve.</p>
                                     </div>
-                                </div>
-                                <div className="dashboard-lumia-divider" aria-hidden="true" />
-                                <div className="dashboard-period-tabs schedule-scope-toggle inline-grid grid-cols-4 gap-1 rounded-lg bg-neutral-100 p-1">
-                                    {dashboardPortfolio.periods.map(period => (
-                                        <button
-                                            key={period.id}
-                                            onClick={() => {
-                                                setDashboardPeriod(period.id);
-                                                resetDashboardFeedPages();
-                                            }}
-                                            className={`dashboard-period-tab h-10 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${dashboardPeriod === period.id ? 'is-active bg-[#39FF14] text-black shadow-lg shadow-[#39FF14]/20' : 'text-neutral-500 hover:text-black'}`}
-                                        >
-                                            {period.label}
-                                        </button>
-                                    ))}
-                                </div>
+                                </header>
 
-                                <div className="dashboard-mobile-tile-switcher" aria-label="Dashboard sections">
-                                    <button
-                                        type="button"
-                                        className="dashboard-pager-arrow"
-                                        onClick={() => shiftDashboardMobileTile(-1)}
-                                        aria-label="Previous dashboard section"
-                                    >
-                                        <ChevronLeft size={18} strokeWidth={2.6} />
-                                    </button>
-                                    <span className="dashboard-pager-center">
-                                        <span className="dashboard-pager-title-row">
-                                            <strong className="dashboard-pager-title">{dashboardActiveTile?.label || 'Dashboard'}</strong>
-                                            <span className="dashboard-command-badge dashboard-pager-badge" aria-label={`${dashboardActiveTile?.badgeValue ?? 0} dashboard signals`}>
-                                                {dashboardActiveTile?.badgeValue ?? 0}
-                                            </span>
-                                        </span>
-                                        <span className="dashboard-pager-track" aria-hidden="true">
-                                            {dashboardMobileTiles.map((tile, index) => (
-                                                <span key={tile.id} className={index === dashboardActiveTileIndex ? 'is-active' : ''} />
+                                <div className="dashboard-butler-chat" aria-label="Butler conversation" aria-busy={butlerSending}>
+                                    {!!butlerMessages.length && (
+                                        <div className="dashboard-butler-thread" aria-live="polite">
+                                            {butlerMessages.map(message => (
+                                                <article key={message.id} className={`dashboard-butler-message is-${message.role} ${message.pending ? 'is-pending' : ''}`}>
+                                                    <span>{message.role === 'user' ? 'You' : 'Butler'}</span>
+                                                    <p>{message.body}</p>
+                                                    {!!message.actions?.length && (
+                                                        <div className="dashboard-butler-message-actions">
+                                                            {message.actions.map(action => (
+                                                                <button key={action.id} type="button" onClick={() => handleButlerAction(action)}>
+                                                                    {action.label}
+                                                                    <ArrowUpRight size={13} strokeWidth={2.8} />
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </article>
                                             ))}
-                                        </span>
-                                    </span>
-                                    <button
-                                        type="button"
-                                        className="dashboard-pager-arrow"
-                                        onClick={() => shiftDashboardMobileTile(1)}
-                                        aria-label="Next dashboard section"
-                                    >
-                                        <ChevronRight size={18} strokeWidth={2.6} />
-                                    </button>
-                                </div>
-
-                                <div
-                                    className="dashboard-command-grid"
-                                    onTouchStart={handleDashboardTileTouchStart}
-                                    onTouchEnd={handleDashboardTileTouchEnd}
-                                >
-                                    <section className="dashboard-workspace-section dashboard-section-notifications">
-                                        <div className="dashboard-section-heading">
-                                            <span>Notifications</span>
-                                            <strong>{dashboardPortfolio.activeBookings}</strong>
                                         </div>
-                                        <div className="dashboard-section-grid dashboard-section-grid-notifications">
-                                    <article className={`dashboard-command-tile dashboard-command-tile-bookings ${dashboardMobileTile === 'bookings' ? 'is-mobile-active' : ''}`}>
-                                        <div className="dashboard-command-head">
-                                            <span className="dashboard-lumia-icon"><BookOpenCheck size={21} strokeWidth={2.4} /></span>
+                                    )}
+                                    <div className="dashboard-butler-composer-stack">
+                                        <div className="dashboard-butler-prompts" aria-label="Suggested prompts">
+                                            {butlerQuickPrompts.map(prompt => (
+                                                <button key={prompt} type="button" onClick={() => sendButlerPrompt(prompt)} disabled={butlerSending}>
+                                                    {prompt}
+                                                </button>
+                                            ))}
                                         </div>
-                                        <div className="dashboard-command-summary">
-                                            <div>
-                                                <div className="dashboard-command-title-row">
-                                                    <h3>Bookings</h3>
-                                                    <span className="dashboard-command-badge" aria-label={`${dashboardPortfolio.activeBookings} total bookings`}>{dashboardPortfolio.activeBookings}</span>
-                                                </div>
-                                                <p>{dashboardPortfolio.period.rangeLabel}</p>
-                                            </div>
+                                        <div className="dashboard-butler-composer">
+                                            <input
+                                                value={butlerInput}
+                                                onChange={(event) => setButlerInput(event.target.value)}
+                                                onKeyDown={handleButlerKeyDown}
+                                                placeholder={butlerSending ? 'Butler is thinking...' : 'Ask for a client reply, colour scheme, page direction, or workspace action...'}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="dashboard-butler-send-button"
+                                                onClick={() => sendButlerPrompt()}
+                                                aria-label="Send to butler"
+                                                disabled={butlerSending || !butlerInput.trim()}
+                                            >
+                                                <ArrowRight size={18} strokeWidth={2.7} />
+                                            </button>
                                         </div>
-                                        <div className="dashboard-command-filterbar">
-                                            {renderDashboardFilterControl('bookings')}
-                                        </div>
-                                        <div className="dashboard-activity-feed">
-                                            {(() => {
-                                                const bookingRows = sortDashboardLatest(
-                                                    dashboardPortfolio.periodActiveBookings.filter(booking => bookingMatchesDashboardFilter(booking, dashboardFeedFilters.bookings)),
-                                                    getBookingDashboardTime
-                                                );
-                                                const bookingPage = getDashboardPagedFeed('bookings', bookingRows);
-                                                return (
-                                                    <>
-                                                        {bookingPage.rows.map(booking => (
-                                                            <button
-                                                                key={booking.id}
-                                                                type="button"
-                                                                className="dashboard-activity-row"
-                                                                onClick={() => {
-                                                                    setBookingDeskPeriod(dashboardPeriod === 'all' ? 'all' : dashboardPeriod);
-                                                                    setBookingFilter('all');
-                                                                    setBookingSearch(booking.clientName || '');
-                                                                    navigateWorkspaceTab('bookings');
-                                                                }}
-                                                            >
-                                                                <span className={`dashboard-activity-dot is-${getBookingDashboardDot(booking)}`} />
-                                                                <span className="dashboard-activity-copy">
-                                                                    <strong>{booking.clientName || 'Client'}</strong>
-                                                                    <small>{booking.date || booking.dateKeyResolved || dashboardPortfolio.period.rangeLabel} / {booking.serviceName || 'Booking'} / {booking.time || 'Time pending'}</small>
-                                                                </span>
-                                                                {renderDashboardActivityAction('Open')}
-                                                            </button>
-                                                        ))}
-                                                        {!bookingRows.length && (
-                                                            <div className="dashboard-empty-row">No matching bookings in this period.</div>
-                                                        )}
-                                                        {renderDashboardFeedPager('bookings', bookingPage)}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                    </article>
-                                        </div>
-                                    </section>
-
-                                    <section className="dashboard-workspace-section dashboard-section-income">
-                                        <div className="dashboard-section-heading">
-                                            <span>Income</span>
-                                            <small>{settings.currency || 'ZAR'}</small>
-                                        </div>
-                                        <div className="dashboard-section-grid">
-                                    <article className={`dashboard-command-tile dashboard-command-tile-finance ${dashboardMobileTile === 'finance' ? 'is-mobile-active' : ''}`}>
-                                        <div className="dashboard-command-head">
-                                            <span className="dashboard-lumia-icon"><DollarSign size={21} strokeWidth={2.4} /></span>
-                                        </div>
-                                        <div className="dashboard-command-summary">
-                                            <div>
-                                                <div className="dashboard-command-title-row">
-                                                    <h3>Payments</h3>
-                                                    <span className="dashboard-command-badge" aria-label={`${dashboardPortfolio.pendingFinanceCount} pending payments`}>{dashboardPortfolio.pendingFinanceCount}</span>
-                                                </div>
-                                                <p>{dashboardPortfolio.totalRevenuePaidCount} paid / {dashboardPortfolio.pendingFinanceCount} pending.</p>
-                                            </div>
-                                        </div>
-                                        <div className="dashboard-mini-stat-row">
-                                            <span><strong>{dashboardPortfolio.pendingRevenueLabel}</strong> Pending</span>
-                                            <span><strong>{settings.currency || 'ZAR'}</strong> Currency</span>
-                                        </div>
-                                        <div className="dashboard-activity-feed">
-                                            {(() => {
-                                                const financeRows = sortDashboardLatest(dashboardPortfolio.financeActivity, record => record.updatedAtMs);
-                                                const financePage = getDashboardPagedFeed('finance', financeRows);
-                                                return (
-                                                    <>
-                                                        {financePage.rows.map(record => (
-                                                            <button
-                                                                key={`${record.title}-${record.updatedAtMs}-${record.amountLabel}`}
-                                                                type="button"
-                                                                className="dashboard-activity-row"
-                                                                onClick={() => navigateWorkspaceTab('finance')}
-                                                            >
-                                                                <span className={`dashboard-activity-dot is-${record.normalizedStatus}`} />
-                                                                <span className="dashboard-activity-copy">
-                                                                    <strong>{record.title}</strong>
-                                                                    <small>{record.detail}</small>
-                                                                </span>
-                                                                <span className="dashboard-activity-action">{record.amountLabel}</span>
-                                                            </button>
-                                                        ))}
-                                                        {!financeRows.length && (
-                                                            <div className="dashboard-empty-row">No payment activity in this period.</div>
-                                                        )}
-                                                        {renderDashboardFeedPager('finance', financePage)}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                    </article>
-                                        </div>
-                                    </section>
+                                    </div>
                                 </div>
                             </section>
                         </div>
                     )}
-
                     {activeTab === 'profile' && (
                         <div className="profile-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-white">
                             <div className="dashboard-action-strip max-w-6xl mb-4 md:mb-6">

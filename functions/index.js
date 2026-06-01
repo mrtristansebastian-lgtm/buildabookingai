@@ -355,3 +355,6 @@ exports.createBillingPortalSession = onCall({ region: 'us-central1' }, async () 
 
 const paymentFunctions = require('./payments');
 Object.assign(exports, paymentFunctions);
+
+const aiFunctions = require('./ai/openrouter');
+Object.assign(exports, aiFunctions);

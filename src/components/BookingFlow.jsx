@@ -788,8 +788,20 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                                             <MapPin size={12} /> {settings.address}
                                         </span>
                                     )}
-                                    {settings.features?.location && (
-                                        <a href={settings.features.location} target="_blank" rel="noreferrer" className={`booking-hero-chip booking-hero-chip-action transition-all hover:opacity-80 ${nativeAccent ? 'booking-gradient-chip' : ''}`} style={{ color: settings.primaryColor }}>
+                                    {settings.features?.location && venueMapHref && (
+                                        <a
+                                            href={venueMapHref}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={`booking-hero-chip booking-hero-chip-action transition-all hover:opacity-80 ${nativeAccent ? 'booking-gradient-chip' : ''}`}
+                                            style={{ color: settings.primaryColor }}
+                                            onClick={(event) => {
+                                                if (isPreview) {
+                                                    event.preventDefault();
+                                                    onInspect('venue');
+                                                }
+                                            }}
+                                        >
                                             <MapPin size={12} /> Get Directions
                                         </a>
                                     )}

@@ -3,6 +3,7 @@ dist/
 .firebase/
 .env
 .env.local
+functions/.secret.local
 vite-dev.*.log
 *.log
 .local-dev-logs/

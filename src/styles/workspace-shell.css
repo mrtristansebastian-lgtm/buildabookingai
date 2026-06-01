@@ -2340,6 +2340,7 @@ html body .native-ui .dashboard-butler-message.is-user p {
   font-size: clamp(0.98rem, 1.08vw, 1.08rem) !important;
   font-weight: 620 !important;
   line-height: 1.56 !important;
+  white-space: pre-wrap !important;
 }
 
 html body .native-ui .dashboard-butler-message.is-pending p {
@@ -2474,6 +2475,218 @@ html body .native-ui .dashboard-butler-composer button:disabled {
   transform: none !important;
 }
 
+/* Butler follows the user as a compact execution layer across the workspace. */
+html body .native-ui .butler-floating-layer {
+  position: fixed !important;
+  right: 1.25rem !important;
+  bottom: 6.1rem !important;
+  z-index: 180 !important;
+  display: flex !important;
+  flex-direction: column-reverse !important;
+  align-items: flex-end !important;
+  gap: 0.7rem !important;
+  pointer-events: none !important;
+}
+
+html body .native-ui .butler-floating-trigger,
+html body .native-ui .butler-dock-panel {
+  pointer-events: auto !important;
+}
+
+html body .native-ui .butler-floating-trigger {
+  min-width: 11.5rem !important;
+  min-height: 3.15rem !important;
+  display: inline-grid !important;
+  grid-template-columns: 2.15rem minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 0.7rem !important;
+  padding: 0.46rem 0.58rem 0.46rem 0.5rem !important;
+  border: 1px solid rgba(5, 5, 5, 0.1) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #050505 !important;
+  box-shadow:
+    0 24px 70px -44px rgba(5, 5, 5, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+html body .native-ui .butler-floating-trigger:hover {
+  border-color: rgba(5, 5, 5, 0.22) !important;
+  transform: translateY(-1px) !important;
+}
+
+html body .native-ui .butler-floating-mark {
+  width: 2.15rem !important;
+  height: 2.15rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  background: #050505 !important;
+  color: #ffffff !important;
+}
+
+html body .native-ui .butler-floating-trigger strong,
+html body .native-ui .butler-floating-trigger small {
+  display: block !important;
+  max-width: 9rem !important;
+  overflow: hidden !important;
+  text-align: left !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .native-ui .butler-floating-trigger strong {
+  font-size: 0.72rem !important;
+  font-weight: 880 !important;
+  line-height: 1.1 !important;
+}
+
+html body .native-ui .butler-floating-trigger small {
+  margin-top: 0.12rem !important;
+  color: #7a8089 !important;
+  font-size: 0.56rem !important;
+  font-weight: 760 !important;
+  line-height: 1.1 !important;
+}
+
+html body .native-ui .butler-floating-trigger i {
+  width: 0.52rem !important;
+  height: 0.52rem !important;
+  border-radius: 999px !important;
+  background: #39ff14 !important;
+  box-shadow: 0 0 0 0.3rem rgba(57, 255, 20, 0.16) !important;
+}
+
+html body .native-ui .butler-dock-panel {
+  width: min(27rem, calc(100vw - 2rem)) !important;
+  max-height: min(36rem, calc(100dvh - 8rem)) !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto auto !important;
+  gap: 0.82rem !important;
+  padding: 1rem !important;
+  border: 1px solid rgba(5, 5, 5, 0.09) !important;
+  border-radius: 1.2rem !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    0 40px 120px -62px rgba(5, 5, 5, 0.55),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+  backdrop-filter: blur(22px) !important;
+}
+
+html body .native-ui .butler-dock-header {
+  display: flex !important;
+  align-items: start !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+}
+
+html body .native-ui .butler-dock-header p {
+  margin: 0 0 0.25rem !important;
+  color: #8b8f98 !important;
+  font-size: 0.58rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+html body .native-ui .butler-dock-header h2 {
+  margin: 0 !important;
+  color: #050505 !important;
+  font-size: 1.08rem !important;
+  font-weight: 860 !important;
+  line-height: 1.1 !important;
+}
+
+html body .native-ui .butler-dock-header button {
+  width: 2rem !important;
+  height: 2rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  background: #f5f5f5 !important;
+  color: #6b7280 !important;
+}
+
+html body .native-ui .butler-dock-thread {
+  min-height: 8rem !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 0.85rem !important;
+  overflow-y: auto !important;
+  padding-right: 0.2rem !important;
+}
+
+html body .native-ui .butler-dock-thread .dashboard-butler-message {
+  width: 100% !important;
+}
+
+html body .native-ui .butler-dock-thread .dashboard-butler-message p,
+html body .native-ui .butler-dock-thread .dashboard-butler-message.is-user p {
+  font-size: 0.88rem !important;
+  line-height: 1.48 !important;
+}
+
+html body .native-ui .butler-dock-thread .dashboard-butler-message.is-user {
+  max-width: 88% !important;
+  padding: 0.72rem 0.82rem !important;
+  border-radius: 1rem !important;
+}
+
+html body .native-ui .butler-dock-empty {
+  min-height: 9rem !important;
+  display: grid !important;
+  place-items: center !important;
+  align-content: center !important;
+  gap: 0.7rem !important;
+  color: #7a8089 !important;
+  text-align: center !important;
+}
+
+html body .native-ui .butler-dock-empty p {
+  max-width: 20rem !important;
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  font-weight: 650 !important;
+  line-height: 1.45 !important;
+}
+
+html body .native-ui .butler-dock-prompts {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.45rem !important;
+}
+
+html body .native-ui .butler-dock-prompts button {
+  min-height: 2.1rem !important;
+  padding: 0 0.75rem !important;
+  border-radius: 999px !important;
+  background: #f5f5f5 !important;
+  color: #4f545c !important;
+  font-size: 0.64rem !important;
+  font-weight: 760 !important;
+}
+
+html body .native-ui .butler-dock-composer {
+  min-height: 3.45rem !important;
+  grid-template-columns: minmax(0, 1fr) 2.35rem !important;
+  padding: 0.4rem 0.44rem 0.4rem 0.92rem !important;
+}
+
+html body .native-ui .butler-dock-composer input {
+  min-height: 2.35rem !important;
+  font-size: 0.88rem !important;
+}
+
+html body .native-ui .butler-dock-composer button {
+  width: 2.35rem !important;
+  height: 2.35rem !important;
+  min-width: 2.35rem !important;
+  min-height: 2.35rem !important;
+}
+
 @media (max-width: 1100px) {
   html body .native-ui .dashboard-butler-shell {
     padding-top: 3.5rem !important;
@@ -2591,5 +2804,410 @@ html body .native-ui .dashboard-butler-composer button:disabled {
     height: 2.5rem !important;
     min-width: 2.5rem !important;
     min-height: 2.5rem !important;
+  }
+
+  html body .native-ui .butler-floating-layer {
+    right: 0.85rem !important;
+    bottom: max(9.85rem, calc(8.85rem + env(safe-area-inset-bottom))) !important;
+  }
+
+  html body .native-ui .butler-floating-layer.is-open {
+    left: 0.85rem !important;
+    right: 0.85rem !important;
+    align-items: stretch !important;
+  }
+
+  html body .native-ui .butler-floating-trigger {
+    min-width: 3.15rem !important;
+    width: 3.15rem !important;
+    grid-template-columns: 2.15rem !important;
+    padding: 0.48rem !important;
+    justify-self: end !important;
+  }
+
+  html body .native-ui .butler-floating-layer.is-open .butler-floating-trigger {
+    width: max-content !important;
+    min-width: 10.5rem !important;
+    grid-template-columns: 2.15rem minmax(0, 1fr) auto !important;
+  }
+
+  html body .native-ui .butler-floating-trigger > span:not(.butler-floating-mark) {
+    display: none !important;
+  }
+
+  html body .native-ui .butler-floating-layer.is-open .butler-floating-trigger > span:not(.butler-floating-mark) {
+    display: block !important;
+  }
+
+  html body .native-ui .butler-dock-panel {
+    width: 100% !important;
+    max-height: min(33rem, calc(100dvh - 10rem)) !important;
+    border-radius: 1.05rem !important;
+    padding: 0.9rem !important;
+  }
+
+  html body .native-ui .butler-dock-prompts {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+
+  html body .native-ui .butler-dock-prompts::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  html body .native-ui .butler-dock-prompts button {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* Gemini-style Butler home: light OS shell, saved history, single command surface. */
+html body .native-ui .dashboard-butler-shell {
+  width: min(100%, 78rem) !important;
+  min-height: calc(100dvh - 8.4rem) !important;
+  display: grid !important;
+  grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: clamp(1.8rem, 4vw, 4.2rem) !important;
+  padding-top: clamp(2.2rem, 5vh, 4.2rem) !important;
+}
+
+html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell[data-tour="dashboard-hero"] {
+  padding-top: clamp(2.2rem, 5vh, 4.2rem) !important;
+}
+
+@media (min-width: 981px) {
+  html body .native-ui .dashboard-main > div.dashboard-overview-page.dashboard-butler-page:not(.mobile-editor-shell) {
+    padding-left: clamp(6.75rem, 8vw, 7.75rem) !important;
+  }
+}
+
+html body .native-ui .dashboard-butler-shell.has-thread {
+  align-items: start !important;
+  padding-top: 1.2rem !important;
+}
+
+html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell.has-thread[data-tour="dashboard-hero"] {
+  padding-top: 1.2rem !important;
+}
+
+html body .native-ui .butler-home-main {
+  min-width: 0 !important;
+  min-height: min(42rem, calc(100dvh - 12rem)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 1.55rem !important;
+}
+
+html body .native-ui .dashboard-butler-shell.has-thread .butler-home-main {
+  justify-content: flex-start !important;
+}
+
+html body .native-ui .butler-history-rail {
+  align-self: stretch !important;
+  min-height: min(38rem, calc(100dvh - 12rem)) !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  gap: 0.85rem !important;
+  padding: 0.35rem 1rem 0.35rem 0 !important;
+  border-right: 1px solid rgba(5, 5, 5, 0.075) !important;
+}
+
+html body .native-ui .butler-history-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.8rem !important;
+}
+
+html body .native-ui .butler-history-head p {
+  margin: 0 !important;
+  color: #9aa0a8 !important;
+  font-size: 0.58rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.13em !important;
+  text-transform: uppercase !important;
+}
+
+html body .native-ui .butler-history-head h3 {
+  margin: 0.16rem 0 0 !important;
+  color: #050505 !important;
+  font-size: 0.96rem !important;
+  font-weight: 850 !important;
+}
+
+html body .native-ui .butler-history-head button,
+html body .native-ui .butler-history-toggle {
+  min-height: 2.2rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.38rem !important;
+  padding: 0 0.72rem !important;
+  border-radius: 999px !important;
+  background: #050505 !important;
+  color: #ffffff !important;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+}
+
+html body .native-ui .butler-history-list {
+  min-height: 0 !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 0.35rem !important;
+  overflow-y: auto !important;
+  padding-right: 0.2rem !important;
+}
+
+html body .native-ui .butler-history-list button {
+  width: 100% !important;
+  min-height: 3rem !important;
+  display: grid !important;
+  grid-template-columns: 1.8rem minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  padding: 0.45rem 0.55rem !important;
+  border-radius: 0.78rem !important;
+  color: #6f7681 !important;
+  text-align: left !important;
+}
+
+html body .native-ui .butler-history-list button:hover,
+html body .native-ui .butler-history-list button.is-active {
+  background: #f5f5f5 !important;
+  color: #050505 !important;
+}
+
+html body .native-ui .butler-history-list strong,
+html body .native-ui .butler-history-list small {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .native-ui .butler-history-list strong {
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+}
+
+html body .native-ui .butler-history-list small {
+  margin-top: 0.12rem !important;
+  color: #a0a6ae !important;
+  font-size: 0.56rem !important;
+  font-weight: 760 !important;
+}
+
+html body .native-ui .butler-history-toggle {
+  display: none !important;
+  justify-self: center !important;
+  margin-bottom: 0.15rem !important;
+}
+
+html body .native-ui .dashboard-butler-title h2 {
+  max-width: 18ch !important;
+  font-size: 3.1rem !important;
+  font-weight: 760 !important;
+  line-height: 1.08 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .native-ui .dashboard-butler-title p {
+  max-width: 34rem !important;
+  font-size: 1rem !important;
+  font-weight: 620 !important;
+}
+
+html body .native-ui .dashboard-butler-chat {
+  width: min(100%, 52rem) !important;
+}
+
+html body .native-ui .dashboard-butler-thread {
+  max-height: min(31rem, calc(100dvh - 24rem)) !important;
+  padding: 0 0.2rem !important;
+}
+
+html body .native-ui .dashboard-butler-message p,
+html body .native-ui .dashboard-butler-message.is-user p {
+  font-size: 1rem !important;
+}
+
+html body .native-ui .dashboard-butler-composer {
+  min-height: 4rem !important;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto 2.62rem !important;
+  gap: 0.55rem !important;
+  padding: 0.46rem 0.52rem !important;
+  border: 0 !important;
+  background: #1f1f1f !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 30px 90px -54px rgba(5, 5, 5, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+}
+
+html body .native-ui .dashboard-butler-composer:focus-within {
+  border-color: transparent !important;
+  box-shadow:
+    0 34px 100px -58px rgba(5, 5, 5, 0.68),
+    0 0 0 4px rgba(117, 92, 255, 0.12) !important;
+}
+
+html body .native-ui .dashboard-butler-composer input {
+  color: #ffffff !important;
+  font-size: 1rem !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+html body .native-ui .dashboard-butler-composer input::placeholder {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+html body .native-ui .dashboard-butler-composer input:focus {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-butler-plus-button,
+html body .native-ui .dashboard-butler-send-button {
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+  min-width: 2.4rem !important;
+  min-height: 2.4rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+}
+
+html body .native-ui .dashboard-butler-plus-button {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.86) !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-butler-plus-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+html body .native-ui .dashboard-butler-send-button {
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: #050505 !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-butler-send-button:disabled {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.36) !important;
+}
+
+html body .native-ui .dashboard-butler-model {
+  min-height: 2.35rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 0.72rem !important;
+  border-radius: 999px !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-size: 0.76rem !important;
+  font-weight: 780 !important;
+  white-space: nowrap !important;
+}
+
+html body .native-ui .dashboard-butler-prompts {
+  padding-top: 0.1rem !important;
+}
+
+@media (max-width: 980px) {
+  html body .native-ui .dashboard-butler-shell {
+    width: min(100%, 46rem) !important;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding-top: 2rem !important;
+  }
+
+  html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell[data-tour="dashboard-hero"] {
+    padding-top: 2rem !important;
+  }
+
+  html body .native-ui .butler-history-toggle {
+    display: inline-flex !important;
+  }
+
+  html body .native-ui .butler-history-rail {
+    display: none !important;
+  }
+
+  html body .native-ui .butler-history-rail.is-open {
+    position: fixed !important;
+    top: 1rem !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    z-index: 240 !important;
+    min-height: 0 !important;
+    max-height: min(34rem, calc(100dvh - 2rem)) !important;
+    display: grid !important;
+    padding: 1rem !important;
+    border: 1px solid rgba(5, 5, 5, 0.09) !important;
+    border-radius: 1.1rem !important;
+    background: rgba(255, 255, 255, 0.97) !important;
+    box-shadow: 0 36px 110px -62px rgba(5, 5, 5, 0.55) !important;
+    backdrop-filter: blur(22px) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .dashboard-butler-shell,
+  html body .native-ui .dashboard-main .dashboard-overview-page .dashboard-butler-shell[data-tour="dashboard-hero"] {
+    padding-top: clamp(2.4rem, 8vh, 3.8rem) !important;
+  }
+
+  html body .native-ui .butler-home-main {
+    min-height: auto !important;
+    gap: 1rem !important;
+  }
+
+  html body .native-ui .dashboard-butler-title h2,
+  html body .native-ui .dashboard-main > div.dashboard-overview-page.dashboard-butler-page:not(.mobile-editor-shell) section.dashboard-butler-shell[data-tour="dashboard-hero"] .dashboard-butler-title h2 {
+    max-width: 14ch !important;
+    font-size: 2.15rem !important;
+    line-height: 1.1 !important;
+  }
+
+  html body .native-ui .dashboard-butler-title p,
+  html body .native-ui .dashboard-main > div.dashboard-overview-page.dashboard-butler-page:not(.mobile-editor-shell) section.dashboard-butler-shell[data-tour="dashboard-hero"] .dashboard-butler-title p {
+    max-width: 20rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  html body .native-ui .dashboard-butler-composer,
+  html body .native-ui .butler-dock-composer {
+    min-height: 3.6rem !important;
+    grid-template-columns: 2.2rem minmax(0, 1fr) 2.34rem !important;
+    padding: 0.38rem 0.44rem !important;
+  }
+
+  html body .native-ui .dashboard-butler-model {
+    display: none !important;
+  }
+
+  html body .native-ui .dashboard-butler-plus-button,
+  html body .native-ui .dashboard-butler-send-button,
+  html body .native-ui .butler-dock-composer .dashboard-butler-plus-button,
+  html body .native-ui .butler-dock-composer .dashboard-butler-send-button {
+    width: 2.2rem !important;
+    height: 2.2rem !important;
+    min-width: 2.2rem !important;
+    min-height: 2.2rem !important;
   }
 }

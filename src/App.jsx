@@ -1286,6 +1286,7 @@ const googleCalendarRedirectStorageKey = 'build-a-booking-google-calendar-auth';
 const editorDraftStoragePrefix = 'build-a-booking-editor-draft-v2';
 const editorDraftVersionsStoragePrefix = 'build-a-booking-editor-draft-versions-v1';
 const bookingsCacheStoragePrefix = 'build-a-booking-bookings-cache-v1';
+const butlerThreadsStoragePrefix = 'build-a-booking-butler-threads-v1';
 const workspaceTabIds = ['overview', 'bookings', 'business', 'communications', 'editor', 'services', 'finance', 'clients', 'staff', 'profile'];
 const workspaceTabAliases = {
   schedule: 'business',
@@ -1335,6 +1336,48 @@ const safeJsonParse = (value, fallback = null) => {
 };
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
+
+const getButlerThreadsKey = (ownerId = 'guest') => `${butlerThreadsStoragePrefix}-${cleanFirestoreIdPart(ownerId || 'guest')}`;
+const createButlerThreadId = () => `butler-thread-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const sanitizeButlerMessages = (messages = []) => (
+  asArray(messages)
+    .filter(message => message && ['user', 'assistant'].includes(message.role))
+    .filter(message => !message.pending)
+    .slice(-80)
+    .map((message, index) => ({
+      id: String(message.id || `butler-message-${Date.now()}-${index}`),
+      role: message.role,
+      body: String(message.body || '').slice(0, 5000),
+      actions: asArray(message.actions).slice(0, 4),
+      createdAtMs: Number(message.createdAtMs || Date.now())
+    }))
+    .filter(message => message.body || message.actions.length)
+);
+
+const getButlerThreadTitle = (messages = [], fallback = 'New chat') => {
+  const firstUser = sanitizeButlerMessages(messages).find(message => message.role === 'user');
+  const title = String(firstUser?.body || fallback || 'New chat').replace(/\s+/g, ' ').trim();
+  return title.length > 46 ? `${title.slice(0, 43)}...` : title;
+};
+
+const createButlerThread = (overrides = {}) => {
+  const now = Date.now();
+  const messages = sanitizeButlerMessages(overrides.messages || []);
+  return {
+    id: overrides.id || createButlerThreadId(),
+    title: overrides.title || getButlerThreadTitle(messages),
+    messages,
+    createdAtMs: Number(overrides.createdAtMs || now),
+    updatedAtMs: Number(overrides.updatedAtMs || now)
+  };
+};
+
+const sanitizeButlerThreads = (threads = []) => (
+  asArray(threads)
+    .map(thread => createButlerThread(thread))
+    .sort((a, b) => Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0))
+    .slice(0, 24)
+);
 
 const areJsonEqual = (left, right) => {
   if (left === right) return true;
@@ -1726,7 +1769,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [butlerInput, setButlerInput] = useState('');
             const [butlerMessages, setButlerMessages] = useState(() => ([
             ]));
+            const [butlerThreads, setButlerThreads] = useState([]);
+            const [activeButlerThreadId, setActiveButlerThreadId] = useState('');
+            const [butlerHistoryOpen, setButlerHistoryOpen] = useState(false);
             const [butlerSending, setButlerSending] = useState(false);
+            const [butlerDockOpen, setButlerDockOpen] = useState(false);
             const [editorTab, setEditorTab] = useState(initialWorkspaceRoute.editorTab);
             const [editorStudioModal, setEditorStudioModal] = useState(null);
             const editorStudioAudioRef = useRef(null);
@@ -1820,6 +1867,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const unsavedWorkspaceChangesRef = useRef(false);
             const ownerNotificationSeenRef = useRef(new Set());
             const ownerNotificationsReadyRef = useRef(false);
+            const butlerHistoryReadyRef = useRef(false);
+            const butlerPersistTimerRef = useRef(null);
+            const activeButlerThreadIdRef = useRef('');
+            const butlerThreadsRef = useRef([]);
             
             const showToast = (msg) => {
                 window.clearTimeout(toastTimerRef.current);
@@ -1847,6 +1898,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             };
 
             useEffect(() => () => window.clearTimeout(toastTimerRef.current), []);
+            useEffect(() => () => window.clearTimeout(butlerPersistTimerRef.current), []);
             useEffect(() => () => window.clearTimeout(editorDraftSaveTimerRef.current), []);
             useEffect(() => () => window.clearTimeout(editorDraftCloudTimerRef.current), []);
             useEffect(() => () => editorRoomNavDragRef.current?.cleanup?.(), []);
@@ -2057,6 +2109,99 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             }, [settings.brandName, user, workspaceAccess]);
             const safeStaffList = useMemo(() => asArray(staffList), [staffList]);
             const safeClientRecords = useMemo(() => asArray(clientRecords), [clientRecords]);
+
+            useEffect(() => {
+                activeButlerThreadIdRef.current = activeButlerThreadId;
+            }, [activeButlerThreadId]);
+
+            useEffect(() => {
+                butlerThreadsRef.current = butlerThreads;
+            }, [butlerThreads]);
+
+            useEffect(() => {
+                butlerHistoryReadyRef.current = false;
+                window.clearTimeout(butlerPersistTimerRef.current);
+
+                const localOwnerKey = workspaceOwnerId || (isGuestWorkspace ? 'guest-workspace' : 'local');
+                const loadLocalThreads = () => {
+                    const storedThreads = sanitizeButlerThreads(safeJsonParse(safeLocalGet(getButlerThreadsKey(localOwnerKey)), []));
+                    const nextThreads = storedThreads.length ? storedThreads : [createButlerThread()];
+                    const nextActiveId = nextThreads[0]?.id || '';
+                    butlerThreadsRef.current = nextThreads;
+                    activeButlerThreadIdRef.current = nextActiveId;
+                    setButlerThreads(nextThreads);
+                    setActiveButlerThreadId(nextActiveId);
+                    setButlerMessages(nextThreads[0]?.messages || []);
+                    butlerHistoryReadyRef.current = true;
+                };
+
+                if (!user || !isFirebaseConfigured || !db || !workspaceOwnerId || isGuestWorkspace || publicSlug) {
+                    loadLocalThreads();
+                    return undefined;
+                }
+
+                const threadsQuery = FirebaseSDK.query(
+                    FirebaseSDK.collection(db, 'artifacts', appId, 'users', workspaceOwnerId, 'butlerThreads'),
+                    FirebaseSDK.orderBy('updatedAtMs', 'desc'),
+                    FirebaseSDK.limit(24)
+                );
+                const unsubscribe = FirebaseSDK.onSnapshot(threadsQuery, (snap) => {
+                    let nextThreads = sanitizeButlerThreads(snap.docs.map(docSnap => ({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    })));
+                    if (!nextThreads.length) nextThreads = [createButlerThread()];
+                    const currentId = activeButlerThreadIdRef.current;
+                    const nextActiveThread = nextThreads.find(thread => thread.id === currentId) || nextThreads[0];
+                    butlerThreadsRef.current = nextThreads;
+                    activeButlerThreadIdRef.current = nextActiveThread?.id || '';
+                    setButlerThreads(nextThreads);
+                    setActiveButlerThreadId(nextActiveThread?.id || '');
+                    setButlerMessages(nextActiveThread?.messages || []);
+                    butlerHistoryReadyRef.current = true;
+                }, (error) => {
+                    console.error('Butler history sync failed', error);
+                    loadLocalThreads();
+                });
+                return () => unsubscribe();
+            }, [user?.uid, workspaceOwnerId, isGuestWorkspace, publicSlug]);
+
+            useEffect(() => {
+                if (!butlerHistoryReadyRef.current || !activeButlerThreadId) return;
+                const messages = sanitizeButlerMessages(butlerMessages);
+                const now = Date.now();
+                const existingThread = butlerThreadsRef.current.find(thread => thread.id === activeButlerThreadId);
+                const nextThread = createButlerThread({
+                    ...(existingThread || {}),
+                    id: activeButlerThreadId,
+                    title: getButlerThreadTitle(messages, existingThread?.title || 'New chat'),
+                    messages,
+                    createdAtMs: existingThread?.createdAtMs || now,
+                    updatedAtMs: now
+                });
+                const nextThreads = sanitizeButlerThreads([
+                    nextThread,
+                    ...butlerThreadsRef.current.filter(thread => thread.id !== activeButlerThreadId)
+                ]);
+                butlerThreadsRef.current = nextThreads;
+                setButlerThreads(nextThreads);
+
+                window.clearTimeout(butlerPersistTimerRef.current);
+                butlerPersistTimerRef.current = window.setTimeout(() => {
+                    const localOwnerKey = workspaceOwnerId || (isGuestWorkspace ? 'guest-workspace' : 'local');
+                    safeLocalSet(getButlerThreadsKey(localOwnerKey), JSON.stringify(nextThreads));
+                    if (!user || !isFirebaseConfigured || !db || !workspaceOwnerId || isGuestWorkspace || publicSlug) return;
+                    FirebaseSDK.setDoc(
+                        FirebaseSDK.doc(db, 'artifacts', appId, 'users', workspaceOwnerId, 'butlerThreads', activeButlerThreadId),
+                        {
+                            ...nextThread,
+                            ownerId: workspaceOwnerId,
+                            updatedAt: FirebaseSDK.serverTimestamp()
+                        },
+                        { merge: true }
+                    ).catch(error => console.error('Could not save Butler history', error));
+                }, 550);
+            }, [butlerMessages, activeButlerThreadId, user?.uid, workspaceOwnerId, isGuestWorkspace, publicSlug]);
             const safeFinanceImports = useMemo(() => asArray(financeImports), [financeImports]);
             const visibleBookings = useMemo(() => asArray(bookings), [bookings]);
             const editorDraftOwnerKey = workspaceOwnerId || user?.uid || (isGuestWorkspace ? 'guest' : 'local');
@@ -3103,6 +3248,13 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const mobileMoreNavItems = navItems.filter(item => !mobilePrimaryNavIds.includes(item.id));
             const mobileMoreActive = mobileMoreNavItems.some(item => item.id === activeTab);
             const mobileMoreHasBadge = mobileMoreNavItems.some(item => item.badge);
+            const activeWorkspaceArea = navItems.find(item => item.id === activeTab);
+            const butlerAreaLabel = activeWorkspaceArea?.label || 'Workspace';
+            const butlerContextLine = activeTab === 'editor'
+                ? `${butlerAreaLabel} / ${editorTab || 'Visuals'}`
+                : butlerAreaLabel;
+            const activeButlerThread = butlerThreads.find(thread => thread.id === activeButlerThreadId) || butlerThreads[0] || null;
+            const recentButlerThreads = butlerThreads.slice(0, 12);
             const collectsClientPhone = settings.features?.collectClientPhone !== false;
             const collectsClientEmail = settings.features?.collectClientEmail !== false;
             const collectsClientNotes = Boolean(settings.features?.collectClientNotes);
@@ -6154,16 +6306,131 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             };
 
             const butlerQuickPrompts = [
+                'Design my booking page',
+                'Build a colour system',
                 'Draft a client reply',
-                'Generate colour direction',
-                'Refine page design',
                 'Improve weekly schedule'
             ];
 
-            const buildButlerResponse = (prompt, liveBody = '') => {
+            const validButlerActionTypes = new Set([
+                'auth',
+                'navigate',
+                'draft-reply',
+                'detect-palette',
+                'preview-style',
+                'apply-style',
+                'apply-colour',
+                'apply-design-kit',
+                'generate-faqs',
+                'draft-service-pack',
+                'draft-schedule-plan',
+                'open-booking-page',
+                'save-draft',
+                'explain-platform',
+                'apply-settings-patch',
+                'create-service'
+            ]);
+            const butlerMutatingActionTypes = new Set([
+                'detect-palette',
+                'apply-style',
+                'apply-colour',
+                'apply-design-kit',
+                'generate-faqs',
+                'save-draft',
+                'apply-settings-patch',
+                'create-service'
+            ]);
+
+            const normalizeButlerActions = (actions = [], messageId = `butler-action-${Date.now()}`) => (
+                Array.isArray(actions)
+                    ? actions
+                        .filter(action => action && validButlerActionTypes.has(action.type))
+                        .slice(0, 3)
+                        .map((action, index) => ({
+                            ...action,
+                            id: action.id || `${messageId}-${action.type}-${index}`,
+                            label: String(action.label || 'Open').trim().slice(0, 80),
+                            summary: String(action.summary || action.confirmationSummary || '').trim().slice(0, 420)
+                        }))
+                    : []
+            );
+
+            const butlerActionNeedsAuthorization = (action = {}) => (
+                butlerMutatingActionTypes.has(action.type) || Boolean(action.requiresConfirmation)
+            );
+
+            const butlerActionSummaryItems = (action = {}) => {
+                if (Array.isArray(action.summaryItems) && action.summaryItems.length) {
+                    return action.summaryItems.map(item => String(item || '').trim()).filter(Boolean).slice(0, 6);
+                }
+                if (action.type === 'apply-style') {
+                    const direction = getEditorStyleDirection(action.directionId || 'native-precision');
+                    return [
+                        `Apply ${direction.label} to the booking page draft`,
+                        'Update section styling, media placement, controls, and visual rhythm',
+                        'Keep the client booking order unchanged'
+                    ];
+                }
+                if (action.type === 'apply-colour') {
+                    return [
+                        `Apply ${themePaletteLabel(action.paletteId || detectedThemePalette || 'neutral')} colour direction`,
+                        'Update draft page colours, selected states, buttons, FAQ, socials, and readable text tones',
+                        'Keep the app in light mode'
+                    ];
+                }
+                if (action.type === 'apply-design-kit') {
+                    const kit = action.designKit || {};
+                    const direction = kit.styleDirection ? getEditorStyleDirection(kit.styleDirection) : null;
+                    const fontPreset = fontStylePresets.find(preset => preset.id === kit.fontPresetId);
+                    const items = [];
+                    if (direction) items.push(`Apply ${direction.label} booking page structure`);
+                    if (kit.paletteId) items.push(`Apply ${themePaletteLabel(kit.paletteId)} colour direction${kit.paletteShade ? ` at shade ${kit.paletteShade}` : ''}`);
+                    if (fontPreset) items.push(`Apply ${fontPreset.label} typography`);
+                    if (Array.isArray(kit.patches) && kit.patches.length) items.push(`Update ${kit.patches.length} copy, FAQ, or colour fields`);
+                    items.push('Keep the client journey order locked');
+                    return items.slice(0, 6);
+                }
+                if (action.type === 'detect-palette') {
+                    return [
+                        'Read the uploaded logo, banner, or footer image',
+                        'Update the editor colour direction signal',
+                        'Open Colour Direction for review'
+                    ];
+                }
+                if (action.type === 'generate-faqs') {
+                    return [
+                        'Enable FAQ on the booking page draft',
+                        'Replace FAQ items with a clean generated starter set',
+                        'Open the FAQ editor for review'
+                    ];
+                }
+                if (action.type === 'apply-settings-patch') {
+                    return (action.patches || []).map(patch => `Update ${String(patch.path || '').replace('features.', 'FAQ ')}`).slice(0, 6);
+                }
+                if (action.type === 'create-service') {
+                    return [
+                        `Create service: ${action.service?.name || 'New service'}`,
+                        'Add it to the Services draft list',
+                        'Open Services for review'
+                    ];
+                }
+                if (action.type === 'save-draft') {
+                    return ['Save the current editor draft state for this workspace'];
+                }
+                return [action.summary || 'Authorize Butler to execute this workspace operation.'];
+            };
+
+            const buildButlerResponse = (prompt, liveBody = '', liveActions = []) => {
                 const lowerPrompt = prompt.toLowerCase();
                 const messageId = `butler-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-                const withLiveBody = (message) => liveBody ? { ...message, body: liveBody } : message;
+                const normalizedLiveActions = normalizeButlerActions(liveActions, messageId);
+                const withLiveBody = (message) => ({
+                    ...message,
+                    body: liveBody || message.body,
+                    actions: normalizedLiveActions.length
+                        ? normalizedLiveActions
+                        : normalizeButlerActions(message.actions || [], messageId)
+                });
                 if (/(reply|client|chat|message|reschedule|late|follow)/.test(lowerPrompt)) {
                     return withLiveBody({
                         id: messageId,
@@ -6181,12 +6448,37 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         : settings.logo || settings.bannerImage
                             ? 'I can read the uploaded brand media and push that signal into Colour Direction.'
                             : 'Upload a logo or banner in the editor first, then I can read a stronger brand signal.';
+                    const paletteId = lowerPrompt.includes('yellow') || lowerPrompt.includes('gold')
+                        ? 'yellow'
+                        : lowerPrompt.includes('purple') || lowerPrompt.includes('luxe')
+                            ? 'purple'
+                            : lowerPrompt.includes('red')
+                                ? 'red'
+                                : lowerPrompt.includes('orange') || lowerPrompt.includes('warm')
+                                    ? 'orange'
+                                    : lowerPrompt.includes('green')
+                                        ? 'green'
+                                        : lowerPrompt.includes('blue')
+                                            ? 'blue'
+                                            : detectedThemePalette || 'neutral';
                     return withLiveBody({
                         id: messageId,
                         role: 'assistant',
-                        body: `${palettePhrase} For the premium light UI, I would keep white as the canvas, black for structure, one confident accent, and a softer tint only for selected states.`,
+                        body: `${palettePhrase} I would make the page feel engineered rather than decorated: white canvas, black structure, one confident accent, and softer tints only for selected states. That gives the client a clean booking path without muddy brand drift.`,
                         actions: [
                             { id: `${messageId}-read-logo`, label: 'Read logo colours', type: 'detect-palette' },
+                            {
+                                id: `${messageId}-apply-kit`,
+                                label: 'Apply design kit',
+                                type: 'apply-design-kit',
+                                designKit: {
+                                    paletteId,
+                                    paletteShade: 7,
+                                    styleDirection: 'native-precision',
+                                    fontPresetId: 'precision'
+                                },
+                                summary: `Apply a premium light design kit built around ${themePaletteLabel(paletteId)}.`
+                            },
                             { id: `${messageId}-open-colours`, label: 'Open colours', type: 'navigate', tab: 'editor', editorTab: 'themes', room: 'colours' }
                         ]
                     });
@@ -6201,9 +6493,21 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     return withLiveBody({
                         id: messageId,
                         role: 'assistant',
-                        body: `I would start with ${direction.label}. It gives ${settings.brandName || 'the page'} a stronger visual opinion while keeping the booking journey locked and low-friction.`,
+                        body: `I would start with ${direction.label}. It gives ${settings.brandName || 'the page'} a clearer design point of view while keeping the booking journey locked, fast, and low-friction. The page should feel like a purpose-built booking instrument, not a mini website.`,
                         actions: [
-                            { id: `${messageId}-apply-style`, label: `Apply ${direction.label}`, type: 'apply-style', directionId },
+                            { id: `${messageId}-preview-style`, label: `Preview ${direction.label}`, type: 'preview-style', directionId },
+                            {
+                                id: `${messageId}-apply-kit`,
+                                label: 'Apply full kit',
+                                type: 'apply-design-kit',
+                                designKit: {
+                                    styleDirection: directionId,
+                                    paletteId: detectedThemePalette || 'neutral',
+                                    paletteShade: directionId === 'editorial-luxe' ? 6 : 7,
+                                    fontPresetId: directionId === 'editorial-luxe' ? 'boutique' : directionId === 'command-flow' ? 'precision' : 'native'
+                                },
+                                summary: `Apply a full ${direction.label} design kit to the booking page draft.`
+                            },
                             { id: `${messageId}-open-style`, label: 'Open style system', type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'style' }
                         ]
                     });
@@ -6214,6 +6518,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         role: 'assistant',
                         body: 'The clean move is to tighten availability first: define the days you truly want clients to book, protect buffer time, then let the booking page expose only confident slots.',
                         actions: [
+                            { id: `${messageId}-plan`, label: 'Draft schedule plan', type: 'draft-schedule-plan' },
                             { id: `${messageId}-schedule`, label: 'Open schedule', type: 'navigate', tab: 'business' },
                             { id: `${messageId}-bookings`, label: 'Review bookings', type: 'navigate', tab: 'bookings' }
                         ]
@@ -6225,6 +6530,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         role: 'assistant',
                         body: 'Services should read like clean buying decisions. I would reduce vague names, tighten durations, and make each price feel attached to a clear outcome.',
                         actions: [
+                            { id: `${messageId}-draft-services`, label: 'Draft service pack', type: 'draft-service-pack' },
                             { id: `${messageId}-services`, label: 'Open services', type: 'navigate', tab: 'services' },
                             { id: `${messageId}-editor-services`, label: 'Preview service layout', type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'style' }
                         ]
@@ -6236,8 +6542,8 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     body: 'I can work from that. The strongest next move is to pick the workspace area this affects, then I can help with copy, design direction, client wording, or the exact place to make the change.',
                     actions: [
                         { id: `${messageId}-editor`, label: 'Editor', type: 'navigate', tab: 'editor' },
-                        { id: `${messageId}-clients`, label: 'Clients', type: 'navigate', tab: 'clients' },
-                        { id: `${messageId}-schedule`, label: 'Schedule', type: 'navigate', tab: 'business' }
+                        { id: `${messageId}-explain`, label: 'Explain this area', type: 'explain-platform' },
+                        { id: `${messageId}-save-draft`, label: 'Save draft', type: 'save-draft' }
                     ]
                 });
             };
@@ -6246,9 +6552,22 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 workspaceName: settings.brandName || settings.businessName || 'Build A Booking',
                 workspaceRole,
                 activeArea: activeTab,
+                activeAreaLabel: butlerAreaLabel,
+                editorTab,
+                editorRoom: editorStudioModal || editorStudioScene || '',
                 bookingPageStyle: getEditorStyleDirection(settings.interfaceStyleDirection || 'native-precision')?.label || '',
                 colourDirection: detectedThemePalette ? themePaletteLabel(detectedThemePalette) : '',
                 businessType: settings.serviceIndustry || settings.industry || '',
+                bookingPageUrl,
+                canManageWorkspace,
+                dirtyDraft: Boolean(unsavedWorkspaceChangesRef.current),
+                metrics: {
+                    services: workspaceServices.length,
+                    bookings: visibleBookings.length,
+                    pendingBookings: visibleBookings.filter(booking => booking.status === 'pending' || booking.status === 'waitlist').length,
+                    clients: clientDirectory.length,
+                    unreadThreads: workspaceClientThreads.filter(thread => Number(thread.ownerUnread || 0) > 0).length
+                },
                 services: workspaceServices.slice(0, 8).map(service => ({
                     name: service.name || service.title || '',
                     price: service.price || service.priceLabel || '',
@@ -6291,25 +6610,60 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 };
             };
 
+            const startNewButlerThread = () => {
+                const nextThread = createButlerThread({ title: 'New chat' });
+                const nextThreads = sanitizeButlerThreads([nextThread, ...butlerThreadsRef.current]);
+                butlerHistoryReadyRef.current = true;
+                butlerThreadsRef.current = nextThreads;
+                activeButlerThreadIdRef.current = nextThread.id;
+                setButlerThreads(nextThreads);
+                setActiveButlerThreadId(nextThread.id);
+                setButlerMessages([]);
+                setButlerInput('');
+                setButlerHistoryOpen(false);
+            };
+
+            const openButlerThread = (threadId) => {
+                const thread = butlerThreadsRef.current.find(item => item.id === threadId);
+                if (!thread) return;
+                activeButlerThreadIdRef.current = thread.id;
+                setActiveButlerThreadId(thread.id);
+                setButlerMessages(thread.messages || []);
+                setButlerHistoryOpen(false);
+                if (activeTab !== 'overview') setButlerDockOpen(true);
+            };
+
             const sendButlerPrompt = async (promptOverride = '') => {
                 const prompt = String(promptOverride || butlerInput || '').trim();
                 if (!prompt || butlerSending) return;
+                if (!activeButlerThreadIdRef.current) {
+                    const nextThread = createButlerThread({ title: 'New chat' });
+                    const nextThreads = sanitizeButlerThreads([nextThread, ...butlerThreadsRef.current]);
+                    butlerHistoryReadyRef.current = true;
+                    butlerThreadsRef.current = nextThreads;
+                    activeButlerThreadIdRef.current = nextThread.id;
+                    setButlerThreads(nextThreads);
+                    setActiveButlerThreadId(nextThread.id);
+                }
                 const existingMessages = butlerMessages;
                 const userMessage = {
                     id: `butler-user-${Date.now()}`,
                     role: 'user',
-                    body: prompt
+                    body: prompt,
+                    createdAtMs: Date.now()
                 };
                 const pendingId = `butler-pending-${Date.now()}`;
                 const pendingMessage = {
                     id: pendingId,
                     role: 'assistant',
                     body: 'Thinking through the workspace...',
+                    createdAtMs: Date.now(),
                     pending: true
                 };
                 setButlerMessages(prev => [...prev, userMessage, pendingMessage]);
                 setButlerInput('');
                 setButlerSending(true);
+                if (activeTab !== 'overview') setButlerDockOpen(true);
                 try {
                     if (!user) {
                         throw { code: 'unauthenticated', message: 'Sign in to use the live Butler.' };
@@ -6329,7 +6683,11 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             .map(message => ({ role: message.role, body: message.body }))
                     });
                     const liveReply = String(result.data?.reply || '').trim();
-                    const assistantMessage = buildButlerResponse(prompt, liveReply || 'I have the request, but the live Butler returned an empty response.');
+                    const assistantMessage = buildButlerResponse(
+                        prompt,
+                        liveReply || 'I have the request, but the live Butler returned an empty response.',
+                        result.data?.actions || []
+                    );
                     setButlerMessages(prev => prev.map(message => message.id === pendingId ? assistantMessage : message));
                 } catch (error) {
                     console.error('Butler request failed', error);
@@ -6348,23 +6706,205 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 sendButlerPrompt();
             };
 
-            const handleButlerAction = (action = {}) => {
+            const appendButlerAssistantMessage = (body, actions = []) => {
+                const messageId = `butler-action-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                setButlerMessages(prev => ([
+                    ...prev,
+                    {
+                        id: messageId,
+                        role: 'assistant',
+                        body,
+                        actions: normalizeButlerActions(actions, messageId)
+                    }
+                ]));
+            };
+
+            const applyButlerSettingsPatch = (patches = []) => {
+                const colorPatchPaths = new Set([
+                    'primaryColor',
+                    'accentColor',
+                    'backgroundColor',
+                    'headingColor',
+                    'bodyColor',
+                    'dateActiveBgColor',
+                    'dateActiveTextColor',
+                    'slotBgColor',
+                    'slotTextColor',
+                    'slotActiveBgColor',
+                    'slotActiveTextColor',
+                    'buttonColor',
+                    'buttonTextColor',
+                    'faqBgColor',
+                    'faqBorderColor',
+                    'faqTextColor',
+                    'faqAnswerColor',
+                    'socialIconBgColor',
+                    'socialIconColor',
+                    'socialIconTextColor'
+                ]);
+                const allowedPaths = new Set([
+                    'welcomeMessage',
+                    'tagline',
+                    'buttonText',
+                    'confirmButtonText',
+                    'detailsHeading',
+                    'detailsSubHeading',
+                    'successHeading',
+                    'dateLabel',
+                    'timeLabel',
+                    'venueTitle',
+                    'venueIntro',
+                    'features.faqEnabled',
+                    'features.faqs',
+                    ...colorPatchPaths
+                ]);
+                const safePatches = Array.isArray(patches)
+                    ? patches.filter(patch => allowedPaths.has(patch?.path)).slice(0, 8)
+                    : [];
+                if (!safePatches.length) {
+                    showToast('Butler did not include any supported edits.');
+                    return false;
+                }
+                markWorkspaceDirty();
+                setSettings(prev => {
+                    const next = { ...prev, features: { ...(prev.features || {}) } };
+                    safePatches.forEach(patch => {
+                        if (patch.path === 'features.faqEnabled') {
+                            next.features.faqEnabled = Boolean(patch.value);
+                            return;
+                        }
+                        if (patch.path === 'features.faqs') {
+                            const faqs = Array.isArray(patch.value)
+                                ? patch.value
+                                    .slice(0, 6)
+                                    .map(item => ({
+                                        q: String(item?.q || item?.question || '').trim().slice(0, 160),
+                                        a: String(item?.a || item?.answer || '').trim().slice(0, 500)
+                                    }))
+                                    .filter(item => item.q && item.a)
+                                : [];
+                            if (faqs.length) {
+                                next.features.faqEnabled = true;
+                                next.features.faqs = faqs;
+                            }
+                            return;
+                        }
+                        if (colorPatchPaths.has(patch.path)) {
+                            const color = normalizeHexColor(String(patch.value || '').trim(), '');
+                            if (color) next[patch.path] = color;
+                            return;
+                        }
+                        next[patch.path] = String(patch.value || '').trim().slice(0, 220);
+                    });
+                    return next;
+                });
+                showToast('Butler applied draft edits.');
+                return true;
+            };
+
+            const applyButlerDesignKit = (designKit = {}) => {
+                const kit = designKit && typeof designKit === 'object' ? designKit : {};
+                const applied = [];
+                const direction = getEditorStyleDirection(kit.styleDirection);
+                if (kit.styleDirection && direction?.id === kit.styleDirection) {
+                    applyEditorStyleDirection(direction.id);
+                    applied.push(direction.label);
+                }
+                const paletteId = String(kit.paletteId || '').trim();
+                if (paletteFlowOptions.some(option => option.id === paletteId)) {
+                    applyPaletteFlowColor(paletteId, kit.paletteShade || activePaletteShade);
+                    applied.push(`${themePaletteLabel(paletteId)} colour`);
+                }
+                const fontPreset = fontStylePresets.find(preset => preset.id === kit.fontPresetId);
+                if (fontPreset) {
+                    applyFontStylePreset(fontPreset);
+                    applied.push(`${fontPreset.label} typography`);
+                }
+                const patches = Array.isArray(kit.patches) ? kit.patches : [];
+                if (patches.length && applyButlerSettingsPatch(patches)) {
+                    applied.push('copy and detail fields');
+                }
+                if (Array.isArray(kit.faqs) && kit.faqs.length) {
+                    const faqPatches = [
+                        { path: 'features.faqEnabled', value: true },
+                        { path: 'features.faqs', value: kit.faqs }
+                    ];
+                    if (applyButlerSettingsPatch(faqPatches)) applied.push('FAQ set');
+                }
+                if (!applied.length) {
+                    showToast('Butler did not include a supported design kit.');
+                    return false;
+                }
+                navigateWorkspaceTab('editor', 'visuals');
+                openEditorRoom(direction?.id === kit.styleDirection ? 'style' : paletteId ? 'colours' : fontPreset ? 'typography' : 'introduction');
+                appendButlerAssistantMessage(
+                    `Authorized design kit applied to the draft: ${applied.join(', ')}. Review it in the Editor before saving or publishing.`,
+                    [
+                        { label: 'Open editor', type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'style' },
+                        { label: 'Preview page', type: 'open-booking-page' }
+                    ]
+                );
+                showToast('Butler applied the design kit.');
+                return true;
+            };
+
+            const createButlerService = (service = {}) => {
+                const name = String(service.name || '').trim().slice(0, 120);
+                if (!name) {
+                    showToast('Butler did not include a service name.');
+                    return false;
+                }
+                const nextService = {
+                    id: `service-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    name,
+                    category: String(service.category || '').trim().slice(0, 80),
+                    description: String(service.description || '').trim().slice(0, 500),
+                    price: String(service.price || '').trim().slice(0, 60),
+                    currency: settings.currency || 'R',
+                    priceType: 'fixed',
+                    duration: String(service.duration || '').trim().slice(0, 60),
+                    active: true,
+                    staffIds: [],
+                    imageUrls: [],
+                    templateId: '',
+                    bookingNote: ''
+                };
+                markWorkspaceDirty();
+                setSettings(prev => ({
+                    ...prev,
+                    services: [...normalizeServiceList(prev.services || []), nextService],
+                    servicesUpdatedAt: Date.now()
+                }));
+                navigateWorkspaceTab('services');
+                appendButlerAssistantMessage(
+                    `${nextService.name} has been added to the Services draft. Review price, duration, staff assignment, and display before publishing.`,
+                    [{ label: 'Open services', type: 'navigate', tab: 'services' }]
+                );
+                showToast('Butler created a service draft.');
+                return true;
+            };
+
+            const handleButlerAction = async (action = {}) => {
                 if (action.type === 'auth') {
                     openOwnerAuth(action.mode || 'signin');
                     return;
                 }
+                if (butlerActionNeedsAuthorization(action) && !action.authorized) {
+                    setConfirmDialog({
+                        eyebrow: 'Butler Action',
+                        title: 'Authorize Butler changes?',
+                        body: action.summary || 'Review the exact changes below. Butler will apply them to the workspace draft only after you authorize.',
+                        items: butlerActionSummaryItems(action),
+                        actionLabel: 'Authorize',
+                        onConfirm: () => handleButlerAction({ ...action, authorized: true, requiresConfirmation: false })
+                    });
+                    return;
+                }
                 if (action.type === 'draft-reply') {
-                    setButlerMessages(prev => ([
-                        ...prev,
-                        {
-                            id: `butler-draft-${Date.now()}`,
-                            role: 'assistant',
-                            body: 'Draft: Thanks for letting me know. We can absolutely look at a better time. I have a few clean options available, and I will keep the booking simple so you do not have to restart the whole process.',
-                            actions: [
-                                { id: `butler-draft-open-${Date.now()}`, label: 'Open chats', type: 'navigate', tab: 'communications' }
-                            ]
-                        }
-                    ]));
+                    appendButlerAssistantMessage(
+                        'Draft: Thanks for letting me know. We can absolutely look at a better time. I have a few clean options available, and I will keep the booking simple so you do not have to restart the whole process.',
+                        [{ label: 'Open chats', type: 'navigate', tab: 'communications' }]
+                    );
                     return;
                 }
                 if (action.type === 'detect-palette') {
@@ -6373,15 +6913,122 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     openEditorRoom('colours');
                     return;
                 }
+                if (action.type === 'preview-style') {
+                    const direction = getEditorStyleDirection(action.directionId || 'native-precision');
+                    appendButlerAssistantMessage(
+                        `${direction.label} preview: ${direction.summary} It will keep the booking journey fixed while changing the visual system, media placement, section styling, and interaction tone.`,
+                        [
+                            { label: `Apply ${direction.label}`, type: 'apply-style', directionId: direction.id, requiresConfirmation: true },
+                            { label: 'Open style system', type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'style' }
+                        ]
+                    );
+                    return;
+                }
                 if (action.type === 'apply-style') {
                     applyEditorStyleDirection(action.directionId || 'native-precision');
                     navigateWorkspaceTab('editor', 'visuals');
                     openEditorRoom('style');
                     return;
                 }
+                if (action.type === 'apply-colour') {
+                    const paletteId = action.paletteId || detectedThemePalette || 'neutral';
+                    applyPaletteFlowColor(paletteId);
+                    navigateWorkspaceTab('editor', 'themes');
+                    openEditorRoom('colours');
+                    showToast(`${themePaletteLabel(paletteId)} direction applied`);
+                    return;
+                }
+                if (action.type === 'apply-design-kit') {
+                    applyButlerDesignKit(action.designKit || {});
+                    return;
+                }
+                if (action.type === 'generate-faqs') {
+                    const businessName = settings.brandName || 'the business';
+                    const primaryService = workspaceServices[0]?.name || 'a booking';
+                    const faqs = [
+                        { q: 'How do I book?', a: `Choose ${primaryService}, pick an available day and time, then confirm your details. ${businessName} receives the request instantly.` },
+                        { q: 'Can I reschedule?', a: 'Yes. Open your booking thread or contact the team as soon as possible so they can move you to the cleanest available time.' },
+                        { q: 'Will I get updates?', a: 'Yes. If you add your email, booking updates and important messages can be sent to you automatically.' },
+                        { q: 'What should I bring?', a: 'Bring anything specific to your service and arrive a few minutes early so the session can start calmly.' },
+                        { q: 'How do payments work?', a: 'Payment instructions are shown during booking when the business has enabled payment options for this service.' }
+                    ];
+                    markWorkspaceDirty();
+                    setSettings(prev => ({
+                        ...prev,
+                        features: {
+                            ...(prev.features || {}),
+                            faqEnabled: true,
+                            faqs
+                        }
+                    }));
+                    navigateWorkspaceTab('editor', 'features');
+                    openEditorRoom('faq');
+                    appendButlerAssistantMessage(
+                        'I generated a clean FAQ set and added it to the booking page draft. Review the wording in the Editor before publishing.',
+                        [{ label: 'Open FAQ', type: 'navigate', tab: 'editor', editorTab: 'features', room: 'faq' }]
+                    );
+                    return;
+                }
+                if (action.type === 'apply-settings-patch') {
+                    const applied = applyButlerSettingsPatch(action.patches || []);
+                    if (applied) {
+                        if ((action.patches || []).some(patch => String(patch.path || '').startsWith('features.'))) {
+                            navigateWorkspaceTab('editor', 'features');
+                            openEditorRoom('faq');
+                        } else {
+                            navigateWorkspaceTab('editor', 'identity');
+                            openEditorRoom('introduction');
+                        }
+                        appendButlerAssistantMessage(
+                            'Authorized edits are now in the workspace draft. Review them in the Editor, then save or publish when ready.',
+                            [{ label: 'Open editor', type: 'navigate', tab: 'editor', editorTab: 'identity', room: 'introduction' }]
+                        );
+                    }
+                    return;
+                }
+                if (action.type === 'create-service') {
+                    createButlerService(action.service || {});
+                    return;
+                }
+                if (action.type === 'draft-service-pack') {
+                    const serviceSummary = workspaceServices.length
+                        ? workspaceServices.slice(0, 3).map(service => `${service.name}${service.duration ? ` / ${formatServiceDuration(service.duration)}` : ''}${service.price ? ` / ${formatServicePrice(service)}` : ''}`).join('\n')
+                        : 'Signature Session / 60 min\nExpress Session / 30 min\nPremium Session / 90 min';
+                    appendButlerAssistantMessage(
+                        `Service pack draft:\n${serviceSummary}\n\nMake each service name outcome-led, keep durations predictable, and avoid giving clients too many near-identical choices.`,
+                        [{ label: 'Open services', type: 'navigate', tab: 'services' }]
+                    );
+                    return;
+                }
+                if (action.type === 'draft-schedule-plan') {
+                    appendButlerAssistantMessage(
+                        'Schedule plan: protect your highest-energy days, keep public availability narrower than internal capacity, add buffer time around premium services, and review pending bookings before widening slots.',
+                        [
+                            { label: 'Open schedule', type: 'navigate', tab: 'business' },
+                            { label: 'Review bookings', type: 'navigate', tab: 'bookings' }
+                        ]
+                    );
+                    return;
+                }
+                if (action.type === 'open-booking-page') {
+                    openBookingPage();
+                    return;
+                }
+                if (action.type === 'save-draft') {
+                    await saveSettingsDraft(settings, 'Butler saved the current editor draft.');
+                    clearWorkspaceDirty();
+                    return;
+                }
+                if (action.type === 'explain-platform') {
+                    appendButlerAssistantMessage(
+                        `${butlerAreaLabel} is where this workspace handles ${activeTab === 'editor' ? 'booking page design, colour direction, layout style, content blocks, and preview decisions' : activeTab === 'business' ? 'availability, operating rhythm, calendar logic, and schedule quality' : activeTab === 'communications' ? 'client conversations, replies, follow-ups, and support context' : activeTab === 'bookings' ? 'requests, approvals, payment state, client timing, and operational follow-through' : 'the current business workflow'}. Tell me what outcome you want here and I can guide, draft, or open the exact control.`
+                    );
+                    return;
+                }
                 if (action.type === 'navigate') {
                     if (!navigateWorkspaceTab(action.tab || 'overview', action.editorTab)) return;
                     if (action.tab === 'editor' && action.room) openEditorRoom(action.room);
+                    if (action.tab !== 'overview') setButlerDockOpen(true);
                 }
             };
 
@@ -6723,6 +7370,16 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-neutral-400 mb-3">{confirmDialog.eyebrow || 'Confirm Action'}</p>
                         <h2 className="text-2xl font-bold tracking-tight text-black mb-3">{confirmDialog.title}</h2>
                         <p className="text-sm leading-relaxed text-neutral-500 mb-6">{confirmDialog.body}</p>
+                        {!!confirmDialog.items?.length && (
+                            <div className="mb-6 rounded-lg border border-neutral-100 bg-neutral-50 p-3">
+                                {confirmDialog.items.map((item, index) => (
+                                    <div key={`${item}-${index}`} className="flex items-start gap-3 py-2 text-sm font-semibold leading-snug text-neutral-700">
+                                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-black" />
+                                        <span>{item}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-3">
                             <button type="button" onClick={() => setConfirmDialog(null)} className="h-12 rounded-full bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest hover:border-black transition-colors">
                                 Cancel
@@ -7582,58 +8239,197 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     </div>
                 </nav>
 
+                {activeTab !== 'overview' && (
+                    <div className={`butler-floating-layer ${butlerDockOpen ? 'is-open' : ''}`}>
+                        <button
+                            type="button"
+                            className="butler-floating-trigger"
+                            onClick={() => setButlerDockOpen(open => !open)}
+                            aria-expanded={butlerDockOpen}
+                            aria-label={butlerDockOpen ? 'Close Butler' : 'Open Butler'}
+                        >
+                            <span className="butler-floating-mark">
+                                <Sparkles size={17} strokeWidth={2.6} />
+                            </span>
+                            <span>
+                                <strong>Butler</strong>
+                                <small>{butlerContextLine}</small>
+                            </span>
+                            {butlerSending && <i />}
+                        </button>
+
+                        {butlerDockOpen && (
+                            <section className="butler-dock-panel" aria-label="Build A Booking Butler">
+                                <header className="butler-dock-header">
+                                    <div>
+                                        <p>Build A Booking Butler</p>
+                                        <h2>{butlerContextLine}</h2>
+                                    </div>
+                                    <button type="button" onClick={() => setButlerDockOpen(false)} aria-label="Close Butler">
+                                        <X size={15} strokeWidth={2.7} />
+                                    </button>
+                                </header>
+                                <div className="butler-dock-thread" aria-live="polite">
+                                    {butlerMessages.length ? (
+                                        butlerMessages.slice(-6).map(message => (
+                                            <article key={message.id} className={`dashboard-butler-message is-${message.role} ${message.pending ? 'is-pending' : ''}`}>
+                                                <span>{message.role === 'user' ? 'You' : 'Butler'}</span>
+                                                <p>{message.body}</p>
+                                                {!!message.actions?.length && (
+                                                    <div className="dashboard-butler-message-actions">
+                                                        {message.actions.map(action => (
+                                                            <button key={action.id} type="button" onClick={() => handleButlerAction(action)}>
+                                                                {action.label}
+                                                                <ArrowUpRight size={13} strokeWidth={2.8} />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </article>
+                                        ))
+                                    ) : (
+                                        <div className="butler-dock-empty">
+                                            <Sparkles size={16} strokeWidth={2.5} />
+                                            <p>Ask me to navigate, explain, draft, design, or apply authorized changes in this area.</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="butler-dock-prompts">
+                                    {butlerQuickPrompts.slice(0, 3).map(prompt => (
+                                        <button key={prompt} type="button" onClick={() => sendButlerPrompt(prompt)} disabled={butlerSending}>
+                                            {prompt}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="dashboard-butler-composer butler-dock-composer">
+                                    <button
+                                        type="button"
+                                        className="dashboard-butler-plus-button"
+                                        onClick={() => handleButlerAction({ type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'logo' })}
+                                        aria-label="Open brand media"
+                                        title="Open brand media"
+                                    >
+                                        <Plus size={17} strokeWidth={2.5} />
+                                    </button>
+                                    <input
+                                        value={butlerInput}
+                                        onChange={(event) => setButlerInput(event.target.value)}
+                                        onKeyDown={handleButlerKeyDown}
+                                        placeholder={butlerSending ? 'Butler is thinking...' : `Ask about ${butlerAreaLabel.toLowerCase()}...`}
+                                    />
+                                    <span className="dashboard-butler-model">Flash-Lite</span>
+                                    <button
+                                        type="button"
+                                        className="dashboard-butler-send-button"
+                                        onClick={() => sendButlerPrompt()}
+                                        aria-label="Send to butler"
+                                        disabled={butlerSending || !butlerInput.trim()}
+                                    >
+                                        <ArrowRight size={18} strokeWidth={2.7} />
+                                    </button>
+                                </div>
+                            </section>
+                        )}
+                    </div>
+                )}
+
                 <div className={`dashboard-main relative z-10 flex-1 flex overflow-hidden md:pb-0 ${activeTab === 'editor' && mobileNavCollapsed ? 'mobile-nav-space-collapsed' : ''}`}>
                     {activeTab === 'overview' && (
                         <div className="dashboard-overview-page dashboard-butler-page flex-1 overflow-y-auto bg-white">
                             <section data-tour="dashboard-hero" className={`dashboard-butler-shell ${butlerMessages.length ? 'has-thread' : 'is-empty'}`} aria-label="Build A Booking Butler">
-                                <header className="dashboard-butler-hero">
-                                    <div className="dashboard-butler-title">
-                                        <span className="dashboard-butler-kicker">
-                                            <Sparkles size={14} strokeWidth={2.6} />
-                                            Build A Booking Butler
-                                        </span>
-                                        <h2>{dashboardGreeting}, {dashboardGreetingName}</h2>
-                                        <p>Tell me what you want the platform to do, design, write, or improve.</p>
+                                <aside className={`butler-history-rail ${butlerHistoryOpen ? 'is-open' : ''}`} aria-label="Butler chat history">
+                                    <div className="butler-history-head">
+                                        <div>
+                                            <p>Butler History</p>
+                                            <h3>{recentButlerThreads.length} chats</h3>
+                                        </div>
+                                        <button type="button" onClick={startNewButlerThread}>
+                                            <Plus size={15} strokeWidth={2.8} />
+                                            New
+                                        </button>
                                     </div>
-                                </header>
-
-                                <div className="dashboard-butler-chat" aria-label="Butler conversation" aria-busy={butlerSending}>
-                                    {!!butlerMessages.length && (
-                                        <div className="dashboard-butler-thread" aria-live="polite">
-                                            {butlerMessages.map(message => (
-                                                <article key={message.id} className={`dashboard-butler-message is-${message.role} ${message.pending ? 'is-pending' : ''}`}>
-                                                    <span>{message.role === 'user' ? 'You' : 'Butler'}</span>
-                                                    <p>{message.body}</p>
-                                                    {!!message.actions?.length && (
-                                                        <div className="dashboard-butler-message-actions">
-                                                            {message.actions.map(action => (
-                                                                <button key={action.id} type="button" onClick={() => handleButlerAction(action)}>
-                                                                    {action.label}
-                                                                    <ArrowUpRight size={13} strokeWidth={2.8} />
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </article>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <div className="dashboard-butler-composer-stack">
-                                        <div className="dashboard-butler-prompts" aria-label="Suggested prompts">
-                                            {butlerQuickPrompts.map(prompt => (
-                                                <button key={prompt} type="button" onClick={() => sendButlerPrompt(prompt)} disabled={butlerSending}>
-                                                    {prompt}
+                                    <div className="butler-history-list">
+                                        {recentButlerThreads.map(thread => {
+                                            const isActiveThread = thread.id === activeButlerThreadId;
+                                            const updatedAt = getTimestampValue(thread.updatedAtMs || thread.updatedAt || thread.createdAtMs);
+                                            return (
+                                                <button
+                                                    key={thread.id}
+                                                    type="button"
+                                                    className={isActiveThread ? 'is-active' : ''}
+                                                    onClick={() => openButlerThread(thread.id)}
+                                                >
+                                                    <MessageCircle size={15} strokeWidth={2.4} />
+                                                    <span>
+                                                        <strong>{thread.title || 'New chat'}</strong>
+                                                        <small>{updatedAt ? formatNotificationTime(updatedAt) : 'Just now'}</small>
+                                                    </span>
                                                 </button>
-                                            ))}
+                                            );
+                                        })}
+                                    </div>
+                                </aside>
+
+                                <div className="butler-home-main">
+                                    <header className="dashboard-butler-hero">
+                                        <button
+                                            type="button"
+                                            className="butler-history-toggle"
+                                            onClick={() => setButlerHistoryOpen(open => !open)}
+                                        >
+                                            <History size={15} strokeWidth={2.6} />
+                                            History
+                                        </button>
+                                        <div className="dashboard-butler-title">
+                                            <span className="dashboard-butler-kicker">
+                                                <Sparkles size={14} strokeWidth={2.6} />
+                                                Build A Booking Butler
+                                            </span>
+                                            <h2>{butlerMessages.length ? activeButlerThread?.title || 'Butler' : 'Where should we start?'}</h2>
+                                            <p>{butlerMessages.length ? `${dashboardGreeting}, ${dashboardGreetingName}. This chat is saved to your Butler history.` : `${dashboardGreeting}, ${dashboardGreetingName}. Ask me to run the platform with you.`}</p>
                                         </div>
-                                        <div className="dashboard-butler-composer">
-                                            <input
-                                                value={butlerInput}
-                                                onChange={(event) => setButlerInput(event.target.value)}
-                                                onKeyDown={handleButlerKeyDown}
-                                                placeholder={butlerSending ? 'Butler is thinking...' : 'Message the Butler...'}
-                                            />
-                                            <button
+                                    </header>
+
+                                    <div className="dashboard-butler-chat" aria-label="Butler conversation" aria-busy={butlerSending}>
+                                        {!!butlerMessages.length && (
+                                            <div className="dashboard-butler-thread" aria-live="polite">
+                                                {butlerMessages.map(message => (
+                                                    <article key={message.id} className={`dashboard-butler-message is-${message.role} ${message.pending ? 'is-pending' : ''}`}>
+                                                        <span>{message.role === 'user' ? 'You' : 'Butler'}</span>
+                                                        <p>{message.body}</p>
+                                                        {!!message.actions?.length && (
+                                                            <div className="dashboard-butler-message-actions">
+                                                                {message.actions.map(action => (
+                                                                    <button key={action.id} type="button" onClick={() => handleButlerAction(action)}>
+                                                                        {action.label}
+                                                                        <ArrowUpRight size={13} strokeWidth={2.8} />
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </article>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="dashboard-butler-composer-stack">
+                                            <div className="dashboard-butler-composer">
+                                                <button
+                                                    type="button"
+                                                    className="dashboard-butler-plus-button"
+                                                    onClick={() => handleButlerAction({ type: 'navigate', tab: 'editor', editorTab: 'visuals', room: 'logo' })}
+                                                    aria-label="Open brand media"
+                                                    title="Open brand media"
+                                                >
+                                                    <Plus size={18} strokeWidth={2.5} />
+                                                </button>
+                                                <input
+                                                    value={butlerInput}
+                                                    onChange={(event) => setButlerInput(event.target.value)}
+                                                    onKeyDown={handleButlerKeyDown}
+                                                    placeholder={butlerSending ? 'Butler is thinking...' : 'Ask the Butler anything...'}
+                                                />
+                                                <span className="dashboard-butler-model">Flash-Lite</span>
+                                                <button
                                                 type="button"
                                                 className="dashboard-butler-send-button"
                                                 onClick={() => sendButlerPrompt()}
@@ -7642,6 +8438,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             >
                                                 <ArrowRight size={18} strokeWidth={2.7} />
                                             </button>
+                                            </div>
+                                            <div className="dashboard-butler-prompts" aria-label="Suggested prompts">
+                                                {butlerQuickPrompts.map(prompt => (
+                                                    <button key={prompt} type="button" onClick={() => sendButlerPrompt(prompt)} disabled={butlerSending}>
+                                                        {prompt}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Jump Studios demo logo</title>
+  <desc id="desc">Original black and white Jump Studios demo monogram.</desc>
+  <rect width="512" height="512" rx="112" fill="#050505"/>
+  <path d="M150 150h132c55 0 92 35 92 86 0 49-34 84-86 88l91 38v62l-135-59v-74h34c25 0 41-13 41-35 0-23-16-36-43-36H204v204h-54V150Z" fill="#fff"/>
+  <path d="M240 91h54v65h-54V91ZM240 424h54v-65h-54v65Z" fill="#9CF7E6"/>
+  <path d="M102 244h65v54h-65v-54ZM345 244h65v54h-65v-54Z" fill="#D9FF63"/>
+</svg>

@@ -132,13 +132,18 @@ export const hexToHsl = (hex) => {
         };
 
         export const readableTextFor = (backgroundColor) => {
-            const { r, g, b } = hexToRgb(backgroundColor, '#000000');
-            const luminance = [r, g, b].map(value => {
+            const luminanceFor = (color, fallback) => {
+                const { r, g, b } = hexToRgb(color, fallback);
+                const [red, green, blue] = [r, g, b].map(value => {
                 const c = value / 255;
                 return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
             });
-            const score = 0.2126 * luminance[0] + 0.7152 * luminance[1] + 0.0722 * luminance[2];
-            return score > 0.58 ? '#000000' : '#FFFFFF';
+                return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+            };
+            const backgroundLuminance = luminanceFor(backgroundColor, '#000000');
+            const blackContrast = (backgroundLuminance + 0.05) / 0.05;
+            const whiteContrast = 1.05 / (backgroundLuminance + 0.05);
+            return blackContrast >= whiteContrast ? '#000000' : '#FFFFFF';
         };
 
         export const colorContrastRatio = (foregroundColor, backgroundColor) => {

@@ -339,12 +339,12 @@ const manualSections = [
     ],
     workflow: [
       'Set account and business basics.',
-      'Upload brand logo and banner if needed.',
+      'Upload brand logo, banner, hero image, and footer image if needed.',
       'Add social links used on the public page.',
       'Save before leaving Profile.'
     ],
     tips: [
-      'Logo and banner upload can live here for business profile convenience, while booking page display controls stay in Editor Identity.',
+      'Brand media uploads live here, while booking page composition controls live in the Editor Style System.',
       'Use Sign Out if a shared device is involved.'
     ]
   },
@@ -507,7 +507,7 @@ export function OwnerManual({ onClose, onNavigate }) {
   };
 
   return (
-    <div className="native-ui owner-manual-shell fixed inset-0 z-[10000] overflow-hidden bg-[#F7F7F5] text-black">
+    <div className="native-ui owner-manual-shell fixed inset-0 z-[10000] overflow-hidden bg-white text-black">
       <div className="absolute inset-x-0 top-0 h-1 native-gradient-line" />
       <header className="relative z-10 bg-white/92 backdrop-blur-xl border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-3">

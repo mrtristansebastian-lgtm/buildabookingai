@@ -2,6 +2,18 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DEMO_SOURCE = 'jump-studios-guest-v1';
 
 const money = (value) => String(value);
+const demoImage = (fileName) => `/demo/jump-studios/${fileName}`;
+export const jumpStudiosDemoAssets = {
+  logo: demoImage('jump-studios-logo.svg'),
+  studio: demoImage('studio-gym-interior.jpg'),
+  team: demoImage('team-training-rig.jpg'),
+  strength: demoImage('strength-training.jpg'),
+  mobility: demoImage('mobility-stretch.jpg'),
+  weights: demoImage('weight-stack.jpg'),
+  homeGym: demoImage('home-gym.jpg'),
+  coaching: demoImage('coached-dumbbells.jpg')
+};
+const demoAssets = jumpStudiosDemoAssets;
 
 const services = [
   {
@@ -12,7 +24,7 @@ const services = [
     price: money(35),
     duration: '45',
     staffIds: ['owner', 'coach-aria', 'coach-nia'],
-    imageUrls: []
+    imageUrls: [demoAssets.coaching]
   },
   {
     id: 'academy-intake',
@@ -22,7 +34,7 @@ const services = [
     price: money(129),
     duration: '60',
     staffIds: ['owner', 'coach-aria'],
-    imageUrls: []
+    imageUrls: [demoAssets.team]
   },
   {
     id: 'strength-coaching',
@@ -32,7 +44,7 @@ const services = [
     price: money(85),
     duration: '60',
     staffIds: ['coach-aria', 'owner'],
-    imageUrls: []
+    imageUrls: [demoAssets.strength]
   },
   {
     id: 'hiit-live',
@@ -42,7 +54,7 @@ const services = [
     price: money(18),
     duration: '45',
     staffIds: ['coach-mateo', 'coach-lena'],
-    imageUrls: []
+    imageUrls: [demoAssets.team]
   },
   {
     id: 'mobility-reset',
@@ -52,7 +64,7 @@ const services = [
     price: money(32),
     duration: '45',
     staffIds: ['coach-kenji', 'coach-nia'],
-    imageUrls: []
+    imageUrls: [demoAssets.mobility]
   },
   {
     id: 'nutrition-strategy',
@@ -62,7 +74,7 @@ const services = [
     price: money(65),
     duration: '50',
     staffIds: ['coach-nia'],
-    imageUrls: []
+    imageUrls: [demoAssets.homeGym]
   },
   {
     id: 'form-review',
@@ -72,7 +84,7 @@ const services = [
     price: money(45),
     duration: '30',
     staffIds: ['coach-aria', 'coach-kenji'],
-    imageUrls: []
+    imageUrls: [demoAssets.weights]
   },
   {
     id: 'postpartum-strength',
@@ -82,7 +94,7 @@ const services = [
     price: money(72),
     duration: '55',
     staffIds: ['coach-nia', 'coach-lena'],
-    imageUrls: []
+    imageUrls: [demoAssets.mobility]
   },
   {
     id: 'team-energy-session',
@@ -92,7 +104,7 @@ const services = [
     price: money(240),
     duration: '60',
     staffIds: ['owner', 'coach-mateo', 'coach-lena'],
-    imageUrls: []
+    imageUrls: [demoAssets.studio]
   }
 ].map((service) => ({ currency: '$', ...service }));
 
@@ -581,7 +593,7 @@ const createSettings = ({ createDefaultSettings, createDefaultCommunications, ge
   const schedule = createSchedule(getLocalDateStr);
   return {
     ...createDefaultSettings(),
-    guestDemoVersion: 7,
+    guestDemoVersion: 8,
     slug: 'jump-studios',
     brandName: 'Jump Studios',
     businessName: 'Jump Studios',
@@ -619,11 +631,10 @@ const createSettings = ({ createDefaultSettings, createDefaultCommunications, ge
     serviceBorderStyle: 'outline',
     faqDisplayStyle: 'accordion',
     faqStyle: 'outline',
-    venueGalleryStyle: 'minimal',
-    mapDisplayStyle: 'none',
+    venueGalleryStyle: 'mosaic',
+    mapDisplayStyle: 'card',
     socialDisplayStyle: 'minimal',
     socialIconStyle: 'outline',
-    socialPlacement: 'footer',
     dateLabel: 'Choose your training day',
     timeLabel: 'Pick a coaching time',
     buttonText: 'Book Jump Studios',
@@ -647,7 +658,7 @@ const createSettings = ({ createDefaultSettings, createDefaultCommunications, ge
       emailUpdates: true,
       faqEnabled: true,
       socialLinks: true,
-      location: '',
+      location: 'Online academy - coaching across time zones',
       faqs: [
         { q: 'Can I book from any country?', a: 'Yes. Jump Studios is fully online. The booking page shows live times, and the client notes capture timezone context for the coaching team.' },
         { q: 'What happens after I book?', a: 'The business sees your request, payment state, notes, assigned coach, and chat thread in the same workspace so nothing is lost.' },
@@ -668,11 +679,12 @@ const createSettings = ({ createDefaultSettings, createDefaultCommunications, ge
     },
     services,
     serviceIndustry: 'fitness',
-    logoDisplay: { visible: false, alignment: 'center', size: 78, placement: 'top' },
-    bannerDisplay: { visible: false, height: 220, position: 'center', placement: 'hero', opacity: 100 },
-    logo: '',
-    bannerImage: '',
-    venuePhotos: [],
+    logoDisplay: { visible: true, alignment: 'center', size: 88, placement: 'title' },
+    bannerDisplay: { visible: true, height: 240, position: 'center', placement: 'hero', opacity: 100 },
+    logo: demoAssets.logo,
+    bannerImage: demoAssets.studio,
+    businessFooterImage: demoAssets.homeGym,
+    venuePhotos: [demoAssets.studio, demoAssets.team, demoAssets.homeGym, demoAssets.weights],
     venueTitle: 'Online academy',
     venueIntro: 'A live coaching workspace for clients training across time zones, jobs, families, and real schedules.',
     address: 'Online academy - coaching across time zones',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarCheck, Check, ChevronLeft, ChevronRight, Clock, Maximize2, Pencil, Plus, RefreshCw, Trash2, Users, X } from 'lucide-react';
+import { CalendarCheck, Check, ChevronLeft, ChevronRight, Clock, Maximize2, Pencil, Plus, RefreshCw, Settings2, Trash2, Users, Wand2, X } from 'lucide-react';
 import { getLocalDateStr } from '../utils/dates';
 
 // --- CALENDAR ENGINE (Business Settings) ---
@@ -21,12 +21,13 @@ import { getLocalDateStr } from '../utils/dates';
             const [currentMonth, setCurrentMonth] = useState(new Date());
             const [expandedDate, setExpandedDate] = useState(getLocalDateStr(new Date()));
             const [slotEditor, setSlotEditor] = useState(null);
-            const [scheduleStatsPeriod, setScheduleStatsPeriod] = useState('month');
+            const [scheduleStatsPeriod, setScheduleStatsPeriod] = useState('day');
             const calendarViewMode = scheduleStatsPeriod;
             const initialCalendarId = workspaceRole === 'staff' ? (activeStaffId || 'owner') : 'workspace';
             const [selectedCalendarId, setSelectedCalendarId] = useState(initialCalendarId);
             const [overviewDayFocusStaffId, setOverviewDayFocusStaffId] = useState('workspace');
             const [hidePastDays, setHidePastDays] = useState(true);
+            const [scheduleSettingsOpen, setScheduleSettingsOpen] = useState(false);
             const [isMobilePortraitCalendar, setIsMobilePortraitCalendar] = useState(() => (
                 typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px) and (orientation: portrait)')?.matches
             ));
@@ -382,6 +383,140 @@ import { getLocalDateStr } from '../utils/dates';
             const sortSlotValues = (times = []) => [...new Set(times.map(time => String(time || '').trim()).filter(Boolean))]
                 .sort((a, b) => getSlotStartMinutes(a) - getSlotStartMinutes(b) || a.localeCompare(b));
 
+            const getCalendarScheduleDefaults = (calendarId = selectedCalendarId) => {
+                if (calendarId !== 'workspace') {
+                    const calendarDefaults = settings.staffCalendars?.[calendarId]?.scheduleDefaults;
+                    if (calendarDefaults) return calendarDefaults;
+                }
+                return settings.scheduleDefaults || {};
+            };
+
+            const inferSlotInterval = (times = []) => {
+                const starts = sortSlotValues(times)
+                    .map(time => getSlotStartMinutes(time))
+                    .filter(minutes => Number.isFinite(minutes) && minutes < 9999);
+                if (starts.length < 2) return 90;
+                const gap = starts[1] - starts[0];
+                return [15, 30, 45, 60, 75, 90, 120].includes(gap) ? gap : 90;
+            };
+
+            const selectedScheduleDefaults = getCalendarScheduleDefaults(selectedCalendarId);
+            const selectedDefaultTimes = defaultTimes.length ? defaultTimes : ['09:00', '10:30', '12:00', '14:30', '16:00', '17:30'];
+            const defaultSlotInterval = Number(selectedScheduleDefaults.interval || inferSlotInterval(selectedDefaultTimes));
+            const defaultSlotDuration = Number(selectedScheduleDefaults.duration || Math.min(defaultSlotInterval || 60, 90));
+            const defaultSlotStart = selectedScheduleDefaults.start || selectedDefaultTimes[0] || '09:00';
+            const defaultSlotEnd = selectedScheduleDefaults.end || addMinutesToTime(selectedDefaultTimes[selectedDefaultTimes.length - 1] || '16:00', defaultSlotDuration || 60);
+            const defaultSlotMode = selectedScheduleDefaults.mode || 'single';
+            const defaultSlotCapacity = Number(selectedScheduleDefaults.capacity || 1);
+
+            const buildDefaultSlots = ({
+                start = defaultSlotStart,
+                end = defaultSlotEnd,
+                interval = defaultSlotInterval,
+                duration = defaultSlotDuration,
+                mode = defaultSlotMode
+            } = {}) => {
+                const startMinutes = timeValueToMinutes(start, '09:00');
+                const endMinutes = timeValueToMinutes(end, '17:00');
+                const stepMinutes = Math.max(15, Number(interval) || 90);
+                const durationMinutes = Math.max(15, Number(duration) || stepMinutes);
+                if (endMinutes <= startMinutes) return selectedDefaultTimes;
+                const generatedTimes = [];
+                for (let minutes = startMinutes; minutes < endMinutes; minutes += stepMinutes) {
+                    const startValue = minutesToTimeValue(minutes);
+                    if (mode === 'range') {
+                        const endValue = minutesToTimeValue(Math.min(minutes + durationMinutes, endMinutes));
+                        if (endValue !== startValue) generatedTimes.push(`${startValue} - ${endValue}`);
+                    } else {
+                        generatedTimes.push(startValue);
+                    }
+                }
+                return sortSlotValues(generatedTimes);
+            };
+
+            const updateDefaultTimesForCalendar = (calendarId, nextTimes) => {
+                if (!guardCalendarEdit(calendarId)) return;
+                onSettingsDirty?.();
+                const sortedTimes = sortSlotValues(nextTimes);
+                setSettings(prev => {
+                    if (calendarId === 'workspace') {
+                        return { ...prev, availableTimes: sortedTimes };
+                    }
+                    const previousCalendar = prev.staffCalendars?.[calendarId] || {};
+                    return {
+                        ...prev,
+                        staffCalendars: {
+                            ...(prev.staffCalendars || {}),
+                            [calendarId]: {
+                                ...previousCalendar,
+                                staffId: calendarId,
+                                availableTimes: sortedTimes,
+                                updatedAt: Date.now()
+                            }
+                        }
+                    };
+                });
+            };
+
+            const updateScheduleDefaultsForCalendar = (calendarId, nextFields) => {
+                if (!guardCalendarEdit(calendarId)) return;
+                onSettingsDirty?.();
+                setSettings(prev => {
+                    if (calendarId === 'workspace') {
+                        return {
+                            ...prev,
+                            scheduleDefaults: {
+                                ...(prev.scheduleDefaults || {}),
+                                ...nextFields
+                            }
+                        };
+                    }
+                    const previousCalendar = prev.staffCalendars?.[calendarId] || {};
+                    return {
+                        ...prev,
+                        staffCalendars: {
+                            ...(prev.staffCalendars || {}),
+                            [calendarId]: {
+                                ...previousCalendar,
+                                staffId: calendarId,
+                                scheduleDefaults: {
+                                    ...(previousCalendar.scheduleDefaults || {}),
+                                    ...nextFields
+                                },
+                                updatedAt: Date.now()
+                            }
+                        }
+                    };
+                });
+            };
+
+            const saveGeneratedDefaultSlots = () => {
+                updateDefaultTimesForCalendar(selectedCalendarId, buildDefaultSlots());
+                showToast("Default slots updated.");
+            };
+
+            const applyDefaultSlotsToDate = (dateStr = expandedDate, calendarId = selectedCalendarId) => {
+                if (!dateStr) return;
+                const targetConfig = getCalendarDayConfig(calendarId, dateStr);
+                updateDateConfigForCalendar(calendarId, dateStr, {
+                    ...targetConfig,
+                    available: true,
+                    times: buildDefaultSlots(getCalendarScheduleDefaults(calendarId))
+                });
+                showToast("Default slots applied to this day.");
+            };
+
+            const toggleScheduleWaitlist = () => {
+                onSettingsDirty?.();
+                setSettings(prev => ({
+                    ...prev,
+                    features: {
+                        ...(prev.features || {}),
+                        waitlist: prev.features?.waitlist === false
+                    }
+                }));
+            };
+
             const startAddingSlot = ({ dateStr = expandedDate, calendarId = selectedCalendarId, times = [] } = {}) => {
                 if (!dateStr || !guardCalendarEdit(calendarId)) return;
                 setSlotEditor({
@@ -532,6 +667,23 @@ import { getLocalDateStr } from '../utils/dates';
                     return dateStr;
                 });
             }, [calendarViewMode, expandedDate, hidePastDays, todayStr, daysInMonth, calendarWeekStart, calendarWeekEnd]);
+            const timelineDateStrip = useMemo(() => {
+                const anchor = expandedDate ? dateFromKey(expandedDate) : dateFromKey(todayStr);
+                const start = hidePastDays
+                    ? dateFromKey(todayStr)
+                    : addDaysToDate(anchor, -2);
+                const stripDays = getDateRange(start, addDaysToDate(start, 6));
+                return stripDays.map(dateStr => {
+                    const config = getDayConfig(dateStr);
+                    const bookingsForDay = bookingsByDate[dateStr] || { confirmed: 0, reserved: 0, pending: 0, waitlist: 0 };
+                    return {
+                        dateStr,
+                        config,
+                        bookingsForDay,
+                        date: dateFromKey(dateStr)
+                    };
+                });
+            }, [bookingsByDate, expandedDate, hidePastDays, todayStr, selectedCalendarId, settings.schedule, settings.staffCalendars, settings.availableTimes]);
             const calendarGridClass = calendarViewMode === 'day'
                 ? 'grid-cols-1'
                 : 'grid-cols-2 md:grid-cols-7';
@@ -622,6 +774,126 @@ import { getLocalDateStr } from '../utils/dates';
                     ? 'Reconnect Google'
                     : 'Connect Google';
 
+            const renderScheduleSettingsPanel = () => {
+                if (!scheduleSettingsOpen) return null;
+                const generatedSlots = buildDefaultSlots();
+                const waitlistEnabled = settings.features?.waitlist !== false;
+
+                return (
+                    <div className="schedule-settings-panel">
+                        <div className="schedule-settings-head">
+                            <div>
+                                <p>Schedule Settings</p>
+                                <h4>{isSingleStaffCalendar ? `${selectedCalendar?.name || 'Staff'} defaults` : 'Business defaults'}</h4>
+                            </div>
+                            <button type="button" onClick={() => setScheduleSettingsOpen(false)} aria-label="Close schedule settings">
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        <div className="schedule-settings-grid">
+                            <label className="schedule-settings-field">
+                                <span>Start</span>
+                                <input
+                                    type="time"
+                                    value={defaultSlotStart}
+                                    onChange={(event) => updateScheduleDefaultsForCalendar(selectedCalendarId, { start: event.target.value })}
+                                />
+                            </label>
+                            <label className="schedule-settings-field">
+                                <span>End</span>
+                                <input
+                                    type="time"
+                                    value={defaultSlotEnd}
+                                    onChange={(event) => updateScheduleDefaultsForCalendar(selectedCalendarId, { end: event.target.value })}
+                                />
+                            </label>
+                            <label className="schedule-settings-field">
+                                <span>Interval</span>
+                                <select
+                                    value={String(defaultSlotInterval)}
+                                    onChange={(event) => updateScheduleDefaultsForCalendar(selectedCalendarId, { interval: Number(event.target.value) })}
+                                >
+                                    {[15, 30, 45, 60, 75, 90, 120].map(minutes => <option key={minutes} value={minutes}>{minutes} min</option>)}
+                                </select>
+                            </label>
+                            <label className="schedule-settings-field">
+                                <span>Duration</span>
+                                <select
+                                    value={String(defaultSlotDuration)}
+                                    onChange={(event) => updateScheduleDefaultsForCalendar(selectedCalendarId, { duration: Number(event.target.value) })}
+                                >
+                                    {[15, 30, 45, 60, 90, 120].map(minutes => <option key={minutes} value={minutes}>{minutes} min</option>)}
+                                </select>
+                            </label>
+                            <label className="schedule-settings-field">
+                                <span>Slot style</span>
+                                <select
+                                    value={defaultSlotMode}
+                                    onChange={(event) => updateScheduleDefaultsForCalendar(selectedCalendarId, { mode: event.target.value })}
+                                >
+                                    <option value="single">Start times</option>
+                                    <option value="range">Time periods</option>
+                                </select>
+                            </label>
+                            <label className="schedule-settings-field">
+                                <span>Capacity</span>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="24"
+                                    value={defaultSlotCapacity}
+                                    onChange={(event) => updateScheduleDefaultsForCalendar(selectedCalendarId, { capacity: Math.max(1, Number(event.target.value) || 1) })}
+                                />
+                            </label>
+                        </div>
+
+                        <div className="schedule-settings-options">
+                            <button
+                                type="button"
+                                className={waitlistEnabled ? 'is-active' : ''}
+                                onClick={toggleScheduleWaitlist}
+                                aria-pressed={waitlistEnabled}
+                            >
+                                <span>{waitlistEnabled ? <Check size={12} /> : null}</span>
+                                Waitlist
+                            </button>
+                            <button
+                                type="button"
+                                className={hidePastDays ? 'is-active' : ''}
+                                onClick={toggleHidePastDays}
+                                aria-pressed={hidePastDays}
+                            >
+                                <span>{hidePastDays ? <Check size={12} /> : null}</span>
+                                Hide past
+                            </button>
+                        </div>
+
+                        <div className="schedule-settings-preview">
+                            <div>
+                                <p>Generated Default Slots</p>
+                                <strong>{generatedSlots.length} slots</strong>
+                            </div>
+                            <div className="schedule-settings-slot-strip">
+                                {generatedSlots.slice(0, 8).map(time => <span key={time}>{time}</span>)}
+                                {generatedSlots.length > 8 && <span>+{generatedSlots.length - 8}</span>}
+                            </div>
+                        </div>
+
+                        <div className="schedule-settings-actions">
+                            <button type="button" onClick={saveGeneratedDefaultSlots}>
+                                <Wand2 size={14} />
+                                Save defaults
+                            </button>
+                            <button type="button" onClick={() => applyDefaultSlotsToDate(expandedDate, selectedCalendarId)}>
+                                <CalendarCheck size={14} />
+                                Apply to day
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
             const renderSlotEditor = () => {
                 if (!slotEditor) return null;
                 const isRangeMode = slotEditor.mode === 'range';
@@ -629,10 +901,6 @@ import { getLocalDateStr } from '../utils/dates';
                 const targetDateLabel = slotEditor.dateStr
                     ? new Date(`${slotEditor.dateStr}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
                     : 'Selected day';
-                const previewValue = isRangeMode
-                    ? `${slotEditor.start || 'Start'} - ${slotEditor.end || 'End'}`
-                    : (formatSlotEditorValue(slotEditor) || 'Choose a time');
-                const quickTimes = ['08:00', '09:00', '10:30', '12:00', '14:30', '16:00'];
                 const minuteOptions = [0, 15, 30, 45];
                 const durationOptions = [
                     { label: '30m', minutes: 30 },
@@ -669,7 +937,7 @@ import { getLocalDateStr } from '../utils/dates';
                     const paddedMinute = String(minute).padStart(2, '0');
 
                     return (
-                        <div className="rounded-xl border border-neutral-200 bg-white p-3 sm:p-4 shadow-sm">
+                        <div className="schedule-slot-time-card rounded-xl border border-neutral-200 bg-white p-3 sm:p-4 shadow-sm">
                             <div className="flex items-start justify-between gap-3 mb-3">
                                 <div>
                                     <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-neutral-400">{label}</p>
@@ -735,10 +1003,13 @@ import { getLocalDateStr } from '../utils/dates';
                             <div className="h-1 native-gradient-line" />
                             <div className="p-5 sm:p-7">
                                 <div className="flex items-start justify-between gap-4 mb-6">
-                                    <div>
+                                    <div className="min-w-0">
                                         <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-neutral-400 mb-2">{slotEditor.originalTime ? 'Edit Slot' : 'New Slot'}</p>
                                         <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-black">Slot time</h2>
-                                        <p className="text-sm sm:text-base font-medium text-neutral-500 mt-2 max-w-xl">Choose a simple listed time, or switch to a period for longer sessions, classes, or hourly services.</p>
+                                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                                            <span className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-500">{targetDateLabel}</span>
+                                            <span className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-500">{isRangeMode ? 'Period' : 'Single time'}</span>
+                                        </div>
                                     </div>
                                     <button
                                         type="button"
@@ -750,101 +1021,61 @@ import { getLocalDateStr } from '../utils/dates';
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.8fr] gap-4 sm:gap-5">
-                                    <div className="rounded-xl border border-neutral-200 bg-neutral-50/70 p-3 sm:p-4">
-                                        <div className="grid grid-cols-2 gap-2 rounded-xl bg-white p-1 border border-neutral-100 mb-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => updateEditor({ mode: 'single', end: '' })}
-                                                className={`h-12 rounded-lg px-4 text-[10px] font-bold uppercase tracking-widest transition-all ${!isRangeMode ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-neutral-500 hover:text-black hover:bg-neutral-50'}`}
-                                            >
-                                                Set time
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => updateEditor({ mode: 'range', end: slotEditor.end || addMinutesToTime(slotEditor.start, 60) })}
-                                                className={`h-12 rounded-lg px-4 text-[10px] font-bold uppercase tracking-widest transition-all ${isRangeMode ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-neutral-500 hover:text-black hover:bg-neutral-50'}`}
-                                            >
-                                                Period
-                                            </button>
-                                        </div>
-
-                                        {isRangeMode && (
-                                            <div className="mb-4 rounded-xl border border-neutral-100 bg-white p-3">
-                                                <div className="flex items-center justify-between gap-3 mb-2">
-                                                    <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-neutral-400">Duration</p>
-                                                    <p className="text-[10px] font-bold text-neutral-400">Starts at {slotEditor.start}</p>
-                                                </div>
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {durationOptions.map(option => (
-                                                        <button
-                                                            type="button"
-                                                            key={option.label}
-                                                            onClick={() => setDurationFromStart(option.minutes)}
-                                                            className="h-9 rounded-lg border border-neutral-200 bg-neutral-50 text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-black hover:bg-white hover:text-black transition-all"
-                                                        >
-                                                            {option.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {renderTimeControl('start', isRangeMode ? 'Starts' : 'Time')}
-                                            {isRangeMode && renderTimeControl('end', 'Ends')}
-                                        </div>
-
-                                        {!isRangeMode && (
-                                            <div className="mt-4 rounded-xl border border-neutral-100 bg-white p-3">
-                                                <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-neutral-400 mb-2">Quick picks</p>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {quickTimes.map(time => (
-                                                        <button
-                                                            type="button"
-                                                            key={time}
-                                                            onClick={() => setTimeField('start', time)}
-                                                            className={`h-10 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all ${slotEditor.start === time ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:border-black hover:bg-white hover:text-black'}`}
-                                                        >
-                                                            {time}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 flex flex-col justify-between gap-5">
-                                        <div>
-                                            <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-neutral-400 mb-2">Preview</p>
-                                            <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="w-10 h-10 rounded-lg bg-white border border-neutral-100 flex items-center justify-center text-neutral-400">
-                                                        <Clock size={16}/>
-                                                    </span>
-                                                    <div>
-                                                        <p className="text-2xl font-black tracking-tight text-black">{previewValue}</p>
-                                                        <p className="text-xs font-semibold text-neutral-400">{targetDateLabel}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p className="text-xs font-medium text-neutral-500 mt-3">
-                                                {isRangeMode ? 'Clients see this as one bookable time period.' : 'Clients see this as one exact start time.'}
-                                            </p>
-                                        </div>
-
+                                <div className="schedule-slot-editor-surface rounded-xl border border-neutral-200 bg-neutral-50/70 p-3 sm:p-4">
+                                    <div className="grid grid-cols-2 gap-2 rounded-xl bg-white p-1 border border-neutral-100 mb-4">
                                         <button
                                             type="button"
-                                            onClick={deleteSlotFromEditor}
-                                            className="h-11 rounded-xl border border-red-100 bg-red-50 px-4 text-[10px] font-bold uppercase tracking-widest text-red-600 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                            disabled={!slotEditor.originalTime}
+                                            onClick={() => updateEditor({ mode: 'single', end: '' })}
+                                            className={`h-12 rounded-lg px-4 text-[10px] font-bold uppercase tracking-widest transition-all ${!isRangeMode ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-neutral-500 hover:text-black hover:bg-neutral-50'}`}
                                         >
-                                            <Trash2 size={14}/> Delete slot
+                                            Set time
                                         </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => updateEditor({ mode: 'range', end: slotEditor.end || addMinutesToTime(slotEditor.start, 60) })}
+                                            className={`h-12 rounded-lg px-4 text-[10px] font-bold uppercase tracking-widest transition-all ${isRangeMode ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-neutral-500 hover:text-black hover:bg-neutral-50'}`}
+                                        >
+                                            Period
+                                        </button>
+                                    </div>
+
+                                    {isRangeMode && (
+                                        <div className="mb-4 rounded-xl border border-neutral-100 bg-white p-3">
+                                            <div className="flex items-center justify-between gap-3 mb-2">
+                                                <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-neutral-400">Duration</p>
+                                                <p className="text-[10px] font-bold text-neutral-400">Starts at {slotEditor.start}</p>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {durationOptions.map(option => (
+                                                    <button
+                                                        type="button"
+                                                        key={option.label}
+                                                        onClick={() => setDurationFromStart(option.minutes)}
+                                                        className="h-9 rounded-lg border border-neutral-200 bg-neutral-50 text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:border-black hover:bg-white hover:text-black transition-all"
+                                                    >
+                                                        {option.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className={`grid grid-cols-1 ${isRangeMode ? 'lg:grid-cols-2' : ''} gap-3`}>
+                                        {renderTimeControl('start', isRangeMode ? 'Starts' : 'Time')}
+                                        {isRangeMode && renderTimeControl('end', 'Ends')}
                                     </div>
                                 </div>
 
-                                <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
+                                <div className={`schedule-slot-actions mt-5 sm:mt-6 grid gap-3 ${slotEditor.originalTime ? 'grid-cols-1 sm:grid-cols-[1fr_1fr_1.15fr]' : 'grid-cols-2'}`}>
+                                    {slotEditor.originalTime && (
+                                        <button
+                                            type="button"
+                                            onClick={deleteSlotFromEditor}
+                                            className="h-12 rounded-xl border border-red-100 bg-red-50 px-4 text-[10px] font-bold uppercase tracking-widest text-red-600 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                                        >
+                                            <Trash2 size={14}/> Delete slot
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => setSlotEditor(null)}
@@ -897,71 +1128,15 @@ import { getLocalDateStr } from '../utils/dates';
                         </div>
                     </div>
 
-                    <section className="saas-card schedule-team-card p-3 md:p-4 mb-6">
-                        <div className="schedule-team-layout flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                            <div className="schedule-team-copy min-w-0">
-                                <p className="schedule-team-eyebrow text-[9px] font-bold uppercase tracking-[0.24em] text-neutral-400">Team Calendar</p>
-                                <h3 className="schedule-team-title text-lg md:text-xl font-bold tracking-tight text-black truncate">
-                                    {isWorkspaceCalendar ? 'Business Overview' : selectedCalendar?.name || 'My Calendar'}
-                                </h3>
-                                <p className="schedule-team-subcopy text-xs text-neutral-500 mt-1">
-                                    {isWorkspaceCalendar
-                                        ? `${staffMembersForCoverage.length} staff ${staffMembersForCoverage.length === 1 ? 'calendar' : 'calendars'} in view`
-                                        : canEditSelectedCalendar ? 'Editing this calendar' : 'View only calendar'}
-                                </p>
-                            </div>
-                            <div className="schedule-team-rail flex gap-2 overflow-x-auto no-scrollbar pb-1 lg:justify-end">
-                                {visibleCalendarOptions.map(calendar => {
-                                    const active = selectedCalendarId === calendar.id;
-                                    const initials = getStaffInitials(calendar.name);
-                                    const displayName = getCalendarDisplayName(calendar);
-                                    return (
-                                        <button
-                                            key={calendar.id}
-                                            type="button"
-                                            onClick={() => setSelectedCalendarId(calendar.id)}
-                                            className={`schedule-team-chip min-w-[156px] h-12 rounded-lg border px-3 flex items-center gap-3 text-left transition-all ${active ? 'is-active bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-black border-neutral-200 hover:border-black'}`}
-                                            aria-pressed={active}
-                                        >
-                                            <span className={`schedule-team-avatar w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold overflow-hidden ${active ? 'native-gradient-icon text-black' : 'bg-neutral-50 border border-neutral-100 text-black'}`}>
-                                                {calendar.photoURL ? <img src={calendar.photoURL} alt="" className="w-full h-full object-cover" /> : calendar.id === 'workspace' ? <Users size={14} /> : initials}
-                                            </span>
-                                            <span className="min-w-0">
-                                                <span className={`schedule-team-name block text-sm font-bold truncate ${active ? 'text-white' : 'text-black'}`}>{displayName}</span>
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                        {!canEditSelectedCalendar && (
-                            <div className="mt-3 rounded-lg border border-neutral-100 bg-neutral-50 px-3 py-2 text-xs font-medium text-neutral-500">
-                                {readOnlyCalendarMessage}
-                            </div>
-                        )}
-                    </section>
-
-                    <div className="space-y-6">
+                    <div className="space-y-6 schedule-planner-stack">
                         <section data-tour="schedule-calendar" className={`saas-card schedule-calendar-card schedule-mode-${calendarViewMode} ${hidePastDays ? 'schedule-forward-days' : ''} overflow-hidden`}>
                             <div className="schedule-calendar-command p-5 md:p-6 border-b border-neutral-100 bg-white">
                                 <div className="schedule-calendar-command-inner flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                                     <div className="schedule-calendar-title-block">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-neutral-400 mb-2">Calendar Board</p>
-                                        <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-black">{calendarTitle}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-neutral-400 mb-2">Slot Timeline</p>
+                                        <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-black">{calendarViewMode === 'day' ? selectedDateLabel : calendarTitle}</h3>
                                     </div>
                                     <div className="schedule-calendar-controls flex flex-col gap-3 w-full lg:w-auto lg:items-end">
-                                        <div className="schedule-period-tabs schedule-scope-toggle flex bg-neutral-100 p-1 rounded-lg border border-neutral-200 w-full sm:w-fit">
-                                            {['day', 'week', 'month'].map(period => (
-                                                <button
-                                                    key={period}
-                                                    type="button"
-                                                    onClick={() => setSchedulePeriod(period)}
-                                                    className={`schedule-period-tab flex-1 sm:flex-none h-10 px-5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${scheduleStatsPeriod === period ? 'is-active bg-[#39FF14] text-black shadow-lg shadow-[#39FF14]/20' : 'text-neutral-500 hover:text-black hover:bg-white'}`}
-                                                >
-                                                    {period}
-                                                </button>
-                                            ))}
-                                        </div>
                                         <div className="schedule-calendar-toolbar flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
                                             <div className="schedule-month-switcher flex items-center gap-2 bg-neutral-50 p-1.5 rounded-lg border border-neutral-100 w-full sm:w-fit shadow-sm">
                                                 <button type="button" aria-label="Show previous calendar window" title="Previous" onClick={() => moveCalendarWindow(-1)} className="w-10 h-10 rounded-md bg-white border border-neutral-100 text-neutral-500 hover:text-black hover:border-neutral-200 transition-colors flex items-center justify-center shrink-0"><ChevronLeft size={18}/></button>
@@ -979,12 +1154,45 @@ import { getLocalDateStr } from '../utils/dates';
                                                 </span>
                                                 Hide past
                                             </button>
+                                            <button
+                                                type="button"
+                                                aria-pressed={scheduleSettingsOpen}
+                                                onClick={() => setScheduleSettingsOpen(open => !open)}
+                                                className={`schedule-settings-toggle h-11 sm:h-auto px-3 rounded-lg border text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${scheduleSettingsOpen ? 'is-active' : 'bg-white text-neutral-500 border-neutral-200 hover:text-black'}`}
+                                            >
+                                                <Settings2 size={14} />
+                                                Settings
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
+                                {renderScheduleSettingsPanel()}
+                                <div className="schedule-date-strip" aria-label="Choose day to manage">
+                                    {timelineDateStrip.map(({ dateStr, config, bookingsForDay, date }) => {
+                                        const isActive = dateStr === selectedAgendaDate;
+                                        const isToday = dateStr === todayStr;
+                                        const openCount = Math.max(0, (config.times?.length || 0) - bookingsForDay.reserved);
+                                        return (
+                                            <button
+                                                key={dateStr}
+                                                type="button"
+                                                className={isActive ? 'is-active' : ''}
+                                                onClick={() => {
+                                                    setSchedulePeriod('day');
+                                                    setExpandedDate(dateStr);
+                                                    setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+                                                }}
+                                            >
+                                                <span>{date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                                <strong>{date.getDate()}</strong>
+                                                <small>{isToday ? 'Today' : config.available ? `${openCount} open` : 'Closed'}</small>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
-                            <div className={`schedule-calendar-scroll-zone ${calendarViewMode === 'day' ? 'schedule-day-scroll-zone' : ''} p-4 md:p-6 no-scrollbar bg-gradient-to-b from-white to-neutral-50/60`}>
+                            <div className={`schedule-calendar-scroll-zone ${calendarViewMode === 'day' ? 'schedule-day-scroll-zone' : ''} p-4 md:p-6 no-scrollbar bg-white`}>
                                 <div className={calendarFrameClass}>
                                 {(calendarViewMode === 'month' || calendarViewMode === 'week') && (
                                     <div className="schedule-rotate-prompt mb-3 rounded-lg border border-neutral-100 bg-white/85 px-3 py-3 text-black">
@@ -1035,7 +1243,7 @@ import { getLocalDateStr } from '../utils/dates';
                                             return (
                                                 <div
                                                     key={dateStr}
-                                                    className={`schedule-day-agenda-card relative ${calendarCellSizeClass} rounded-lg border p-4 md:p-5 overflow-hidden ${isSelected ? 'schedule-day-selected bg-white text-black border-transparent' : 'bg-white border-neutral-200'}`}
+                                                    className={`schedule-day-agenda-card schedule-day-operations-card relative ${calendarCellSizeClass} rounded-lg border p-4 md:p-5 overflow-hidden ${isSelected ? 'schedule-day-selected bg-white text-black border-transparent' : 'bg-white border-neutral-200'}`}
                                                 >
                                                     {!isPastDay && (!isWorkspaceCalendar || activeDayFocusId === 'workspace') && (
                                                         <button
@@ -1049,7 +1257,7 @@ import { getLocalDateStr } from '../utils/dates';
                                                         </button>
                                                     )}
 
-                                                    <div className="schedule-day-agenda-layout grid grid-cols-1 xl:grid-cols-[0.82fr_1.18fr] gap-5 h-full">
+                                                    <div className="schedule-day-agenda-layout grid grid-cols-1 xl:grid-cols-[0.68fr_1.32fr] gap-5 h-full">
                                                         <div className="flex flex-col min-h-0 pr-0 xl:pr-3">
                                                             <p className="text-[9px] font-bold uppercase tracking-[0.32em] text-neutral-400 mb-2">
                                                                 {new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -1063,9 +1271,12 @@ import { getLocalDateStr } from '../utils/dates';
                                                                         <span className={`rounded-full px-2 py-1 text-[8px] font-bold uppercase tracking-widest ${agendaConfig.available ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>{agendaConfig.available ? 'Open' : 'Closed'}</span>
                                                                     </div>
                                                                     {staffCoverage.length > 0 && (
-                                                                        <div className="mt-4">
-                                                                            <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-neutral-400 mb-2">Staff on this day</p>
-                                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                        <div className="schedule-day-staff-panel mt-4">
+                                                                            <div className="schedule-day-staff-head">
+                                                                                <p>Staff on this day</p>
+                                                                                <span>{staffCoverage.length} active</span>
+                                                                            </div>
+                                                                            <div className="schedule-day-staff-rail">
                                                                                 {staffCoverage.slice(0, 4).map(staff => (
                                                                                     <button
                                                                                         key={staff.id}
@@ -1090,19 +1301,42 @@ import { getLocalDateStr } from '../utils/dates';
                                                                             </div>
                                                                         </div>
                                                                     )}
+                                                                    <div className="schedule-day-readout">
+                                                                        <span>
+                                                                            <strong>{agendaConfig.times.length}</strong>
+                                                                            slots
+                                                                        </span>
+                                                                        <span>
+                                                                            <strong>{openSlots}</strong>
+                                                                            open
+                                                                        </span>
+                                                                        <span>
+                                                                            <strong>{selectedDayBookingList.length}</strong>
+                                                                            records
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="schedule-day-agenda-panels grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+                                                        <div className="schedule-day-agenda-panels schedule-day-operations-panels grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] gap-4 min-h-0">
                                                             <div className="schedule-day-timeline-panel rounded-lg border border-neutral-100 bg-white p-3 md:p-4 min-h-0">
                                                                 <div className="flex items-center justify-between gap-3 mb-3">
                                                                     <div>
-                                                                        <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-neutral-400">Slot Timeline</p>
-                                                                        <p className="text-sm font-bold text-black">{agendaConfig.times.length || 0} times available</p>
+                                                                        <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-neutral-400">Availability Plan</p>
+                                                                        <p className="text-sm font-bold text-black">{agendaConfig.times.length || 0} scheduled slot{agendaConfig.times.length === 1 ? '' : 's'}</p>
                                                                         {agendaStaff && <p className="text-[10px] font-semibold text-neutral-400 mt-0.5 truncate">{getStaffDisplayName(agendaStaff)}</p>}
                                                                     </div>
-                                                                    <div className="flex items-center gap-2">
+                                                                    <div className="schedule-day-plan-actions flex items-center gap-2">
+                                                                        {!isPastDay && canEditAgendaCalendar && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => applyDefaultSlotsToDate(dateStr, agendaCalendarId)}
+                                                                                className="h-8 rounded-lg border border-neutral-200 bg-white px-3 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:border-black hover:text-black transition-colors"
+                                                                            >
+                                                                                Defaults
+                                                                            </button>
+                                                                        )}
                                                                         {!isPastDay && canEditAgendaCalendar && (
                                                                             <button
                                                                                 type="button"
@@ -1114,7 +1348,6 @@ import { getLocalDateStr } from '../utils/dates';
                                                                                 <Plus size={14}/>
                                                                             </button>
                                                                         )}
-                                                                        <Clock size={16} className="text-neutral-300" />
                                                                     </div>
                                                                 </div>
                                                                 <div className="schedule-day-timeline-list space-y-2 max-h-[310px] overflow-y-auto no-scrollbar pr-1">
@@ -1122,15 +1355,13 @@ import { getLocalDateStr } from '../utils/dates';
                                                                         const timeBookings = selectedDayBookingsByTime[time] || [];
                                                                         const hasBookings = timeBookings.length > 0;
                                                                         return (
-                                                                            <div key={time} className="rounded-lg border border-neutral-100 bg-neutral-50/70 px-3 py-3">
+                                                                            <div key={time} className="schedule-slot-plan-row rounded-lg border border-neutral-100 bg-neutral-50/70 px-3 py-3">
                                                                                 <div className="flex items-center justify-between gap-3">
-                                                                                    <div className="flex items-center gap-3 min-w-0">
-                                                                                        <span className="w-8 h-8 rounded-md bg-white border border-neutral-100 flex items-center justify-center shrink-0">
-                                                                                            <Clock size={13} className="text-neutral-400"/>
-                                                                                        </span>
+                                                                                    <div className="schedule-slot-plan-main flex items-center gap-3 min-w-0">
+                                                                                        <span className="schedule-slot-plan-time">{time}</span>
                                                                                         <div className="min-w-0">
-                                                                                            <p className="text-sm font-black tracking-widest text-black">{time}</p>
-                                                                                            <p className="text-[10px] text-neutral-400 font-semibold truncate">{hasBookings ? timeBookings.map(booking => booking.clientName || 'Client').join(', ') : 'Available for booking'}</p>
+                                                                                            <p className="text-xs font-black text-black truncate">{hasBookings ? timeBookings.map(booking => booking.clientName || 'Client').join(', ') : 'Open booking window'}</p>
+                                                                                            <p className="text-[10px] text-neutral-400 font-semibold truncate">{hasBookings ? `${timeBookings.length} record${timeBookings.length === 1 ? '' : 's'} attached` : 'No booking assigned'}</p>
                                                                                         </div>
                                                                                     </div>
                                                                                     <div className="shrink-0 flex items-center gap-2">
@@ -1143,11 +1374,12 @@ import { getLocalDateStr } from '../utils/dates';
                                                                                             <button
                                                                                                 type="button"
                                                                                                 onClick={() => startEditingDaySlot({ time, dateStr, calendarId: agendaCalendarId })}
-                                                                                                className="w-8 h-8 rounded-md border border-neutral-200 bg-white text-neutral-500 flex items-center justify-center hover:border-black hover:text-black transition-colors"
+                                                                                                className="schedule-slot-edit-button"
                                                                                                 title={`Edit ${time}`}
                                                                                                 aria-label={`Edit ${time}`}
                                                                                             >
-                                                                                                <Pencil size={13}/>
+                                                                                                <Pencil size={12}/>
+                                                                                                <span>Edit</span>
                                                                                             </button>
                                                                                         ) : (
                                                                                             <span className="rounded-full border px-2 py-1 text-[8px] font-bold uppercase tracking-widest bg-white text-neutral-500 border-neutral-200">
@@ -1159,7 +1391,15 @@ import { getLocalDateStr } from '../utils/dates';
                                                                             </div>
                                                                         );
                                                                     }) : (
-                                                                        <div className="rounded-lg border border-dashed border-neutral-200 p-5 text-center text-sm font-medium text-neutral-400">No slots set for this day.</div>
+                                                                        <div className="schedule-empty-plan rounded-lg border border-dashed border-neutral-200 p-5 text-center">
+                                                                            <p className="text-sm font-bold text-black">No slots set for this day</p>
+                                                                            <p className="text-xs text-neutral-400 mt-1">Apply defaults or add a custom booking window.</p>
+                                                                            {!isPastDay && canEditAgendaCalendar && (
+                                                                                <button type="button" onClick={() => applyDefaultSlotsToDate(dateStr, agendaCalendarId)} className="mt-4 h-10 rounded-lg bg-black px-4 text-[10px] font-bold uppercase tracking-widest text-white">
+                                                                                    Apply defaults
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -1167,7 +1407,7 @@ import { getLocalDateStr } from '../utils/dates';
                                                             <div className="schedule-day-bookings-panel rounded-lg border border-neutral-100 bg-white p-3 md:p-4 min-h-0">
                                                                 <div className="flex items-center justify-between gap-3 mb-3">
                                                                     <div>
-                                                                        <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-neutral-400">Bookings</p>
+                                                                        <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-neutral-400">Day Records</p>
                                                                         <p className="text-sm font-bold text-black">{selectedDayBookingList.length ? 'Synced records' : 'Clear day'}</p>
                                                                     </div>
                                                                     <CalendarCheck size={16} className="text-neutral-300" />

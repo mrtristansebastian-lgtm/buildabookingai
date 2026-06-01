@@ -14,6 +14,7 @@ const displayLooks = {
     maps: ['button', 'card', 'footer', 'dock', 'none'],
     social: ['icons', 'labels', 'dock', 'minimal', 'solid']
 };
+const bookingStyleDirections = ['native-precision', 'editorial-luxe', 'command-flow', 'studio-glass', 'venue-story'];
 const clampNumber = (value, min, max, fallback) => {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return fallback;
@@ -198,7 +199,9 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             const actionButtonStyle = getVisualStyle(settings.actionButtonStyle, 'solid');
             const faqStyle = getVisualStyle(settings.faqStyle, 'minimal');
             const socialIconStyle = getVisualStyle(settings.socialIconStyle, 'outline');
-            const serviceDisplayStyle = 'signature';
+            const serviceDisplayStyle = ['signature', 'cards', 'menu', 'gallery', 'compact', 'luxury'].includes(settings.serviceDisplayStyle)
+                ? settings.serviceDisplayStyle
+                : 'signature';
             const serviceDropdownEnabled = Boolean(settings.serviceDropdownEnabled);
             const serviceDropdownStyle = 'signature';
             const serviceBorderStyle = getVisualStyle(settings.serviceBorderStyle, 'solid');
@@ -209,7 +212,10 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             const venueGalleryStyle = getDisplayLook('venue', settings.venueGalleryStyle, 'mosaic');
             const mapDisplayStyle = getDisplayLook('maps', settings.mapDisplayStyle, 'card');
             const socialDisplayStyle = getDisplayLook('social', settings.socialDisplayStyle, 'icons');
-            const socialPlacement = ['intro', 'booking', 'footer'].includes(settings.socialPlacement) ? settings.socialPlacement : 'footer';
+            const styleDirection = bookingStyleDirections.includes(settings.interfaceStyleDirection)
+                ? settings.interfaceStyleDirection
+                : 'native-precision';
+            const styleDirectionClass = `booking-style-${styleDirection}`;
 
             useEffect(() => {
                 if (!serviceDropdownEnabled) setServicesDropdownOpen(false);
@@ -278,13 +284,22 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                 };
             }, [settings.bannerDisplay]);
             const hasHeroLogo = Boolean(settings.logo && logoDisplay.visible);
-            const hasHeroBanner = Boolean(settings.bannerImage && bannerDisplay.visible);
+            const topBannerImage = settings.bannerImage || '';
+            const businessFooterImage = settings.businessFooterImage || settings.bannerImage || '';
+            const getHeroMediaSource = (placement = bannerDisplay.placement) => (
+                placement === 'footer' ? businessFooterImage : topBannerImage
+            );
+            const hasHeroBanner = Boolean(getHeroMediaSource() && bannerDisplay.visible);
             const renderHeroLogo = (extraClass = '') => hasHeroLogo ? (
                 <button
                     type="button"
                     className={`booking-hero-logo-frame ${extraClass} ${inspectClass}`}
-                    style={{ width: logoDisplay.size, height: logoDisplay.size }}
-                    onClick={() => isPreview && onInspect('introduction')}
+                    style={{
+                        '--booking-logo-size': `${logoDisplay.size}px`,
+                        width: logoDisplay.size,
+                        height: logoDisplay.size
+                    }}
+                    onClick={() => isPreview && onInspect('logo')}
                     aria-label="Edit brand logo"
                 >
                     <img
@@ -294,20 +309,23 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                     />
                 </button>
             ) : null;
-            const renderHeroMedia = (extraClass = '') => hasHeroBanner ? (
+            const renderHeroMedia = (extraClass = '', placement = bannerDisplay.placement) => {
+                const mediaSource = getHeroMediaSource(placement);
+                return mediaSource && bannerDisplay.visible ? (
                 <figure
                     className={`booking-hero-media ${extraClass} ${inspectClass}`}
                     style={{ '--hero-media-height': `${bannerDisplay.height}px` }}
-                    onClick={() => isPreview && onInspect('introduction')}
+                    onClick={() => isPreview && onInspect('banner')}
                 >
                     <img
-                        src={settings.bannerImage}
+                        src={mediaSource}
                         className="booking-hero-banner-image"
                         style={{ objectPosition: bannerDisplay.objectPosition, opacity: bannerDisplay.opacity / 100 }}
-                        alt="Booking page banner"
+                        alt={placement === 'footer' ? 'Business footer visual' : 'Business hero visual'}
                     />
                 </figure>
-            ) : null;
+                ) : null;
+            };
 
             useEffect(() => {
                 if (selectedManualPayment && !manualPaymentOptions.some(option => option.id === selectedManualPayment)) {
@@ -650,10 +668,10 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                 );
             };
 
-            const renderSocialLinks = (placement = 'footer') => {
-                if (socialLinks.length === 0 || socialPlacement !== placement) return null;
+            const renderSocialLinks = () => {
+                if (socialLinks.length === 0) return null;
                 return (
-                    <div className={`booking-social-links booking-social-${socialDisplayStyle} booking-social-placement-${placement} mt-8 flex flex-wrap items-center justify-center gap-3 ${inspectClass}`} data-preview-section="social" onClick={() => isPreview && onInspect('social')}>
+                    <div className={`booking-social-links booking-social-${socialDisplayStyle} booking-social-placement-footer mt-8 flex flex-wrap items-center justify-center gap-3 ${inspectClass}`} data-preview-section="social" onClick={() => isPreview && onInspect('social')}>
                         {socialLinks.map(link => {
                             const IconCmp = link.icon;
                             return (
@@ -695,7 +713,7 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
             if (!activeDate) return <div className="h-full w-full flex items-center justify-center font-bold text-xl opacity-20">No Availability</div>;
 
             return (
-                <div className={`w-full h-full flex flex-col ${previewMotionClass} select-none pb-12 ${nativeAccent ? 'native-booking-theme' : ''} ${isPreview ? 'booking-flow-preview' : 'booking-flow-public'}`} style={dynamicStyles}>
+                <div className={`w-full h-full flex flex-col ${previewMotionClass} select-none pb-12 ${nativeAccent ? 'native-booking-theme' : ''} ${styleDirectionClass} ${isPreview ? 'booking-flow-preview' : 'booking-flow-public'}`} style={dynamicStyles}>
                 {step === 1 && (
                     <div className={`${previewStepMotionClass} min-h-full flex flex-col p-6 md:p-12 relative z-10 ${isPreview ? 'booking-flow-preview-shell' : 'booking-flow-public-shell'}`}>
                     
@@ -780,7 +798,6 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                         </div>
                         {hasHeroBanner && bannerDisplay.placement === 'footer' && renderHeroMedia('booking-hero-media-footer')}
                     </header>
-                    {renderSocialLinks('intro')}
 
                     <div className="flex flex-col gap-16 flex-1">
                         {renderServiceSection()}
@@ -1124,7 +1141,6 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                             {settings.features?.socialProof && (
                                 <p className="mt-6 text-[10px] font-bold uppercase tracking-widest opacity-40" style={{ color: settings.bodyColor }}><Flame size={12} className="inline mr-1 -mt-0.5"/> 4 People secured slots this week</p>
                             )}
-                            {renderSocialLinks('booking')}
                             {(venuePhotos.length > 0 || (venueMapHref && mapDisplayStyle !== 'none')) && (
                                 <section
                                     className={`booking-venue-gallery booking-venue-${venueGalleryStyle} mt-8 ${inspectClass}`}
@@ -1205,7 +1221,7 @@ export const BookingFlow = memo(({ settings, onComplete, isPreview = false, onIn
                                     )}
                                 </section>
                             )}
-                            {renderSocialLinks('footer')}
+                            {renderSocialLinks()}
                         </div>
                     </div>
                     </div>

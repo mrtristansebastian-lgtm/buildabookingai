@@ -907,7 +907,7 @@ export function WorkspaceInbox({
                 </div>
               </div>
 
-              <div className="support-chat-canvas flex-1 overflow-y-auto p-3 md:p-6 bg-[#F7F7F5] space-y-3">
+              <div className="support-chat-canvas flex-1 overflow-y-auto p-3 md:p-6 bg-white space-y-3">
                 {!activeThread?.isExample && hasOlderMessages && (
                   <div className="flex justify-center">
                     <button

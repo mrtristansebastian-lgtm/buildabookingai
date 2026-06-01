@@ -752,7 +752,7 @@ export function ClientPortal({ appId, db, user, isGuestPreview = false, onSignOu
             </div>
           )}
 
-          <div className="client-chat-canvas flex-1 overflow-y-auto p-4 md:p-6 bg-[#F7F7F5] space-y-3">
+          <div className="client-chat-canvas flex-1 overflow-y-auto p-4 md:p-6 bg-white space-y-3">
             {!activeThread?.isExample && hasOlderMessages && (
               <div className="flex justify-center">
                 <button
@@ -976,7 +976,7 @@ export function ClientPortal({ appId, db, user, isGuestPreview = false, onSignOu
   };
 
   return (
-    <div className="native-ui client-portal-shell min-h-screen pb-28 md:pb-0 bg-[#F7F7F5] text-black">
+    <div className="native-ui client-portal-shell min-h-screen pb-28 md:pb-0 bg-white text-black">
       <NotificationCenter
         title="Client Alerts"
         subtitle="Booking approvals, reschedules, running-late notes, and chat replies."

@@ -2,7 +2,7 @@ import { lazy, Suspense, startTransition, useEffect, useLayoutEffect, useMemo, u
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
-    AlignCenter, AlignLeft, AlignRight, ArrowRight, Battery, Bell, BookOpen, BookOpenCheck, Briefcase, BriefcaseBusiness, Calendar, CalendarCheck, CalendarDays, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, CreditCard, Crop, DollarSign, Eye, FileText, Globe, GripVertical, HeartHandshake, HelpCircle, History, Home, Hourglass, ImagePlus, Images, Inbox, Info, Instagram, Layers, Layout, LayoutDashboard, Mail, MessageCircle, MessageSquare, MessagesSquare, Monitor, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Settings2, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Tag, Trash2, Type, User, Users, UsersRound, Wifi, X, Zap
+    AlignCenter, AlignLeft, AlignRight, ArrowRight, ArrowUpRight, Battery, Bell, BookOpen, BookOpenCheck, Briefcase, BriefcaseBusiness, Calendar, CalendarCheck, CalendarDays, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, CreditCard, Crop, DollarSign, Eye, FileText, Globe, GripVertical, HeartHandshake, HelpCircle, History, Home, Hourglass, ImagePlus, Images, Inbox, Info, Instagram, Layers, Layout, LayoutDashboard, Mail, MessageCircle, MessageSquare, MessagesSquare, Monitor, MousePointerClick, Paintbrush, Palette, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Phone, Pipette, Plus, RefreshCw, Search, Settings2, Share2, ShieldCheck, Signal, SlidersHorizontal, Sparkles, Star, Tag, Trash2, Type, User, Users, UsersRound, Wifi, X, Zap
 } from 'lucide-react';
 import { BuildABookingBrand, BuildABookingMark } from './components/BuildABookingBrand';
 import { EmailNotificationSettings } from './components/EmailNotificationSettings';
@@ -11,7 +11,7 @@ import { LandingPaymentRail } from './components/LandingPaymentRail';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { ProButton } from './components/ProButton';
 import { FONT_OPTIONS, getFontFamily } from './data/fonts';
-import { createJumpGuestWorkspace } from './data/guestWorkspace/jumpStudios';
+import { createJumpGuestWorkspace, jumpStudiosDemoAssets } from './data/guestWorkspace/jumpStudios';
 import * as FirebaseSDK from './services/firebase';
 import { appId, auth, db, functions, initialAuthToken, isFirebaseConfigured, storage } from './services/firebase';
 import { createDefaultEmailConfig, sendClientEmail } from './services/email';
@@ -33,7 +33,7 @@ import {
 import { getLocalDateStr } from './utils/dates';
 import { buildBookingSlug } from './utils/slugs';
 import { formatServiceDuration, formatServicePrice, normalizeServiceList, summarizeService } from './utils/services';
-import { hexToRgb, mixHexColors, normalizeHexColor, readableTextFor, THEME_FILTER_GROUPS } from './utils/theme';
+import { colorContrastRatio, hexToHsl, hexToRgb, hueBetween, mixHexColors, normalizeHexColor, readableTextFor, THEME_FILTER_GROUPS } from './utils/theme';
 
 const OwnerManual = lazy(() => (
   import('./components/OwnerManual').then((module) => ({ default: module.OwnerManual }))
@@ -369,6 +369,215 @@ const editorInterfaceLooks = {
   ]
 };
 
+const editorStyleDirections = [
+  {
+    id: 'native-precision',
+    label: 'Native Precision',
+    summary: 'The cleanest all-rounder: iOS-like controls, calm rhythm, and strong booking clarity.',
+    settings: {
+      logoDisplay: { visible: true, alignment: 'center', size: 88, placement: 'title' },
+      bannerDisplay: { visible: true, height: 240, position: 'center', placement: 'hero', opacity: 100 },
+      serviceDisplayStyle: 'signature',
+      serviceDropdownEnabled: false,
+      serviceBorderStyle: 'solid',
+      calendarDisplayStyle: 'studio',
+      dateStyle: 'solid',
+      calendarShadow: true,
+      calendarGlow: false,
+      timeDisplayStyle: 'pill',
+      timeSlotStyle: 'solid',
+      availabilityStyle: 'solid',
+      timeSlotShadow: true,
+      timeSlotGlow: false,
+      actionButtonStyle: 'solid',
+      buttonStyle: 'pill',
+      faqDisplayStyle: 'accordion',
+      faqStyle: 'minimal',
+      venueGalleryStyle: 'mosaic',
+      mapDisplayStyle: 'card',
+      socialDisplayStyle: 'icons',
+      socialIconStyle: 'outline'
+    },
+    sections: ['Services list', 'Native calendar', 'Pill slots', 'Accordion FAQ', 'Pill action', 'Mosaic venue', 'Icon socials']
+  },
+  {
+    id: 'editorial-luxe',
+    label: 'Editorial Luxe',
+    summary: 'More boutique and composed: larger visual moments, quieter help, and refined text-led links.',
+    settings: {
+      logoDisplay: { visible: true, alignment: 'left', size: 72, placement: 'top' },
+      bannerDisplay: { visible: true, height: 300, position: 'center', placement: 'footer', opacity: 96 },
+      serviceDisplayStyle: 'luxury',
+      serviceDropdownEnabled: false,
+      serviceBorderStyle: 'outline',
+      calendarDisplayStyle: 'editorial',
+      dateStyle: 'outline',
+      calendarShadow: true,
+      calendarGlow: false,
+      timeDisplayStyle: 'luxury',
+      timeSlotStyle: 'minimal',
+      availabilityStyle: 'minimal',
+      timeSlotShadow: false,
+      timeSlotGlow: false,
+      actionButtonStyle: 'solid',
+      buttonStyle: 'sharp',
+      faqDisplayStyle: 'split',
+      faqStyle: 'minimal',
+      venueGalleryStyle: 'editorial',
+      mapDisplayStyle: 'footer',
+      socialDisplayStyle: 'minimal',
+      socialIconStyle: 'minimal'
+    },
+    sections: ['Service editorial', 'Poster dates', 'Gallery slots', 'Split FAQ', 'Sharp action', 'Lead venue', 'Text socials']
+  },
+  {
+    id: 'command-flow',
+    label: 'Command Flow',
+    summary: 'Fast and operational: compact decisions, high signal states, and a stronger app-like footer system.',
+    settings: {
+      logoDisplay: { visible: true, alignment: 'left', size: 78, placement: 'badge' },
+      bannerDisplay: { visible: true, height: 190, position: 'center', placement: 'top', opacity: 92 },
+      serviceDisplayStyle: 'compact',
+      serviceDropdownEnabled: true,
+      serviceBorderStyle: 'solid',
+      calendarDisplayStyle: 'compact',
+      dateStyle: 'solid',
+      calendarShadow: false,
+      calendarGlow: true,
+      timeDisplayStyle: 'blocks',
+      timeSlotStyle: 'solid',
+      availabilityStyle: 'solid',
+      timeSlotShadow: true,
+      timeSlotGlow: true,
+      actionButtonStyle: 'solid',
+      buttonStyle: 'pill',
+      faqDisplayStyle: 'numbered',
+      faqStyle: 'outline',
+      venueGalleryStyle: 'filmstrip',
+      mapDisplayStyle: 'dock',
+      socialDisplayStyle: 'dock',
+      socialIconStyle: 'solid'
+    },
+    sections: ['Dropdown services', 'Compact calendar', 'Session blocks', 'Numbered FAQ', 'Fast action', 'Venue reel', 'Social dock']
+  },
+  {
+    id: 'studio-glass',
+    label: 'Studio Glass',
+    summary: 'Airy, luminous, and quietly technical: a glassy studio surface with soft depth and clear booking choices.',
+    settings: {
+      logoDisplay: { visible: true, alignment: 'center', size: 76, placement: 'top' },
+      bannerDisplay: { visible: true, height: 260, position: 'center', placement: 'hero', opacity: 88 },
+      serviceDisplayStyle: 'cards',
+      serviceDropdownEnabled: false,
+      serviceBorderStyle: 'solid',
+      calendarDisplayStyle: 'glow',
+      dateStyle: 'solid',
+      calendarShadow: true,
+      calendarGlow: true,
+      timeDisplayStyle: 'pill',
+      timeSlotStyle: 'solid',
+      availabilityStyle: 'solid',
+      timeSlotShadow: true,
+      timeSlotGlow: true,
+      actionButtonStyle: 'solid',
+      buttonStyle: 'pill',
+      faqDisplayStyle: 'cards',
+      faqStyle: 'solid',
+      venueGalleryStyle: 'mosaic',
+      mapDisplayStyle: 'card',
+      socialDisplayStyle: 'icons',
+      socialIconStyle: 'outline'
+    },
+    sections: ['Soft glass', 'Glow dates', 'Pill slots', 'Card FAQ', 'Hero image', 'Mosaic venue', 'Icon row']
+  },
+  {
+    id: 'venue-story',
+    label: 'Venue Story',
+    summary: 'Image-forward without becoming a website: venue media frames the booking path with calm confidence.',
+    settings: {
+      logoDisplay: { visible: true, alignment: 'center', size: 92, placement: 'title' },
+      bannerDisplay: { visible: true, height: 320, position: 'center', placement: 'hero', opacity: 100 },
+      serviceDisplayStyle: 'gallery',
+      serviceDropdownEnabled: false,
+      serviceBorderStyle: 'outline',
+      calendarDisplayStyle: 'studio',
+      dateStyle: 'solid',
+      calendarShadow: true,
+      calendarGlow: false,
+      timeDisplayStyle: 'blocks',
+      timeSlotStyle: 'solid',
+      availabilityStyle: 'solid',
+      timeSlotShadow: true,
+      timeSlotGlow: false,
+      actionButtonStyle: 'solid',
+      buttonStyle: 'pill',
+      faqDisplayStyle: 'accordion',
+      faqStyle: 'outline',
+      venueGalleryStyle: 'postcard',
+      mapDisplayStyle: 'card',
+      socialDisplayStyle: 'labels',
+      socialIconStyle: 'outline'
+    },
+    sections: ['Venue-first', 'Studio dates', 'Block slots', 'Accordion FAQ', 'Postcard venue', 'Map card', 'Label socials']
+  }
+];
+
+const getEditorStyleDirection = (directionId) => (
+  editorStyleDirections.find(direction => direction.id === directionId) || editorStyleDirections[0]
+);
+
+const editorSampleServiceImages = [
+  jumpStudiosDemoAssets.coaching,
+  jumpStudiosDemoAssets.team,
+  jumpStudiosDemoAssets.strength,
+  jumpStudiosDemoAssets.mobility,
+  jumpStudiosDemoAssets.homeGym,
+  jumpStudiosDemoAssets.weights
+];
+
+const withEditorSampleMedia = (settings = {}) => {
+  const hasLogo = Boolean(settings.logo);
+  const hasBanner = Boolean(settings.bannerImage);
+  const hasFooterImage = Boolean(settings.businessFooterImage);
+  const hasVenuePhotos = Array.isArray(settings.venuePhotos) && settings.venuePhotos.some(Boolean);
+  const services = normalizeServiceList(settings.services || []).map((service, index) => (
+    Array.isArray(service.imageUrls) && service.imageUrls.some(Boolean)
+      ? service
+      : { ...service, imageUrls: [editorSampleServiceImages[index % editorSampleServiceImages.length]] }
+  ));
+
+  return {
+    ...settings,
+    services,
+    logo: hasLogo ? settings.logo : jumpStudiosDemoAssets.logo,
+    bannerImage: hasBanner ? settings.bannerImage : jumpStudiosDemoAssets.studio,
+    businessFooterImage: hasFooterImage ? settings.businessFooterImage : jumpStudiosDemoAssets.homeGym,
+    venuePhotos: hasVenuePhotos
+      ? settings.venuePhotos
+      : [jumpStudiosDemoAssets.studio, jumpStudiosDemoAssets.team, jumpStudiosDemoAssets.homeGym, jumpStudiosDemoAssets.weights],
+    logoDisplay: {
+      visible: hasLogo ? settings.logoDisplay?.visible !== false : true,
+      alignment: settings.logoDisplay?.alignment || 'center',
+      size: Number(settings.logoDisplay?.size) || 88,
+      placement: settings.logoDisplay?.placement || 'title'
+    },
+    bannerDisplay: {
+      visible: hasBanner ? settings.bannerDisplay?.visible !== false : true,
+      height: Number(settings.bannerDisplay?.height) || 240,
+      position: settings.bannerDisplay?.position || 'center',
+      placement: settings.bannerDisplay?.placement || 'hero',
+      opacity: Number(settings.bannerDisplay?.opacity) || 100
+    },
+    features: {
+      ...(settings.features || {}),
+      socialLinks: settings.features?.socialLinks ?? true,
+      location: settings.features?.location || settings.address || 'Online academy - coaching across time zones'
+    },
+    venueGalleryStyle: settings.venueGalleryStyle || 'mosaic',
+    mapDisplayStyle: settings.mapDisplayStyle === 'none' ? 'card' : (settings.mapDisplayStyle || 'card')
+  };
+};
+
 const defaultFaqItems = [
   { q: 'How do I know my booking is confirmed?', a: 'You will see a confirmation on this page and receive a message when the business approves your request.' },
   { q: 'Can I join a waitlist if the day is full?', a: 'Yes. If waitlist is enabled, you can leave your details and the business can contact you when a slot opens.' }
@@ -671,6 +880,7 @@ const createDefaultSettings = () => ({
   taglineFontFamily: '',
   welcomeSize: 20,
   welcomeFontFamily: '',
+  interfaceStyleDirection: 'native-precision',
   buttonStyle: 'pill',
   availabilityStyle: 'solid',
   dateStyle: 'solid',
@@ -678,6 +888,7 @@ const createDefaultSettings = () => ({
   actionButtonStyle: 'solid',
   calendarDisplayStyle: 'studio',
   timeDisplayStyle: 'pill',
+  serviceDisplayStyle: 'signature',
   serviceDropdownEnabled: false,
   serviceBorderStyle: 'solid',
   faqStyle: 'minimal',
@@ -693,7 +904,6 @@ const createDefaultSettings = () => ({
   mapDisplayStyle: 'card',
   socialIconStyle: 'outline',
   socialDisplayStyle: 'icons',
-  socialPlacement: 'footer',
   socialIconBgColor: 'transparent',
   socialIconColor: '',
   socialIconTextColor: '',
@@ -717,6 +927,7 @@ const createDefaultSettings = () => ({
   bannerDisplay: { visible: true, height: 220, position: 'center', placement: 'hero', opacity: 100 },
   logo: '',
   bannerImage: '',
+  businessFooterImage: '',
   venuePhotos: [],
   address: '',
   socials: { instagram: '', tiktok: '', facebook: '', website: '' }
@@ -937,6 +1148,41 @@ function InterfaceLookGrid({ value, onChange, looks = [], label = 'Display look'
         })}
       </div>
       {children && <div className="cinema-look-picker-footer">{children}</div>}
+    </div>
+  );
+}
+
+function StyleDirectionPicker({ value, onApply }) {
+  const activeDirection = getEditorStyleDirection(value);
+
+  return (
+    <div className="style-direction-suite">
+      <div className="style-direction-grid">
+        {editorStyleDirections.map((direction) => {
+          const isActive = activeDirection.id === direction.id;
+          return (
+            <button
+              key={direction.id}
+              type="button"
+              onClick={() => onApply(direction.id)}
+              className={isActive ? 'is-active' : ''}
+              aria-pressed={isActive}
+              aria-label={`${direction.label} style`}
+              title={direction.label}
+            >
+              <i className={`style-direction-preview style-direction-preview-${direction.id}`} aria-hidden="true">
+                <b />
+                <b />
+                <b />
+                <b />
+                <b />
+                <b />
+              </i>
+              <strong>{direction.label}</strong>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1570,6 +1816,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const [accountDeleteText, setAccountDeleteText] = useState('');
             const containerRef = useRef(null);
             const editorContentRef = useRef(null);
+            const editorPreviewScrollRef = useRef(null);
             const imageCropCommitRef = useRef(null);
             const scaleRef = useRef(1);
             const compactViewportRef = useRef(false);
@@ -3079,11 +3326,22 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const getDateKeyDashboardTime = (dateKey) => (
                 dateKey ? new Date(`${dateKey}T00:00:00`).getTime() : 0
             );
+            const renderDashboardActivityAction = (label = 'Open') => {
+                const normalizedLabel = String(label || '').trim();
+                if (normalizedLabel.toLowerCase() === 'open') {
+                    return (
+                        <span className="dashboard-activity-action is-arrow" aria-label="Open">
+                            <ArrowUpRight size={13} strokeWidth={2.8} />
+                        </span>
+                    );
+                }
+                return <span className="dashboard-activity-action">{normalizedLabel}</span>;
+            };
             const dashboardMobileTiles = [
-                { id: 'bookings', label: 'Bookings', icon: BookOpenCheck, value: dashboardPortfolio.activeBookings, hint: 'Total' },
-                { id: 'chats', label: 'Chats', icon: MessagesSquare, value: dashboardSupportUnreadCount, hint: 'Unread' },
-                { id: 'schedule', label: 'Schedule', icon: CalendarDays, value: dashboardPortfolio.openSlots, hint: 'Open' },
-                { id: 'finance', label: 'Payments', icon: DollarSign, value: dashboardPortfolio.totalRevenueLabel, hint: 'Revenue' }
+                { id: 'bookings', label: 'Bookings', icon: BookOpenCheck, value: dashboardPortfolio.activeBookings, hint: 'Total', badgeValue: dashboardPortfolio.activeBookings },
+                { id: 'chats', label: 'Chats', icon: MessagesSquare, value: dashboardSupportUnreadCount, hint: 'Unread', badgeValue: dashboardSupportUnreadCount },
+                { id: 'schedule', label: 'Schedule', icon: CalendarDays, value: dashboardPortfolio.openSlots, hint: 'Open', badgeValue: dashboardPortfolio.openSlots },
+                { id: 'finance', label: 'Payments', icon: DollarSign, value: dashboardPortfolio.totalRevenueLabel, hint: 'Revenue', badgeValue: dashboardPortfolio.pendingFinanceCount }
             ];
             const dashboardActiveTileIndex = Math.max(0, dashboardMobileTiles.findIndex(tile => tile.id === dashboardMobileTile));
             const dashboardActiveTile = dashboardMobileTiles[dashboardActiveTileIndex] || dashboardMobileTiles[0];
@@ -3145,19 +3403,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         >
                             <ChevronLeft size={14} strokeWidth={2.6} />
                         </button>
-                        <span>{startRow}-{endRow} / {pageData.totalRows}</span>
-                        <label className="dashboard-feed-size">
-                            <span>Show</span>
-                            <select
-                                value={dashboardFeedPageSizes[section] || DASHBOARD_FEED_PAGE_SIZE}
-                                onChange={event => setDashboardFeedPageSize(section, event.target.value)}
-                                aria-label={`Show ${section} rows`}
-                            >
-                                {DASHBOARD_FEED_PAGE_SIZE_OPTIONS.map(option => (
-                                    <option key={`${section}-size-${option}`} value={option}>{option}</option>
-                                ))}
-                            </select>
-                        </label>
+                        <span>{startRow}-{endRow} of {pageData.totalRows}</span>
                         <button
                             type="button"
                             onClick={() => shiftDashboardFeedPage(section, 1, pageData.totalPages)}
@@ -3425,6 +3671,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 : Number(settings.editorColorDepth ?? 50);
             const activePaletteShade = Math.max(1, Math.min(10, Math.round((activePaletteDepthValue || 50) / 10) || 5));
             const shouldMountEditorPreview = activeTab === 'editor';
+            const editorPreviewSettings = useMemo(() => (
+                activeTab === 'editor' ? withEditorSampleMedia(settings) : settings
+            ), [activeTab, settings]);
 
             const setThemeFilterValue = (groupId, filterId) => {
                 startTransition(() => {
@@ -3437,7 +3686,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             };
 
             useEffect(() => {
-                const source = settings.logo || settings.bannerImage || '';
+                const source = settings.logo || settings.businessFooterImage || settings.bannerImage || '';
                 let cancelled = false;
 
                 if (!source) {
@@ -3454,10 +3703,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 });
 
                 return () => { cancelled = true; };
-            }, [settings.logo, settings.bannerImage]);
+            }, [settings.logo, settings.businessFooterImage, settings.bannerImage]);
 
             const handleAutoDetectThemePalette = async () => {
-                const source = settings.logo || settings.bannerImage || '';
+                const source = settings.logo || settings.businessFooterImage || settings.bannerImage || '';
                 if (!source) {
                     showToast('Upload a logo or banner first, then I can read the palette.');
                     return;
@@ -3564,8 +3813,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     const collapsedPanelGain = editorCollapsed ? (compact ? 16 : 28) : 0;
                     const paddingX = Math.max(12, frame.paddingX - collapsedPanelGain);
                     const paddingY = Math.max(58, frame.paddingY - collapsedNavGain);
+                    const roomPanelReserve = editorStudioModal && !compact && window.innerWidth > 900
+                        ? Math.min(Math.max(window.innerWidth * 0.32, 352), 448) + 54
+                        : 0;
+                    const availablePreviewWidth = Math.max(260, rect.width - roomPanelReserve);
                     const nextScale = Math.min(
-                        (rect.width - paddingX) / frame.width,
+                        (availablePreviewWidth - paddingX) / frame.width,
                         (rect.height - paddingY) / frame.height,
                         frame.maxScale
                     );
@@ -4750,43 +5003,20 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 };
             }, []);
 
-            const editorRoomPreviewTargets = {
-                introduction: 'introduction',
-                logo: 'introduction',
-                banner: 'introduction',
-                services: 'services',
-                colours: 'introduction',
-                typography: 'introduction',
-                calendar: 'calendar',
-                time: 'time',
-                faq: 'faq',
-                form: 'form',
-                buttons: 'action',
-                venue: 'venue-gallery',
-                social: 'social'
-            };
             const editorRoomScenes = [
                 { id: 'introduction', number: '01', icon: MessageSquare, title: 'Introduction' },
-                { id: 'logo', number: '02', icon: ImagePlus, title: 'Logo Placement' },
-                { id: 'banner', number: '03', icon: Images, title: 'Banner Placement' },
-                { id: 'services', number: '04', icon: Briefcase, title: 'Services' },
-                { id: 'colours', number: '05', icon: Pipette, title: 'Colour Direction' },
-                { id: 'typography', number: '06', icon: Type, title: 'Typography' },
-                { id: 'calendar', number: '07', icon: Calendar, title: 'Calendar Style' },
-                { id: 'time', number: '08', icon: Clock, title: 'Time Style' },
-                { id: 'faq', number: '09', icon: HelpCircle, title: 'FAQ Setup' },
-                { id: 'form', number: '10', icon: FileText, title: 'Client Form' },
-                { id: 'buttons', number: '11', icon: SlidersHorizontal, title: 'Action Buttons' },
-                { id: 'venue', number: '12', icon: Images, title: 'Venue & Maps' },
-                { id: 'social', number: '13', icon: Globe, title: 'Social Media' }
+                { id: 'colours', number: '02', icon: Pipette, title: 'Colour Direction' },
+                { id: 'typography', number: '03', icon: Type, title: 'Typography' },
+                { id: 'style', number: '04', icon: Sparkles, title: 'Style System' },
+                { id: 'form', number: '05', icon: FileText, title: 'Client Form' }
             ];
             const roomTabMap = {
                 introduction: 'identity',
-                logo: 'identity',
-                banner: 'identity',
-                services: 'features',
+                logo: 'visuals',
+                banner: 'visuals',
                 colours: 'themes',
                 typography: 'visuals',
+                style: 'visuals',
                 calendar: 'visuals',
                 time: 'visuals',
                 faq: 'features',
@@ -4795,65 +5025,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 venue: 'features',
                 social: 'features'
             };
-            const focusEditorPreviewRoom = (roomId) => {
-                if (typeof document === 'undefined') return;
-                const runFrameCue = (className, duration = 1800) => {
-                    window.requestAnimationFrame(() => {
-                        const frame = document.querySelector('.editor-preview-frame');
-                        const targets = [frame].filter(Boolean);
-                        if (!targets.length) return;
-                        targets.forEach(target => target.classList.remove(className));
-                        void frame.offsetWidth;
-                        targets.forEach(target => target.classList.add(className));
-                        window.setTimeout(() => {
-                            targets.forEach(target => target.classList.remove(className));
-                        }, duration);
-                    });
-                };
-                const focusPreviewTarget = (targetName, attempt = 0) => {
-                    window.requestAnimationFrame(() => {
-                        const frame = document.querySelector('.editor-preview-frame');
-                        const previewScroller = frame?.querySelector('.overflow-y-auto');
-                        const target = frame?.querySelector(`[data-preview-section="${targetName}"]`);
-                        if (!target) {
-                            if (attempt < 8) {
-                                window.setTimeout(() => focusPreviewTarget(targetName, attempt + 1), 90);
-                            }
-                            return;
-                        }
-                        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-                        target.classList.remove('booking-preview-room-flash');
-                        void target.offsetWidth;
-                        target.classList.add('booking-preview-room-flash');
-                        window.setTimeout(() => target.classList.remove('booking-preview-room-flash'), 2400);
-                        previewScroller?.classList.add('is-room-scrolling');
-                        window.setTimeout(() => previewScroller?.classList.remove('is-room-scrolling'), 900);
-                    });
-                };
-                if (roomId === 'colours') {
-                    return;
-                }
-                if (roomId === 'typography') {
-                    runFrameCue('booking-preview-text-dance', 1800);
-                    focusPreviewTarget(editorRoomPreviewTargets[roomId] || roomId);
-                    return;
-                }
-                const targetName = editorRoomPreviewTargets[roomId] || roomId;
-                focusPreviewTarget(targetName);
-            };
             const openEditorRoom = (roomId) => {
-                const normalizedRoomId = roomId === 'identity' ? 'introduction' : roomId;
+                const normalizedRoomId = roomId === 'identity'
+                    ? 'introduction'
+                    : (roomId === 'logo' || roomId === 'banner' ? 'style' : roomId);
                 setEditorStudioModal(normalizedRoomId);
                 setEditorTab(roomTabMap[normalizedRoomId] || 'identity');
-                focusEditorPreviewRoom(normalizedRoomId);
                 playEditorStudioSound('step');
             };
-            useEffect(() => {
-                if (activeTab !== 'editor' || !editorStudioModal) return undefined;
-                const roomId = editorStudioModal === 'identity' ? 'introduction' : editorStudioModal;
-                const timer = window.setTimeout(() => focusEditorPreviewRoom(roomId), 35);
-                return () => window.clearTimeout(timer);
-            }, [activeTab, editorStudioModal, editorCollapsed, previewKey]);
             const startEditorRoomNavDrag = (event) => {
                 if (event.button !== undefined && event.button !== 0) return;
                 event.preventDefault();
@@ -4914,7 +5093,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const inspectRoomMap = {
                     identity: 'introduction',
                     introduction: 'introduction',
-                    services: 'services',
+                    logo: 'style',
+                    banner: 'style',
+                    services: 'style',
                     calendar: 'calendar',
                     time: 'time',
                     faq: 'faq',
@@ -5013,6 +5194,34 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 markWorkspaceDirty();
                 setSettings(prev => ({ ...prev, [key]: value }));
             };
+            const resetEditorPreviewScroll = () => {
+                requestAnimationFrame(() => {
+                    const scroller = editorPreviewScrollRef.current;
+                    if (scroller) {
+                        scroller.scrollTop = 0;
+                        scroller.scrollLeft = 0;
+                    }
+                });
+            };
+            const applyEditorStyleDirection = (directionId) => {
+                const direction = getEditorStyleDirection(directionId);
+                markWorkspaceDirty();
+                setSettings(prev => ({
+                    ...prev,
+                    ...direction.settings,
+                    logoDisplay: {
+                        ...(prev.logoDisplay || {}),
+                        ...(direction.settings.logoDisplay || {})
+                    },
+                    bannerDisplay: {
+                        ...(prev.bannerDisplay || {}),
+                        ...(direction.settings.bannerDisplay || {})
+                    },
+                    interfaceStyleDirection: direction.id
+                }));
+                resetEditorPreviewScroll();
+                showToast(`${direction.label} style applied`);
+            };
             const getEditorColorDepth = (paletteId, depthInput = settings.editorColorDepths || settings.editorColorDepth || 50) => {
                 if (typeof depthInput === 'object' && depthInput !== null) {
                     return Number(depthInput[paletteId] ?? settings.editorColorDepths?.[paletteId] ?? settings.editorColorDepth ?? 50);
@@ -5023,11 +5232,27 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const normalized = normalizeHexColor(color, '');
                 if (!normalized) return '';
                 const safeDepth = Math.max(0, Math.min(100, Number(depth) || 50));
+                const { h, s } = hexToHsl(normalized);
+                const spectrumColor = (stops) => {
+                    const safeStops = stops.map(stop => normalizeHexColor(stop, '')).filter(Boolean);
+                    if (!safeStops.length) return normalized;
+                    if (safeStops.length === 1) return safeStops[0];
+                    const position = Math.max(0, Math.min(1, (safeDepth - 10) / 90)) * (safeStops.length - 1);
+                    const index = Math.min(safeStops.length - 2, Math.floor(position));
+                    const amount = position - index;
+                    return mixHexColors(safeStops[index], safeStops[index + 1], amount);
+                };
+                if (s > 18 && hueBetween(h, 345, 15)) {
+                    return spectrumColor(['#F6C5B8', '#F2A093', '#EA746B', '#DD4A48', '#C91F37', '#B51235', '#A51234', '#C5123E', '#E11445', '#FF174F']);
+                }
+                if (s > 18 && hueBetween(h, 255, 295)) {
+                    return spectrumColor(['#F3D5FF', '#E9B8FF', '#D989FF', '#C85CF5', '#B83BEA', '#A72AD8', '#9422C5', '#B21EC7', '#CE28D9', '#E879F9']);
+                }
                 const electricColor = (input, intensity = 1) => {
                     const { r, g, b } = hexToRgb(input, '#050505');
                     const max = Math.max(r, g, b);
                     const min = Math.min(r, g, b);
-                    if (max - min < 18) return mixHexColors(input, '#F8FAFC', 0.35 + (0.22 * intensity));
+                    if (max - min < 18) return mixHexColors(input, '#050505', 0.68 + (0.24 * intensity));
                     const channel = (value) => {
                         const isLead = value === max;
                         const leadValue = 230 + Math.round(25 * intensity);
@@ -5040,6 +5265,22 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     const amount = Math.min(0.82, (50 - safeDepth) / 50 * 0.82);
                     return mixHexColors(normalized, '#ffffff', amount);
                 }
+                if (s > 18 && hueBetween(h, 38, 65)) {
+                    if (safeDepth <= 76) {
+                        const goldAmount = Math.min(0.72, (safeDepth - 50) / 26 * 0.72);
+                        return mixHexColors(normalized, '#B8C400', goldAmount);
+                    }
+                    const neonAmount = Math.min(1, (safeDepth - 76) / 24);
+                    return mixHexColors('#C7C300', '#F4FF00', neonAmount);
+                }
+                if (s > 18 && hueBetween(h, 15, 38)) {
+                    if (safeDepth <= 76) {
+                        const mandarinAmount = Math.min(0.66, (safeDepth - 50) / 26 * 0.66);
+                        return mixHexColors(normalized, '#FF8A00', mandarinAmount);
+                    }
+                    const neonAmount = Math.min(1, (safeDepth - 76) / 24);
+                    return mixHexColors('#FF8A00', '#FF6A00', neonAmount);
+                }
                 if (safeDepth <= 76) {
                     const amount = Math.min(0.62, (safeDepth - 50) / 26 * 0.62);
                     return mixHexColors(normalized, '#050505', amount);
@@ -5048,10 +5289,20 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const deepBase = mixHexColors(normalized, '#050505', 0.5);
                 return mixHexColors(deepBase, electricColor(normalized, neonAmount), 0.42 + (0.58 * neonAmount));
             };
-            const activePaletteSampleBase = activePaletteFlow?.swatches?.[1] || activePaletteFlow?.swatches?.[0] || settings.primaryColor || '#050505';
-            const activePaletteShadeColor = normalizeHexColor(tuneColorByDepth(activePaletteSampleBase, activePaletteShade * 10), settings.backgroundColor || '#050505');
-            const activePaletteShadeText = readableTextFor(activePaletteShadeColor);
-            const activePalettePreviewSwatches = (activePaletteFlow?.swatches || [activePaletteShadeColor]).slice(0, 3);
+                const activePaletteSampleBase = activePaletteFlow?.swatches?.[1] || activePaletteFlow?.swatches?.[0] || settings.primaryColor || '#050505';
+                const activePaletteShadeColor = normalizeHexColor(tuneColorByDepth(activePaletteSampleBase, activePaletteShade * 10), settings.backgroundColor || '#050505');
+                const activePaletteShadeText = readableTextFor(activePaletteShadeColor);
+            const getPaletteReadableTone = (backgroundColor, textColor, minContrast = 4.5) => {
+                const background = normalizeHexColor(backgroundColor, '#050505');
+                const target = normalizeHexColor(textColor, readableTextFor(background));
+                let fallback = target;
+                for (let amount = 0.68; amount <= 1.001; amount += 0.04) {
+                    const candidate = mixHexColors(background, target, amount);
+                    fallback = candidate;
+                    if (colorContrastRatio(candidate, background) >= minContrast) return candidate;
+                }
+                return fallback;
+            };
             const applyColorDirection = (paletteId, selectedIds = settings.editorColorMix || [], depthInput = settings.editorColorDepths || settings.editorColorDepth || 50) => {
                 const paletteLookup = new Map(paletteFilterOptions.map(option => [option.id, option]));
                 const ids = selectedIds.length ? selectedIds : [paletteId];
@@ -5074,16 +5325,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 const primary = normalizeHexColor(richPrimary, '#050505');
                 const secondary = normalizeHexColor(softSecondary, '#bae6fd');
                 const accent = normalizeHexColor(richAccent, primary);
-                const averageDepth = ids.reduce((total, id) => total + getEditorColorDepth(id, depthInput), 0) / Math.max(ids.length, 1);
                 const pageText = readableTextFor(primary);
                 const textIsLight = pageText === '#FFFFFF';
-                const paletteBody = mixHexColors(primary, pageText, textIsLight ? 0.74 : 0.68);
+                const paletteBody = getPaletteReadableTone(primary, pageText, textIsLight ? 4.7 : 4.5);
                 const paletteAction = pageText;
                 const cardAlpha = textIsLight ? '14' : '10';
-                const activeAlpha = averageDepth > 76 ? '26' : '1D';
                 const borderAlpha = textIsLight ? '45' : '32';
-                const activeText = pageText;
-                const slotText = pageText;
                 const actionText = readableTextFor(paletteAction);
                 markWorkspaceDirty();
                 setSettings(prev => ({
@@ -5093,14 +5340,14 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     backgroundColor: primary,
                     headingColor: pageText,
                     bodyColor: paletteBody,
-                    dateActiveBgColor: `${pageText}${activeAlpha}`,
-                    dateActiveTextColor: activeText,
+                    dateActiveBgColor: paletteAction,
+                    dateActiveTextColor: actionText,
                     dateBgColor: `${pageText}${cardAlpha}`,
                     dateTextColor: paletteBody,
                     slotBgColor: `${pageText}${cardAlpha}`,
                     slotTextColor: paletteBody,
-                    slotActiveBgColor: `${pageText}${activeAlpha}`,
-                    slotActiveTextColor: slotText,
+                    slotActiveBgColor: paletteAction,
+                    slotActiveTextColor: actionText,
                     buttonColor: paletteAction,
                     buttonTextColor: actionText,
                     faqBgColor: `${pageText}${cardAlpha}`,
@@ -5136,7 +5383,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const applyFontStylePreset = (preset) => {
                 if (!preset) return;
                 markWorkspaceDirty();
-                focusEditorPreviewRoom('typography');
                 setSettings(prev => ({
                     ...prev,
                     fontFamily: preset.fontFamily,
@@ -5149,32 +5395,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     subtextLetterSpacing: preset.subtextLetterSpacing
                 }));
                 showToast(`${preset.label} font style applied`);
-            };
-            const handleLogoDisplayChange = (key, value) => {
-                markWorkspaceDirty();
-                setSettings(prev => ({
-                    ...prev,
-                    logoDisplay: {
-                        visible: true,
-                        alignment: 'left',
-                        size: 96,
-                        ...(prev.logoDisplay || {}),
-                        [key]: value
-                    }
-                }));
-            };
-            const handleBannerDisplayChange = (key, value) => {
-                markWorkspaceDirty();
-                setSettings(prev => ({
-                    ...prev,
-                    bannerDisplay: {
-                        visible: true,
-                        height: 220,
-                        position: 'center',
-                        ...(prev.bannerDisplay || {}),
-                        [key]: value
-                    }
-                }));
             };
             const handleFeatureChange = (key, value) => {
                 markWorkspaceDirty();
@@ -5398,19 +5618,54 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
             const saveProfileChanges = async () => {
                 await persistProfileChanges();
             };
+            const getSettingImageMeta = (key) => {
+                const meta = {
+                    logo: {
+                        ratioKey: 'square',
+                        shape: 'square',
+                        uploadTitle: 'Crop business logo',
+                        cropTitle: 'Adjust logo crop',
+                        fileName: 'business-logo.jpg',
+                        emptyMessage: 'Upload a logo in Business Profile first.',
+                        updatedMessage: 'Logo updated',
+                        croppedMessage: 'Logo crop updated'
+                    },
+                    bannerImage: {
+                        ratioKey: 'banner',
+                        shape: 'rounded',
+                        uploadTitle: 'Crop booking banner',
+                        cropTitle: 'Adjust banner crop',
+                        fileName: 'booking-banner.jpg',
+                        emptyMessage: 'Upload a banner in Business Profile first.',
+                        updatedMessage: 'Banner image updated',
+                        croppedMessage: 'Banner crop updated'
+                    },
+                    businessFooterImage: {
+                        ratioKey: 'banner',
+                        shape: 'rounded',
+                        uploadTitle: 'Crop business footer image',
+                        cropTitle: 'Adjust footer image crop',
+                        fileName: 'business-footer.jpg',
+                        emptyMessage: 'Upload a footer image in Business Profile first.',
+                        updatedMessage: 'Footer image updated',
+                        croppedMessage: 'Footer image crop updated'
+                    }
+                };
+                return meta[key] || meta.logo;
+            };
             const handleSettingImageUpload = async (key, file, folder) => {
                 if (!file) return;
-                const ratioKey = key === 'bannerImage' ? 'banner' : 'square';
+                const imageMeta = getSettingImageMeta(key);
                 const previousUrl = settingsRef.current?.[key] || '';
                 requestImageCropUpload(file, {
                     folder,
-                    title: key === 'bannerImage' ? 'Crop booking banner' : 'Crop business logo',
-                    ratioKey,
-                    shape: key === 'bannerImage' ? 'rounded' : 'square'
+                    title: imageMeta.uploadTitle,
+                    ratioKey: imageMeta.ratioKey,
+                    shape: imageMeta.shape
                 }, async (url) => {
                     if (previousUrl && previousUrl !== url) await deleteStorageAsset(previousUrl);
                     handleSettingChange(key, url);
-                    showToast(key === 'bannerImage' ? 'Banner image updated' : 'Logo updated');
+                    showToast(imageMeta.updatedMessage);
                 });
             };
             const removeSettingImage = async (key) => {
@@ -5420,26 +5675,26 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 showToast('Image removed');
             };
             const openSettingImageCrop = (key, folder) => {
+                const imageMeta = getSettingImageMeta(key);
                 const currentUrl = settingsRef.current?.[key] || settings[key] || '';
                 if (!currentUrl) {
-                    showToast(key === 'bannerImage' ? 'Upload a banner in Business Profile first.' : 'Upload a logo in Business Profile first.');
+                    showToast(imageMeta.emptyMessage);
                     return;
                 }
-                const ratioKey = key === 'bannerImage' ? 'banner' : 'square';
                 imageCropCommitRef.current = {
                     folder,
                     onComplete: async (url) => {
                         if (currentUrl && currentUrl !== url) await deleteStorageAsset(currentUrl);
                         handleSettingChange(key, url);
-                        showToast(key === 'bannerImage' ? 'Banner crop updated' : 'Logo crop updated');
+                        showToast(imageMeta.croppedMessage);
                     }
                 };
                 setImageCropModal({
                     source: currentUrl,
-                    fileName: key === 'bannerImage' ? 'booking-banner.jpg' : 'business-logo.jpg',
-                    title: key === 'bannerImage' ? 'Adjust banner crop' : 'Adjust logo crop',
-                    ratioKey,
-                    shape: key === 'bannerImage' ? 'rounded' : 'square',
+                    fileName: imageMeta.fileName,
+                    title: imageMeta.cropTitle,
+                    ratioKey: imageMeta.ratioKey,
+                    shape: imageMeta.shape,
                     zoom: 1,
                     positionX: 50,
                     positionY: 50
@@ -7116,10 +7371,10 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 {
                     id: 'business',
                     title: 'Business Details',
-                    note: settings.brandName || 'Brand, venue gallery, links, logo, and banner',
+                    note: settings.brandName || 'Brand media, venue gallery, links, logo, and banner',
                     icon: Images,
                     meta: settings.slug || 'booking',
-                    quick: ['Logo & banner', 'Venue gallery', 'Social links']
+                    quick: ['Brand media', 'Venue gallery', 'Social links']
                 },
                 {
                     id: 'activity',
@@ -7591,7 +7846,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
 
                 <div className={`dashboard-main relative z-10 flex-1 flex overflow-hidden md:pb-0 ${activeTab === 'editor' && mobileNavCollapsed ? 'mobile-nav-space-collapsed' : ''}`}>
                     {activeTab === 'overview' && (
-                        <div className="dashboard-overview-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                        <div className="dashboard-overview-page flex-1 overflow-y-auto bg-white p-4 sm:p-6 md:p-10 lg:p-12">
                             <section data-tour="dashboard-hero" className="dashboard-lumia-board">
                                 <div className="dashboard-lumia-topline">
                                     <div className="dashboard-lumia-greeting">
@@ -7631,7 +7886,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         <ChevronLeft size={18} strokeWidth={2.6} />
                                     </button>
                                     <span className="dashboard-pager-center">
-                                        <strong className="dashboard-pager-title">{dashboardActiveTile?.label || 'Dashboard'}</strong>
+                                        <span className="dashboard-pager-title-row">
+                                            <strong className="dashboard-pager-title">{dashboardActiveTile?.label || 'Dashboard'}</strong>
+                                            <span className="dashboard-command-badge dashboard-pager-badge" aria-label={`${dashboardActiveTile?.badgeValue ?? 0} dashboard signals`}>
+                                                {dashboardActiveTile?.badgeValue ?? 0}
+                                            </span>
+                                        </span>
                                         <span className="dashboard-pager-track" aria-hidden="true">
                                             {dashboardMobileTiles.map((tile, index) => (
                                                 <span key={tile.id} className={index === dashboardActiveTileIndex ? 'is-active' : ''} />
@@ -7653,18 +7913,23 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                     onTouchStart={handleDashboardTileTouchStart}
                                     onTouchEnd={handleDashboardTileTouchEnd}
                                 >
+                                    <section className="dashboard-workspace-section dashboard-section-notifications">
+                                        <div className="dashboard-section-heading">
+                                            <span>Notifications</span>
+                                            <strong>{dashboardPortfolio.activeBookings}</strong>
+                                        </div>
+                                        <div className="dashboard-section-grid dashboard-section-grid-notifications">
                                     <article className={`dashboard-command-tile dashboard-command-tile-bookings ${dashboardMobileTile === 'bookings' ? 'is-mobile-active' : ''}`}>
                                         <div className="dashboard-command-head">
                                             <span className="dashboard-lumia-icon"><BookOpenCheck size={21} strokeWidth={2.4} /></span>
                                         </div>
                                         <div className="dashboard-command-summary">
                                             <div>
-                                                <h3>Bookings</h3>
+                                                <div className="dashboard-command-title-row">
+                                                    <h3>Bookings</h3>
+                                                    <span className="dashboard-command-badge" aria-label={`${dashboardPortfolio.activeBookings} total bookings`}>{dashboardPortfolio.activeBookings}</span>
+                                                </div>
                                                 <p>{dashboardPortfolio.period.rangeLabel}</p>
-                                            </div>
-                                            <div className="dashboard-command-total">
-                                                <strong className="metric-value">{dashboardPortfolio.activeBookings}</strong>
-                                                <span>Total</span>
                                             </div>
                                         </div>
                                         <div className="dashboard-command-filterbar">
@@ -7696,7 +7961,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                     <strong>{booking.clientName || 'Client'}</strong>
                                                                     <small>{booking.date || booking.dateKeyResolved || dashboardPortfolio.period.rangeLabel} / {booking.serviceName || 'Booking'} / {booking.time || 'Time pending'}</small>
                                                                 </span>
-                                                                <span className="dashboard-activity-action">Open</span>
+                                                                {renderDashboardActivityAction('Open')}
                                                             </button>
                                                         ))}
                                                         {!bookingRows.length && (
@@ -7708,265 +7973,26 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             })()}
                                         </div>
                                     </article>
+                                        </div>
+                                    </section>
 
-                                    <article className={`dashboard-command-tile dashboard-command-tile-support ${dashboardMobileTile === 'chats' ? 'is-mobile-active' : ''}`}>
-                                        <div className="dashboard-command-head">
-                                            <span className="dashboard-lumia-icon"><MessagesSquare size={21} strokeWidth={2.4} /></span>
+                                    <section className="dashboard-workspace-section dashboard-section-income">
+                                        <div className="dashboard-section-heading">
+                                            <span>Income</span>
+                                            <small>{settings.currency || 'ZAR'}</small>
                                         </div>
-                                        <div className="dashboard-command-summary">
-                                            <div>
-                                                <h3>Chats</h3>
-                                                <p>Linked to bookings and client context.</p>
-                                            </div>
-                                            <div className="dashboard-command-total">
-                                                <strong className="metric-value">{dashboardSupportUnreadCount}</strong>
-                                                <span>Unread</span>
-                                            </div>
-                                        </div>
-                                        <div className="dashboard-command-filterbar">
-                                            {renderDashboardFilterControl('chats')}
-                                        </div>
-                                        <div className="dashboard-activity-feed">
-                                            {(() => {
-                                                const chatRows = sortDashboardLatest(
-                                                    dashboardSupportThreads
-                                                        .filter(thread => threadMatchesDashboardFilter(thread, dashboardFeedFilters.chats))
-                                                        .map(thread => {
-                                                            const linkedBooking = dashboardPortfolio.periodActiveBookings.find(booking => (
-                                                                booking.id === thread.bookingId ||
-                                                                booking.threadId === thread.id ||
-                                                                notificationEmailKey(booking.clientEmail || '') === notificationEmailKey(thread.clientEmail || '')
-                                                            )) || visibleBookings.find(booking => (
-                                                                booking.id === thread.bookingId ||
-                                                                booking.threadId === thread.id ||
-                                                                notificationEmailKey(booking.clientEmail || '') === notificationEmailKey(thread.clientEmail || '')
-                                                            ));
-                                                            return {
-                                                                id: thread.id,
-                                                                time: dateValueToMs(thread.lastMessageAt || thread.updatedAt || thread.createdAt),
-                                                                title: thread.clientName || 'Client',
-                                                                detail: thread.lastMessage || `${thread.serviceName || 'Booking'} thread is open.`,
-                                                                dot: getThreadDashboardDot(thread, linkedBooking),
-                                                                action: Number(thread.ownerUnread || 0) > 0 ? `${thread.ownerUnread}` : 'Chat',
-                                                                onClick: () => openDashboardSupportThread(thread)
-                                                            };
-                                                        }),
-                                                    item => item.time
-                                                );
-                                                const chatPage = getDashboardPagedFeed('chats', chatRows);
-                                                return (
-                                                    <>
-                                                        {chatPage.rows.map(item => (
-                                                            <button key={item.id} type="button" className="dashboard-activity-row" onClick={item.onClick}>
-                                                                <span className={`dashboard-activity-dot is-${item.dot}`} />
-                                                                <span className="dashboard-activity-copy">
-                                                                    <strong>{item.title}</strong>
-                                                                    <small>{item.detail}</small>
-                                                                </span>
-                                                                <span className="dashboard-activity-action">{item.action}</span>
-                                                            </button>
-                                                        ))}
-                                                        {!chatRows.length && (
-                                                            <div className="dashboard-empty-row">No matching chats in this period.</div>
-                                                        )}
-                                                        {renderDashboardFeedPager('chats', chatPage)}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                    </article>
-
-                                    <article className={`dashboard-command-tile dashboard-command-tile-schedule ${dashboardMobileTile === 'schedule' ? 'is-mobile-active' : ''}`}>
-                                        <div className="dashboard-command-head">
-                                            <span className="dashboard-lumia-icon"><CalendarDays size={21} strokeWidth={2.4} /></span>
-                                        </div>
-                                        <div className="dashboard-staff-toggle">
-                                            {[{ id: 'all', name: 'All', color: '#39FF14' }, ...displayStaffList].slice(0, 6).map(staff => (
-                                                <button
-                                                    key={staff.id}
-                                                    type="button"
-                                                    className={dashboardScheduleStaffId === staff.id ? 'is-active' : ''}
-                                                    onClick={() => {
-                                                        setDashboardScheduleStaffId(staff.id);
-                                                        resetDashboardFeedPage('schedule');
-                                                    }}
-                                                    style={{ '--staff-color': staff.color || '#39FF14' }}
-                                                >
-                                                    <span>{staff.id === 'all' ? 'All' : staff.name?.split(/\s+/).map(part => part[0]).join('').slice(0, 2) || 'ST'}</span>
-                                                    <strong>{staff.id === 'all' ? 'Team' : staff.name?.split(/\s+/)[0] || 'Staff'}</strong>
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="dashboard-schedule-tabs dashboard-segment-mini" aria-label="Schedule dashboard view">
-                                            {dashboardScheduleViewOptions.map(option => (
-                                                <button
-                                                    key={option.id}
-                                                    type="button"
-                                                    className={dashboardScheduleView === option.id ? 'is-active' : ''}
-                                                    onClick={() => {
-                                                        setDashboardScheduleView(option.id);
-                                                        resetDashboardFeedPage('schedule');
-                                                    }}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        {(() => {
-                                            const selectedStaff = dashboardScheduleStaffId === 'all'
-                                                ? null
-                                                : displayStaffList.find(staff => staff.id === dashboardScheduleStaffId);
-                                            const staffPool = selectedStaff ? [selectedStaff] : displayStaffList;
-                                            const matchesStaff = (booking) => (
-                                                !selectedStaff ||
-                                                booking.staffId === selectedStaff.id ||
-                                                (selectedStaff.id === 'owner' && (!booking.staffId || booking.staffId === 'owner'))
-                                            );
-                                            const bookingMatchesStaff = (booking, staff) => (
-                                                !staff ||
-                                                booking.staffId === staff.id ||
-                                                (staff.id === 'owner' && (!booking.staffId || booking.staffId === 'owner'))
-                                            );
-                                            const staffNameForBooking = (booking) => (
-                                                displayStaffList.find(staff => bookingMatchesStaff(booking, staff))?.name ||
-                                                displayStaffList.find(staff => staff.id === booking.staffId)?.name ||
-                                                'Team'
-                                            );
-                                            const pendingBookings = sortDashboardLatest(
-                                                dashboardPortfolio.periodActiveBookings.filter(booking => String(booking.status || '').toLowerCase() === 'pending' && matchesStaff(booking)),
-                                                getBookingDashboardTime
-                                            );
-                                            const confirmedBookings = sortDashboardLatest(
-                                                dashboardPortfolio.periodActiveBookings.filter(booking => String(booking.status || '').toLowerCase() === 'confirmed' && matchesStaff(booking)),
-                                                getBookingDashboardTime
-                                            );
-                                            const scheduleDates = sortDashboardLatest(
-                                                dashboardPortfolio.dateKeys.length ? dashboardPortfolio.dateKeys : [dashboardPortfolio.todayKey],
-                                                getDateKeyDashboardTime
-                                            ).slice(0, dashboardScheduleView === 'availability' ? 4 : 2);
-                                            const availableRows = scheduleDates.flatMap(dateKey => {
-                                                const daySchedule = settings.schedule?.[dateKey] || {};
-                                                const times = Array.isArray(daySchedule.times) ? daySchedule.times : dashboardPortfolio.defaultTimes;
-                                                if (daySchedule.available === false) return [];
-                                                const sortedTimes = [...times].sort((a, b) => {
-                                                    const aMs = new Date(`${dateKey}T${String(a).padStart(5, '0')}:00`).getTime();
-                                                    const bMs = new Date(`${dateKey}T${String(b).padStart(5, '0')}:00`).getTime();
-                                                    return bMs - aMs;
-                                                });
-                                                return sortedTimes.flatMap(time => (
-                                                    staffPool.filter(staff => !dashboardPortfolio.periodActiveBookings.some(booking => (
-                                                        String(booking.status || '').toLowerCase() === 'confirmed' &&
-                                                        booking.dateKeyResolved === dateKey &&
-                                                        booking.time === time &&
-                                                        bookingMatchesStaff(booking, staff)
-                                                    ))).map(staff => ({
-                                                        id: `open-${staff.id}-${dateKey}-${time}`,
-                                                        type: 'open',
-                                                        time: new Date(`${dateKey}T${String(time).padStart(5, '0')}:00`).getTime(),
-                                                        title: time,
-                                                        detail: `${staff.name || 'Staff'} / ${dateKey}`,
-                                                        staff
-                                                    }))
-                                                ));
-                                            });
-                                            const rows = dashboardScheduleView === 'pending'
-                                                ? pendingBookings.map(booking => ({
-                                                    id: `pending-${booking.id}`,
-                                                    type: 'pending',
-                                                    time: getBookingDashboardTime(booking),
-                                                    title: booking.time || 'Time pending',
-                                                    detail: `${booking.clientName || 'Client'} / ${booking.serviceName || 'Booking'} / ${staffNameForBooking(booking)}`,
-                                                    action: 'Review',
-                                                    booking
-                                                }))
-                                                : dashboardScheduleView === 'confirmed'
-                                                    ? confirmedBookings.map(booking => ({
-                                                        id: `confirmed-${booking.id}`,
-                                                        type: 'confirmed',
-                                                        time: getBookingDashboardTime(booking),
-                                                        title: booking.time || 'Time',
-                                                        detail: `${booking.clientName || 'Client'} / ${booking.serviceName || 'Booking'} / ${staffNameForBooking(booking)}`,
-                                                        action: 'Booked',
-                                                        booking
-                                                    }))
-                                                    : sortDashboardLatest(availableRows, row => row.time).map(row => ({
-                                                        ...row,
-                                                        action: 'Open'
-                                                    }));
-                                            const schedulePage = getDashboardPagedFeed('schedule', rows);
-                                            const scheduleTotal = dashboardScheduleView === 'pending'
-                                                ? pendingBookings.length
-                                                : dashboardScheduleView === 'confirmed'
-                                                    ? confirmedBookings.length
-                                                    : availableRows.length;
-                                            const scheduleTotalLabel = dashboardScheduleView === 'pending'
-                                                ? 'Pending'
-                                                : dashboardScheduleView === 'confirmed'
-                                                    ? 'Booked'
-                                                    : 'Open slots';
-                                            return (
-                                                <>
-                                                    <div className="dashboard-command-summary">
-                                                        <div>
-                                                            <h3>Schedule</h3>
-                                                            <p>{selectedStaff ? selectedStaff.name : 'Team schedule'} / {dashboardScheduleViewOptions.find(option => option.id === dashboardScheduleView)?.label}</p>
-                                                        </div>
-                                                        <div className="dashboard-command-total">
-                                                            <strong className="metric-value">{scheduleTotal}</strong>
-                                                            <span>{scheduleTotalLabel}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="dashboard-activity-feed dashboard-schedule-feed">
-                                                        {schedulePage.rows.map(row => {
-                                                            const rowContent = (
-                                                                <>
-                                                                    <span className={`dashboard-activity-dot is-${row.type}`} />
-                                                                    <span className="dashboard-activity-copy">
-                                                                        <strong>{row.title}</strong>
-                                                                        <small>{row.detail}</small>
-                                                                    </span>
-                                                                    <span className="dashboard-activity-action">{row.action}</span>
-                                                                </>
-                                                            );
-                                                            if (!row.booking) {
-                                                                return <div key={row.id} className="dashboard-activity-row is-static">{rowContent}</div>;
-                                                            }
-                                                            return (
-                                                                <button
-                                                                    key={row.id}
-                                                                    type="button"
-                                                                    className="dashboard-activity-row"
-                                                                    onClick={() => {
-                                                                        setBookingDeskPeriod(dashboardPeriod === 'all' ? 'all' : dashboardPeriod);
-                                                                        setBookingFilter('all');
-                                                                        setBookingSearch(row.booking.clientName || '');
-                                                                        navigateWorkspaceTab('bookings');
-                                                                    }}
-                                                                >
-                                                                    {rowContent}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                        {!rows.length && <div className="dashboard-empty-row">No {scheduleTotalLabel.toLowerCase()} for this staff in this period.</div>}
-                                                        {renderDashboardFeedPager('schedule', schedulePage)}
-                                                    </div>
-                                                </>
-                                            );
-                                        })()}
-                                    </article>
-
+                                        <div className="dashboard-section-grid">
                                     <article className={`dashboard-command-tile dashboard-command-tile-finance ${dashboardMobileTile === 'finance' ? 'is-mobile-active' : ''}`}>
                                         <div className="dashboard-command-head">
                                             <span className="dashboard-lumia-icon"><DollarSign size={21} strokeWidth={2.4} /></span>
                                         </div>
                                         <div className="dashboard-command-summary">
                                             <div>
-                                                <h3>Payments</h3>
+                                                <div className="dashboard-command-title-row">
+                                                    <h3>Payments</h3>
+                                                    <span className="dashboard-command-badge" aria-label={`${dashboardPortfolio.pendingFinanceCount} pending payments`}>{dashboardPortfolio.pendingFinanceCount}</span>
+                                                </div>
                                                 <p>{dashboardPortfolio.totalRevenuePaidCount} paid / {dashboardPortfolio.pendingFinanceCount} pending.</p>
-                                            </div>
-                                            <div className="dashboard-command-total">
-                                                <strong className="metric-value">{dashboardPortfolio.totalRevenueLabel}</strong>
-                                                <span>Revenue</span>
                                             </div>
                                         </div>
                                         <div className="dashboard-mini-stat-row">
@@ -8003,13 +8029,15 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             })()}
                                         </div>
                                     </article>
+                                        </div>
+                                    </section>
                                 </div>
                             </section>
                         </div>
                     )}
 
                     {activeTab === 'profile' && (
-                        <div className="profile-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#F7F7F5]">
+                        <div className="profile-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-white">
                             <div className="dashboard-action-strip max-w-6xl mb-4 md:mb-6">
                                     <div className="profile-header-actions">
                                         <div className="hidden md:flex flex-col sm:flex-row gap-3">
@@ -8395,7 +8423,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         <div>
                                             <label className="text-[10px] font-bold uppercase tracking-[0.5em] opacity-40 mb-4 block text-black">Brand Logo</label>
                                             <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
-                                                <div className="w-28 h-28 rounded-lg bg-neutral-50 border border-neutral-100 flex items-center justify-center overflow-hidden shadow-inner shrink-0">
+                                                <div className="w-28 h-28 bg-transparent border-0 flex items-center justify-center overflow-visible shrink-0">
                                                     {settings.logo ? <img src={settings.logo} className="w-full h-full object-contain" /> : <div className="font-bold text-4xl text-neutral-300">{settings.brandName?.charAt(0) || 'B'}</div>}
                                                 </div>
                                                 <div>
@@ -8441,6 +8469,62 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                         {settings.bannerImage && <button type="button" onClick={() => removeSettingImage('bannerImage')} className="px-5 py-3 text-[10px] font-bold text-red-500 uppercase tracking-widest hover:underline">Remove</button>}
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-neutral-50">
+                                            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5">
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-[0.5em] opacity-40 block text-black">Business Page Images</label>
+                                                    <p className="text-xs text-neutral-400 font-medium mt-2 max-w-xl">The banner handles top and side hero media, while the footer image gives editorial layouts a polished closing visual.</p>
+                                                </div>
+                                                <button type="button" onClick={() => { setActiveTab('editor'); openEditorRoom('style'); }} className="h-12 px-5 rounded-full bg-white border border-neutral-200 text-black text-[10px] font-bold uppercase tracking-widest hover:border-black transition-colors shrink-0">
+                                                    Open Style Room
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {[
+                                                    {
+                                                        key: 'businessFooterImage',
+                                                        title: 'Business Footer Image',
+                                                        note: 'Closing visual for footer, venue, and editorial layouts.',
+                                                        value: settings.businessFooterImage,
+                                                        empty: 'Footer image'
+                                                    }
+                                                ].map((imageSlot) => (
+                                                    <div key={imageSlot.key} className="rounded-lg bg-neutral-50 border border-neutral-100 p-4 md:p-5">
+                                                        <div className="w-full aspect-[16/9] rounded-lg bg-white border border-neutral-100 flex items-center justify-center overflow-hidden shadow-inner mb-4">
+                                                            {imageSlot.value ? <img src={imageSlot.value} className="w-full h-full object-cover" /> : (
+                                                                <div className="text-center px-4">
+                                                                    <Images size={24} className="mx-auto text-neutral-300" />
+                                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-300 mt-2">{imageSlot.empty}</p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-4">
+                                                            <div>
+                                                                <p className="text-sm font-bold text-black">{imageSlot.title}</p>
+                                                                <p className="text-xs text-neutral-400 font-medium mt-1">{imageSlot.note}</p>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <label className="inline-flex px-5 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-neutral-800 transition-colors">
+                                                                    Upload
+                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                                                        const file = e.target.files[0];
+                                                                        handleSettingImageUpload(imageSlot.key, file, 'brand');
+                                                                        e.target.value = '';
+                                                                    }}/>
+                                                                </label>
+                                                                {imageSlot.value && (
+                                                                    <>
+                                                                        <button type="button" onClick={() => openSettingImageCrop(imageSlot.key, 'brand')} className="px-5 py-3 rounded-full bg-white border border-neutral-200 text-[10px] font-bold text-black uppercase tracking-widest hover:border-black transition-colors">Crop</button>
+                                                                        <button type="button" onClick={() => removeSettingImage(imageSlot.key)} className="px-5 py-3 text-[10px] font-bold text-red-500 uppercase tracking-widest hover:underline">Remove</button>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
 
@@ -8629,7 +8713,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'business' && (
-                        <div className="schedule-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#FBFBFB]">
+                        <div className="schedule-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-white">
                             <Suspense fallback={<LazySectionFallback label="Loading schedule" />}>
                                 <AppErrorBoundary compact label="Schedule" resetKey={`${activeTab}-${workspaceOwnerId}`}>
                                     <BusinessCalendar
@@ -8660,7 +8744,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'communications' && (
-                        <div className="communications-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-[#F6F7F9]">
+                        <div className="communications-page flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 lg:p-12 relative bg-white">
                             <div className="support-page-shell max-w-[88rem] mx-auto">
                                 <Suspense fallback={<LazySectionFallback label="Loading client inbox" />}>
                                     <AppErrorBoundary compact label="Support Inbox" resetKey={`${workspaceOwnerId}-${supportThreadFocus?.requestId || 'inbox'}`}>
@@ -8687,7 +8771,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'services' && (
-                        <div className="services-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                        <div className="services-page flex-1 overflow-y-auto bg-white p-4 sm:p-6 md:p-10 lg:p-12">
                             <Suspense fallback={<LazySectionFallback label="Loading service studio" />}>
                                 <AppErrorBoundary compact label="Services" resetKey={`${workspaceOwnerId}-${settings.serviceIndustry || 'services'}`}>
                                     <ServicesStudio
@@ -8714,7 +8798,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'finance' && (
-                        <div className="finance-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                        <div className="finance-page flex-1 overflow-y-auto bg-white p-4 sm:p-6 md:p-10 lg:p-12">
                             <Suspense fallback={<LazySectionFallback label="Loading finance" />}>
                                 <AppErrorBoundary compact label="Finance" resetKey={workspaceOwnerId}>
                                     <FinancePaymentSettings
@@ -8733,7 +8817,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'clients' && (
-                        <div className="clients-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                        <div className="clients-page flex-1 overflow-y-auto bg-white p-4 sm:p-6 md:p-10 lg:p-12">
                             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                                 <section className={`${activeClient ? 'xl:col-span-5' : 'xl:col-span-12'} space-y-4 md:space-y-6 ${clientMobileView === 'directory' || clientMobileView === 'add' ? '' : 'hidden md:block'}`}>
                                     <div data-tour="clients-directory" className={`saas-card client-directory-card overflow-hidden ${clientMobileView === 'add' ? 'hidden md:block' : ''}`}>
@@ -9135,7 +9219,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                         })() : null;
 
                         return (
-                        <div className="team-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                        <div className="team-page flex-1 overflow-y-auto bg-white p-4 sm:p-6 md:p-10 lg:p-12">
                             <section data-tour="team-roster" className="team-roster-shell saas-card p-4 md:p-6 overflow-hidden">
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6">
                                     <div>
@@ -9317,11 +9401,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             ...scene,
                                             title: {
                                                 introduction: 'Introduction',
-                                                logo: 'Logo placement',
-                                                banner: 'Banner placement',
-                                                services: 'Services',
                                                 colours: 'Colour direction',
                                                 typography: 'Typography',
+                                                style: 'Style system',
                                                 calendar: 'Calendar style',
                                                 time: 'Time style',
                                                 faq: 'FAQ setup',
@@ -9332,11 +9414,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                             }[scene.id],
                                             prompt: {
                                                 introduction: 'Name the page and write the first words clients see. Type here or directly on the mockup.',
-                                                logo: 'Place the logo like a brand mark: beside the title, above the hero, or as a small badge.',
-                                                banner: 'Choose whether the banner acts as the hero image, a top strip, or a calmer footer media panel.',
-                                                services: 'Build the bookable menu clients choose from before they request a time.',
                                                 colours: 'Build a live color direction from one color, many colors, or your uploaded brand media.',
                                                 typography: 'Choose a polished font system for headings, paragraphs, labels, and buttons.',
+                                                style: 'Choose one curated visual system for services, calendar, time slots, FAQ, action buttons, venue, maps, and social links.',
                                                 calendar: 'Customize the calendar only: date cards, active states, color, shadow, and glow.',
                                                 time: 'Customize bookable time slots without touching the calendar.',
                                                 faq: 'Add helpful questions and tune how the FAQ block feels.',
@@ -9350,11 +9430,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                         const activeIndex = Math.max(0, scenes.findIndex(scene => scene.id === activeSceneId));
                                         const activeScene = scenes[activeIndex] || scenes[0];
                                         const ActiveSceneIcon = activeScene.icon;
+                                        const activeStyleDirection = getEditorStyleDirection(settings.interfaceStyleDirection);
                                         const goScene = (sceneId) => {
                                             openEditorRoom(sceneId);
-                                            window.requestAnimationFrame(() => {
-                                                document.querySelector('.editor-cinema-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                            });
                                         };
                                         const goNext = () => goScene(scenes[Math.min(scenes.length - 1, activeIndex + 1)].id);
                                         const goPrev = () => goScene(scenes[Math.max(0, activeIndex - 1)].id);
@@ -9406,21 +9484,28 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                 </div>
                                                             )}
 
+                                                            {activeScene.id === 'style' && (
+                                                                <div className="cinema-style-system-preview">
+                                                                    <span>Style system</span>
+                                                                    <h4>{activeStyleDirection.label}</h4>
+                                                                    <p>{activeStyleDirection.summary}</p>
+                                                                    <div className="style-system-mock" aria-hidden="true">
+                                                                        <b />
+                                                                        <b />
+                                                                        <b />
+                                                                        <b />
+                                                                        <b />
+                                                                    </div>
+                                                                    <div className="style-system-tags">
+                                                                        {activeStyleDirection.sections.slice(0, 5).map(section => <small key={section}>{section}</small>)}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
                                                             {(activeScene.id === 'calendar' || activeScene.id === 'time') && (
                                                                 <div className="cinema-visual-preview">
                                                                     <div className="cinema-date-strip">{['Tue 19', 'Wed 20', 'Thu 21'].map((label, index) => <button key={label} type="button" className={index === 0 ? 'is-active' : ''} style={{ background: index === 0 ? settings.dateActiveBgColor || settings.primaryColor : settings.dateBgColor || '#f8fafc', color: index === 0 ? settings.dateActiveTextColor || '#050505' : settings.dateTextColor || '#050505' }}>{label}</button>)}</div>
                                                                     <div className="cinema-slot-strip">{(settings.availableTimes || ['09:00', '10:30', '12:00']).slice(0, 6).map(time => <button key={time} type="button" style={{ background: settings.slotBgColor || '#f8fafc', color: settings.slotTextColor || '#050505' }}>{time}</button>)}</div>
-                                                                </div>
-                                                            )}
-
-                                                            {activeScene.id === 'services' && (
-                                                                <div className="cinema-feature-preview">
-                                                                    {[
-                                                                        ['Services', workspaceServices.length],
-                                                                        ['Live', workspaceServices.filter(service => service.active !== false).length],
-                                                                        ['Staff matched', workspaceServices.filter(service => Array.isArray(service.staffIds) && service.staffIds.length > 0).length],
-                                                                        ['Booking menu', true]
-                                                                    ].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}
                                                                 </div>
                                                             )}
 
@@ -9446,34 +9531,18 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                     <input value={settings.dateLabel || ''} onChange={(event) => handleSettingChange('dateLabel', event.target.value)} placeholder="Which day are you looking to book?" />
                                                                 </div>
                                                             )}
-                                                            {activeScene.id === 'logo' && <div className="cinema-feature-preview">{[['Logo', settings.logo && getLogoDisplay(settings).visible], ['Placement', getLogoDisplay(settings).placement], ['Alignment', getLogoDisplay(settings).alignment], ['Size', `${getLogoDisplay(settings).size}px`]].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
-                                                            {activeScene.id === 'banner' && <div className="cinema-feature-preview">{[['Banner', settings.bannerImage && getBannerDisplay(settings).visible], ['Placement', getBannerDisplay(settings).placement], ['Crop tool', settings.bannerImage], ['Opacity', `${getBannerDisplay(settings).opacity}%`]].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
-
                                                             {activeScene.id === 'faq' && <div className="cinema-feature-preview">{[['FAQ', settings.features?.faqEnabled], ['Questions', (settings.features?.faqs || []).length > 0], ['Look', settings.faqDisplayStyle || settings.faqStyle || 'minimal']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
                                                             {activeScene.id === 'venue' && <div className="cinema-feature-preview">{[['Gallery', Array.isArray(settings.venuePhotos) && settings.venuePhotos.length > 0], ['Maps', settings.features?.location], ['Look', settings.venueGalleryStyle || 'mosaic'], ['Directions', settings.mapDisplayStyle !== 'none']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
-                                                            {activeScene.id === 'social' && <div className="cinema-feature-preview">{[['Shown', settings.features?.socialLinks], ['Links', Object.values(settings.socials || {}).filter(Boolean).length], ['Placement', settings.socialPlacement || 'footer'], ['Look', settings.socialDisplayStyle || settings.socialIconStyle || 'icons']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
+                                                            {activeScene.id === 'social' && <div className="cinema-feature-preview">{[['Shown', settings.features?.socialLinks], ['Links', Object.values(settings.socials || {}).filter(Boolean).length], ['Footer', true], ['Look', settings.socialDisplayStyle || settings.socialIconStyle || 'icons']].map(([label, active]) => <span key={label} className={active ? 'is-on' : ''}>{label}</span>)}</div>}
                                                         </div>
 
                                                         <div className="editor-cinema-control-panel">
-                                                            {activeScene.id === 'services' && <>
-                                                                <div className="cinema-control-title"><span>Services display</span><small>Choose how bookable services are presented on the booking page.</small></div>
-                                                                <div className="service-flow-segmented" role="group" aria-label="Service display type">
-                                                                    <button type="button" onClick={() => handleSettingChange('serviceDropdownEnabled', false)} className={!settings.serviceDropdownEnabled ? 'is-on' : ''}>
-                                                                        <span>Display flow</span>
-                                                                    </button>
-                                                                    <button type="button" onClick={() => handleSettingChange('serviceDropdownEnabled', true)} className={settings.serviceDropdownEnabled ? 'is-on' : ''}>
-                                                                        <span>Dropdown flow</span>
-                                                                    </button>
-                                                                </div>
-                                                                <div className="cinema-look-picker">
-                                                                    <div className="cinema-look-picker-head">
-                                                                        <span>Service look</span>
-                                                                        <small>{settings.serviceDropdownEnabled ? 'Premium dropdown selector' : 'Premium service list'}</small>
-                                                                    </div>
-                                                                    <p className="cinema-native-gradient-note">Build A Booking now handles the service layout for you. Choose the flow above, then tune only how strong the surface feels.</p>
-                                                                    <StyleSegmentedControl value={settings.serviceBorderStyle || 'outline'} onChange={(value) => handleSettingChange('serviceBorderStyle', value)} label="Look" />
-                                                                </div>
-                                                            </>}
+                                                            {activeScene.id === 'style' && (
+                                                                <StyleDirectionPicker
+                                                                    value={settings.interfaceStyleDirection || 'native-precision'}
+                                                                    onApply={applyEditorStyleDirection}
+                                                                />
+                                                            )}
 
                                                             {activeScene.id === 'colours' && <>
                                                                 <div className="cinema-control-title"><span>Page theme</span><small>Choose a colour family, then set its strength.</small></div>
@@ -9484,22 +9553,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                         '--palette-selected-text': activePaletteShadeText
                                                                     }}
                                                                 >
-                                                                    <div className="palette-flow-hero">
-                                                                        <div className="palette-flow-sample" style={{ backgroundColor: activePaletteShadeColor, color: activePaletteShadeText }}>
-                                                                            <span>{activePaletteFlow?.name || 'Palette'}</span>
-                                                                            <strong>{String(activePaletteShade).padStart(2, '0')}</strong>
-                                                                        </div>
-                                                                        <div className="palette-flow-copy">
-                                                                            <span>Palette</span>
-                                                                            <strong>{activePaletteFlow?.name || 'Colour'} spectrum</strong>
-                                                                            <small>Background first. Type, buttons, dates, slots, and surfaces follow.</small>
-                                                                            <div className="palette-flow-chip-row" aria-hidden="true">
-                                                                                {activePalettePreviewSwatches.map((color) => (
-                                                                                    <i key={color} style={{ backgroundColor: color }} />
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
                                                                     <div className="palette-spectrum-grid" aria-label="Colour spectrum">
                                                                         {paletteFlowOptions.map((palette) => {
                                                                             const isActive = activePaletteFlowId === palette.id;
@@ -9672,120 +9725,6 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                                 <textarea value={settings.welcomeMessage || ''} onChange={(event) => handleSettingChange('welcomeMessage', event.target.value)} placeholder="Choose a time that works for you." />
                                                                             </label>
                                                                         </div>
-                                                                        <details className="cinema-setting-group cinema-alignment-room" open>
-                                                                            <summary><AlignCenter size={15}/> Page alignment</summary>
-                                                                            <div className="cinema-control-title"><span>Page rhythm</span><small>Choose how the logo, headline, and booking flow line up.</small></div>
-                                                                            <div className="cinema-align-grid">
-                                                                                {[
-                                                                                    ['left', AlignLeft],
-                                                                                    ['center', AlignCenter],
-                                                                                    ['right', AlignRight]
-                                                                                ].map(([alignment, Icon]) => (
-                                                                                    <button key={alignment} type="button" onClick={() => handleLogoDisplayChange('alignment', alignment)} className={logoDisplay.alignment === alignment ? 'is-active' : ''}>
-                                                                                        <Icon size={15}/>{alignment}
-                                                                                    </button>
-                                                                                ))}
-                                                                            </div>
-                                                                        </details>
-                                                                    </div>
-                                                                );
-                                                            })()}
-
-                                                            {activeScene.id === 'logo' && (() => {
-                                                                const logoDisplay = getLogoDisplay(settings);
-                                                                return (
-                                                                    <div className="cinema-media-room">
-                                                                        <div className="cinema-control-title"><span>Logo placement</span><small>Use the logo as a precise brand mark, not a loose image block.</small></div>
-                                                                        <section className="cinema-media-action-card is-wide">
-                                                                            <div>
-                                                                                <strong>{settings.logo ? 'Logo asset ready' : 'No logo uploaded'}</strong>
-                                                                                <small>{settings.logo ? 'Shared from Business Profile. Crop changes stay linked everywhere.' : 'Add or crop a logo before showing it on the booking page.'}</small>
-                                                                            </div>
-                                                                            <div className="cinema-media-action-controls">
-                                                                                {settings.logo ? (
-                                                                                    <>
-                                                                                        <button type="button" onClick={() => handleLogoDisplayChange('visible', !logoDisplay.visible)} className={logoDisplay.visible ? 'is-active' : ''}>{logoDisplay.visible ? 'Shown' : 'Hidden'}</button>
-                                                                                        <button type="button" onClick={() => openSettingImageCrop('logo', 'logos')} aria-label="Crop logo"><Crop size={15} /></button>
-                                                                                    </>
-                                                                                ) : (
-                                                                                    <button type="button" onClick={() => openSettingImageCrop('logo', 'logos')} className="is-active is-add-media"><ImagePlus size={15} />Add logo</button>
-                                                                                )}
-                                                                            </div>
-                                                                        </section>
-                                                                        <InterfaceLookGrid
-                                                                            label="Logo position"
-                                                                            looks={[
-                                                                                { id: 'title', label: 'Title Lockup', note: 'Logo sits beside the page name like a brand system.' },
-                                                                                { id: 'top', label: 'Top Mark', note: 'Logo appears above the headline as a quiet masthead.' },
-                                                                                { id: 'badge', label: 'Corner Badge', note: 'Logo becomes a small premium badge in the hero.' }
-                                                                            ]}
-                                                                            value={logoDisplay.placement}
-                                                                            onChange={(value) => handleLogoDisplayChange('placement', value)}
-                                                                        />
-                                                                        <details className="cinema-setting-group cinema-alignment-room" open>
-                                                                            <summary><AlignCenter size={15}/> Logo alignment</summary>
-                                                                            <div className="cinema-align-grid">
-                                                                                {[
-                                                                                    ['left', AlignLeft],
-                                                                                    ['center', AlignCenter],
-                                                                                    ['right', AlignRight]
-                                                                                ].map(([alignment, Icon]) => (
-                                                                                    <button key={alignment} type="button" onClick={() => handleLogoDisplayChange('alignment', alignment)} className={logoDisplay.alignment === alignment ? 'is-active' : ''}>
-                                                                                        <Icon size={15}/>{alignment}
-                                                                                    </button>
-                                                                                ))}
-                                                                            </div>
-                                                                        </details>
-                                                                        <label className="cinema-range-row">
-                                                                            <span>Logo size</span>
-                                                                            <input type="range" min="48" max="176" value={logoDisplay.size} style={{ '--range-progress': `${((logoDisplay.size - 48) / 128) * 100}%` }} onChange={(event) => handleLogoDisplayChange('size', Number(event.target.value))} />
-                                                                            <b>{logoDisplay.size}px</b>
-                                                                        </label>
-                                                                    </div>
-                                                                );
-                                                            })()}
-
-                                                            {activeScene.id === 'banner' && (() => {
-                                                                const bannerDisplay = getBannerDisplay(settings);
-                                                                return (
-                                                                    <div className="cinema-media-room">
-                                                                        <div className="cinema-control-title"><span>Banner placement</span><small>Decide whether the banner leads the page, supports the hero, or becomes a finishing panel.</small></div>
-                                                                        <section className="cinema-media-action-card is-wide">
-                                                                            <div>
-                                                                                <strong>{settings.bannerImage ? 'Banner uploaded' : 'No banner uploaded'}</strong>
-                                                                                <small>{settings.bannerImage ? 'Show, hide, or crop the uploaded banner from here.' : 'Add a banner before showing it on the booking page.'}</small>
-                                                                            </div>
-                                                                            <div className="cinema-media-action-controls">
-                                                                                {settings.bannerImage ? (
-                                                                                    <>
-                                                                                        <button type="button" onClick={() => handleBannerDisplayChange('visible', !bannerDisplay.visible)} className={bannerDisplay.visible ? 'is-active' : ''}>{bannerDisplay.visible ? 'Shown' : 'Hidden'}</button>
-                                                                                        <button type="button" onClick={() => openSettingImageCrop('bannerImage', 'banners')} aria-label="Crop banner" title="Crop banner"><Crop size={15} /></button>
-                                                                                    </>
-                                                                                ) : (
-                                                                                    <button type="button" onClick={() => openSettingImageCrop('bannerImage', 'banners')} className="is-active is-add-media"><ImagePlus size={15} />Add banner</button>
-                                                                                )}
-                                                                            </div>
-                                                                        </section>
-                                                                        <InterfaceLookGrid
-                                                                            label="Banner position"
-                                                                            looks={[
-                                                                                { id: 'hero', label: 'Hero Media', note: 'Banner sits beside the copy like a website hero.' },
-                                                                                { id: 'top', label: 'Top Strip', note: 'Banner stretches above the intro as a cinematic opener.' },
-                                                                                { id: 'footer', label: 'Footer Panel', note: 'Banner appears after the intro as a calmer visual pause.' }
-                                                                            ]}
-                                                                            value={bannerDisplay.placement}
-                                                                            onChange={(value) => handleBannerDisplayChange('placement', value)}
-                                                                        />
-                                                                        <label className="cinema-range-row">
-                                                                            <span>Banner height</span>
-                                                                            <input type="range" min="120" max="360" value={bannerDisplay.height} style={{ '--range-progress': `${((bannerDisplay.height - 120) / 240) * 100}%` }} onChange={(event) => handleBannerDisplayChange('height', Number(event.target.value))} />
-                                                                            <b>{bannerDisplay.height}px</b>
-                                                                        </label>
-                                                                        <label className="cinema-range-row">
-                                                                            <span>Banner opacity</span>
-                                                                            <input type="range" min="15" max="100" value={bannerDisplay.opacity} style={{ '--range-progress': `${((bannerDisplay.opacity - 15) / 85) * 100}%` }} onChange={(event) => handleBannerDisplayChange('opacity', Number(event.target.value))} />
-                                                                            <b>{bannerDisplay.opacity}%</b>
-                                                                        </label>
                                                                     </div>
                                                                 );
                                                             })()}
@@ -9927,22 +9866,12 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                                                         }}
                                                                     />
                                                                     <StyleSegmentedControl value={settings.socialIconStyle || 'outline'} onChange={(value) => handleSettingChange('socialIconStyle', value)} label="Icon style" />
-                                                                    <InterfaceLookGrid
-                                                                        label="Social placement"
-                                                                        looks={[
-                                                                            { id: 'intro', label: 'Below Intro', note: 'Social links sit near the opening brand copy.' },
-                                                                            { id: 'booking', label: 'Before Venue', note: 'Links appear after the booking controls, before venue details.' },
-                                                                            { id: 'footer', label: 'Footer', note: 'Links finish the page below venue and directions.' }
-                                                                        ]}
-                                                                        value={settings.socialPlacement || 'footer'}
-                                                                        onChange={(value) => handleSettingChange('socialPlacement', value)}
-                                                                    />
                                                                 </section>
                                                                 <div className="cinema-faq-routing-note cinema-social-routing-note">
                                                                     <span><Globe size={16} /></span>
                                                                     <div>
                                                                         <strong>Social links live in Business Profile</strong>
-                                                                        <small>Add Instagram, TikTok, Facebook, and website links in Business Profile. This room controls visibility, placement, and style.</small>
+                                                                        <small>Add Instagram, TikTok, Facebook, and website links in Business Profile. Social links always finish the page below venue details.</small>
                                                                     </div>
                                                                     <button type="button" onClick={() => { setActiveTab('profile'); setActiveProfileSection('business'); }}>
                                                                         Open profile
@@ -10138,16 +10067,9 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             }}
                             className={`editor-preview-frame ${device === 'mobile' ? 'is-mobile-preview' : 'is-desktop-preview'} relative flex flex-col shrink-0 bg-white shadow-[0_100px_200px_-50px_rgba(0,0,0,0.15)] border-black overflow-hidden ${editorPreviewFrameClass}`}
                         >
-                            {device === 'desktop' && (
-                                <div className={`absolute top-0 left-1/2 -translate-x-1/2 bg-black rounded-b-3xl z-[100] flex items-center justify-center ${isCompactEditorViewport ? 'w-40 h-5' : 'w-48 h-6'}`}>
-                                    <div className="w-2.5 h-2.5 rounded-full bg-neutral-900 border border-white/5 shadow-inner" />
-                                </div>
-                            )}
-
                             {device === 'mobile' && (
                             <>
-                                <div className={`absolute left-1/2 -translate-x-1/2 bg-black rounded-full z-[100] flex items-center justify-center ${isCompactEditorViewport ? 'top-3 w-28 h-7' : 'top-4 w-32 h-8'}`}><div className="w-2 h-2 rounded-full bg-[#111] ml-auto mr-4" /></div>
-                                <div className={`absolute left-10 right-10 z-[100] flex justify-between items-center text-black font-bold tracking-tight ${isCompactEditorViewport ? 'top-8 text-[11px]' : 'top-10 text-[13px]'}`}>
+                                <div className={`editor-device-status-bar absolute left-10 right-10 z-[100] flex justify-between items-center text-black font-bold tracking-tight ${isCompactEditorViewport ? 'top-4 text-[11px]' : 'top-5 text-[13px]'}`}>
                                     <span>9:41</span><div className="flex gap-2 items-center"><Signal size={14} /><Wifi size={14} /><Battery size={18} strokeWidth={2} /></div>
                                 </div>
                                 <div className={`absolute -left-[10px] w-1 bg-black rounded-r-lg z-[100] ${isCompactEditorViewport ? 'top-28 h-14' : 'top-32 h-16'}`} />
@@ -10156,7 +10078,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                             </>
                             )}
 
-                            <div className={`flex-shrink-0 border-b flex items-center justify-between ${device === 'desktop' ? (isCompactEditorViewport ? 'px-10 h-20 bg-neutral-50/50' : 'px-16 h-24 bg-neutral-50/50') : (isCompactEditorViewport ? 'px-7 h-24 pt-8 bg-white' : 'px-8 h-28 pt-10 bg-white')}`} style={{ borderColor: 'rgba(0,0,0,0.04)' }}>
+                            <div className={`flex-shrink-0 border-b flex items-center justify-between editor-device-browser-bar ${device === 'desktop' ? (isCompactEditorViewport ? 'px-10 h-20 bg-neutral-50/50' : 'px-16 h-24 bg-neutral-50/50') : (isCompactEditorViewport ? 'px-7 h-20 pt-5 bg-white' : 'px-8 h-24 pt-7 bg-white')}`} style={{ borderColor: 'rgba(0,0,0,0.04)' }}>
                               <div className="flex gap-3 w-16">
                                 {device === 'desktop' && <><div className="w-3.5 h-3.5 rounded-full bg-red-400/80" /><div className="w-3.5 h-3.5 rounded-full bg-amber-400/80" /><div className="w-3.5 h-3.5 rounded-full bg-green-400/80" /></>}
                               </div>
@@ -10166,7 +10088,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                               <div className="w-16" />
                             </div>
 
-                            <div className="flex-1 overflow-y-auto no-scrollbar relative group/simulator" style={{ backgroundColor: settings.backgroundColor }}>
+                            <div ref={editorPreviewScrollRef} className="flex-1 overflow-y-auto no-scrollbar relative group/simulator" style={{ backgroundColor: settings.backgroundColor }}>
                             {shouldMountEditorPreview ? (
                                 <>
                                 <div className="absolute top-8 right-8 z-50 flex items-center gap-2 px-4 py-2 bg-black/10 backdrop-blur-md rounded-full text-[9px] font-bold uppercase tracking-[0.2em] opacity-0 group-hover/simulator:opacity-100 transition-opacity pointer-events-none text-black">
@@ -10174,7 +10096,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                                 </div>
                                 <Suspense fallback={<LazySectionFallback label="Loading preview" />}>
                                     <AppErrorBoundary compact label="Live Preview" resetKey={previewKey}>
-                                        <BookingFlow key={previewKey} settings={settings} isPreview={true} onInspect={handleInspect} onSettingChange={handleSettingChange} onComplete={handleBookingComplete} />
+                                        <BookingFlow key={previewKey} settings={editorPreviewSettings} isPreview={true} onInspect={handleInspect} onSettingChange={handleSettingChange} onComplete={handleBookingComplete} />
                                     </AppErrorBoundary>
                                 </Suspense>
                                 </>
@@ -10192,7 +10114,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                     )}
 
                     {activeTab === 'bookings' && (
-                    <div className="bookings-page flex-1 overflow-y-auto bg-[#F6F7F9] p-4 sm:p-6 md:p-10 lg:p-12">
+                    <div className="bookings-page flex-1 overflow-y-auto bg-white p-4 sm:p-6 md:p-10 lg:p-12">
                         {manualBookingOpen && (
                             <div className="manual-booking-overlay fixed inset-0 z-[220] bg-black/45 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-6">
                                 <form onSubmit={handleManualBookingSubmit} className="manual-booking-sheet w-full md:max-w-5xl max-h-[94dvh] overflow-y-auto bg-white rounded-t-[1.6rem] md:rounded-2xl border border-neutral-100 shadow-2xl shadow-black/30">

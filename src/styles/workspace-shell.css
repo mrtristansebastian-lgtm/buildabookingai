@@ -5,7 +5,7 @@
 @media (min-width: 768px) {
   html body .native-ui .dashboard-main > div:not(.mobile-editor-shell) {
     padding: clamp(1.35rem, 2vw, 2rem) clamp(1.6rem, 2.4vw, 2.4rem) 2rem clamp(6.3rem, 6.9vw, 7.1rem) !important;
-    background: #f6f7f9 !important;
+    background: #ffffff !important;
   }
 
   html body .native-ui .dashboard-main > div.dashboard-overview-page:not(.mobile-editor-shell) {
@@ -137,12 +137,283 @@
   }
 }
 
+/* Dashboard premium workspace pass: quieter chrome, one cohesive list surface. */
+html body .native-ui .dashboard-overview-page {
+  --dashboard-surface: #ffffff;
+  --dashboard-ink: #050505;
+  --dashboard-muted: #667085;
+  --dashboard-line: rgba(15, 23, 42, 0.065);
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting {
+  min-height: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+  letter-spacing: -0.045em !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+  color: #5f6b7a !important;
+  font-weight: 720 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-divider {
+  opacity: 0.5 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-period-tabs,
+html body .native-ui .dashboard-overview-page > .dashboard-lumia-board > .dashboard-period-tabs,
+html body .native-ui .dashboard-overview-page .dashboard-lumia-board > .dashboard-period-tabs {
+  border: 1px solid var(--dashboard-line) !important;
+  border-radius: 0.9rem !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84) !important;
+  overflow: hidden !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-period-tab {
+  border-radius: 0.62rem !important;
+  color: #556171 !important;
+  font-weight: 850 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-period-tab.is-active {
+  background: linear-gradient(135deg, rgba(207, 255, 221, 0.98), rgba(201, 232, 255, 0.94), rgba(247, 215, 255, 0.9)) !important;
+  color: var(--dashboard-ink) !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher .dashboard-pager-arrow {
+  border-color: var(--dashboard-line) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-title-row {
+  gap: 0.5rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-title {
+  color: var(--dashboard-ink) !important;
+  letter-spacing: -0.03em !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-badge {
+  background: var(--dashboard-ink) !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar {
+  width: min(100%, 58rem) !important;
+  max-width: 58rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-bottom: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip {
+  width: 100% !important;
+  border: 1px solid var(--dashboard-line) !important;
+  border-radius: 0.9rem 0.9rem 0 0 !important;
+  background: var(--dashboard-surface) !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-chip {
+  border-radius: 0.58rem !important;
+  color: #667085 !important;
+  font-weight: 850 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-chip.is-active {
+  background: #050505 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-feed {
+  width: min(100%, 58rem) !important;
+  max-width: 58rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  gap: 0 !important;
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--dashboard-line) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 0.9rem 0.9rem !important;
+  background: var(--dashboard-surface) !important;
+  box-shadow: 0 22px 54px -48px rgba(15, 23, 42, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+  overflow: hidden !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-row,
+html body .native-ui .dashboard-overview-page .dashboard-empty-row {
+  min-height: 3.65rem !important;
+  border-width: 0 0 1px !important;
+  border-style: solid !important;
+  border-color: rgba(15, 23, 42, 0.045) !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-row {
+  grid-template-columns: 1rem minmax(0, 1fr) 1.85rem !important;
+  gap: 1rem !important;
+  padding: 0.66rem 0.72rem 0.66rem 0.95rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-row:hover {
+  background: #fafbfc !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-dot {
+  width: 0.58rem !important;
+  height: 0.58rem !important;
+  box-shadow: 0 0 0 0.28rem rgba(31, 122, 255, 0.11) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-copy {
+  gap: 0.14rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-copy strong {
+  color: #050505 !important;
+  font-weight: 880 !important;
+  letter-spacing: -0.018em !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-copy small {
+  color: #667085 !important;
+  font-weight: 680 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-action.is-arrow {
+  width: 1.82rem !important;
+  min-width: 1.82rem !important;
+  height: 1.82rem !important;
+  border-color: rgba(15, 23, 42, 0.075) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0.62rem !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.055) !important;
+  background: #ffffff !important;
+  grid-template-columns: 2rem minmax(4.2rem, 1fr) auto 2rem !important;
+  gap: 0.42rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager button {
+  width: 2rem !important;
+  height: 2rem !important;
+  border-color: rgba(15, 23, 42, 0.075) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager > span,
+html body .native-ui .dashboard-overview-page .dashboard-feed-size {
+  height: 2rem !important;
+  min-height: 2rem !important;
+  border-color: rgba(15, 23, 42, 0.055) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-size select {
+  background: transparent !important;
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .dashboard-overview-page {
+    padding-top: 0.68rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
+    gap: 0.68rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+    font-size: clamp(2.1rem, 9.2vw, 2.62rem) !important;
+    line-height: 0.88 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+    margin-top: 0.52rem !important;
+    font-size: 0.82rem !important;
+    line-height: 1.32 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page > .dashboard-lumia-board > .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board > .dashboard-period-tabs {
+    min-height: 3.05rem !important;
+    padding: 0.28rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher {
+    margin-top: 0.1rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher .dashboard-pager-arrow {
+    width: 2.32rem !important;
+    height: 2.32rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-pager-title {
+    font-size: 1.02rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-pager-badge {
+    width: 1.62rem !important;
+    height: 1.62rem !important;
+    flex-basis: 1.62rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip {
+    padding: 0.34rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar,
+  html body .native-ui .dashboard-overview-page .dashboard-activity-feed {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-chip {
+    min-height: 1.52rem !important;
+    padding: 0 0.52rem !important;
+    font-size: 0.42rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-row,
+  html body .native-ui .dashboard-overview-page .dashboard-empty-row {
+    min-height: 3.58rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-copy strong {
+    font-size: 0.8rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-copy small {
+    font-size: 0.66rem !important;
+  }
+}
+
 html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
   align-content: start !important;
 }
 
 html body .native-ui .dashboard-overview-page .dashboard-command-tile {
   min-height: 0 !important;
+  gap: 0 !important;
 }
 
 html body .native-ui .dashboard-overview-page .dashboard-command-tile.is-mobile-active .dashboard-activity-feed,
@@ -150,8 +421,121 @@ html body .native-ui .dashboard-overview-page .dashboard-activity-feed {
   gap: 0.44rem !important;
 }
 
+html body .native-ui .dashboard-overview-page .dashboard-activity-row {
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  gap: 0.98rem !important;
+  padding-left: 0.82rem !important;
+  padding-right: 0.58rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-dot {
+  justify-self: center !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-action.is-arrow {
+  width: 2rem !important;
+  min-width: 2rem !important;
+  height: 2rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  color: #050505 !important;
+  box-shadow: 0 16px 30px -26px rgba(15, 23, 42, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.74) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile-support .dashboard-activity-action.is-arrow {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+}
+
 html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
-  letter-spacing: 0.04em !important;
+  color: rgba(15, 23, 42, 0.72) !important;
+  font-size: 0.66rem !important;
+  font-weight: 820 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-size,
+html body .native-ui .dashboard-overview-page .dashboard-feed-size span,
+html body .native-ui .dashboard-overview-page .dashboard-feed-size select {
+  color: rgba(15, 23, 42, 0.72) !important;
+  font-size: 0.66rem !important;
+  font-weight: 820 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-size select {
+  color: #050505 !important;
+  font-weight: 900 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-summary {
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-summary > div {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-title-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.55rem !important;
+  min-width: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-title-row h3 {
+  max-width: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-badge {
+  width: 2.28rem !important;
+  height: 2.28rem !important;
+  flex: 0 0 2.28rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: #050505 !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 34px -26px rgba(15, 23, 42, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  font-size: 0.92rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile-support .dashboard-command-badge {
+  background: #ffffff !important;
+  color: #050505 !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-title-row {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.48rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-badge {
+  width: 1.78rem !important;
+  height: 1.78rem !important;
+  flex-basis: 1.78rem !important;
+  font-size: 0.78rem !important;
+  box-shadow: 0 12px 28px -24px rgba(15, 23, 42, 0.72) !important;
 }
 
 @media (min-width: 768px) {
@@ -311,7 +695,7 @@ html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
 
   html body .native-ui .finance-timeline-chart {
     display: grid !important;
-    grid-template-columns: minmax(18rem, 0.34fr) minmax(0, 0.66fr) !important;
+    grid-template-columns: minmax(18rem, 0.36fr) minmax(0, 0.64fr) !important;
     align-items: stretch !important;
     gap: clamp(1rem, 1.7vw, 1.35rem) !important;
     padding: 0 !important;
@@ -337,8 +721,11 @@ html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
   html body .native-ui .finance-timeline-statbar > div,
   html body .native-ui .finance-timeline-statbar > div:first-child {
     min-height: 7.2rem !important;
-    align-items: flex-start !important;
-    text-align: left !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
     border: 0 !important;
     border-radius: 0.72rem !important;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(250, 251, 252, 0.58)) !important;
@@ -356,7 +743,8 @@ html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
   }
 
   html body .native-ui .finance-timeline-statbar > div p {
-    text-align: left !important;
+    width: 100% !important;
+    text-align: center !important;
   }
 
   html body .native-ui .finance-timeline-statbar > div p:first-child {
@@ -368,13 +756,13 @@ html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
   html body .native-ui .finance-timeline-statbar > div p:nth-child(2),
   html body .native-ui .finance-timeline-statbar > div:first-child p:nth-child(2) {
     color: #050505 !important;
-    font-size: clamp(1.95rem, 2.8vw, 3.1rem) !important;
-    line-height: 0.92 !important;
-    letter-spacing: -0.055em !important;
+    font-size: clamp(1.75rem, 2.15vw, 2.42rem) !important;
+    line-height: 0.96 !important;
+    letter-spacing: -0.035em !important;
   }
 
   html body .native-ui .finance-chart-module {
-    min-height: min(34rem, calc(100dvh - 14rem)) !important;
+    min-height: clamp(22rem, 42dvh, 27rem) !important;
     border-radius: 0.72rem !important;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(250, 251, 252, 0.62)) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
@@ -382,11 +770,38 @@ html body .native-ui .dashboard-overview-page .dashboard-feed-pager span {
 
   html body .native-ui .finance-timeline-canvas {
     height: 100% !important;
-    min-height: min(34rem, calc(100dvh - 14rem)) !important;
+    min-height: clamp(22rem, 42dvh, 27rem) !important;
     border: 0 !important;
     border-radius: 0.72rem !important;
     background: transparent !important;
     box-shadow: none !important;
+  }
+
+  html body .native-ui .finance-timeline-canvas svg {
+    height: 100% !important;
+  }
+
+  html body .native-ui .finance-axis-label {
+    font-size: 0.72rem !important;
+    font-weight: 780 !important;
+    fill: rgba(71, 85, 105, 0.68) !important;
+  }
+
+  html body .native-ui .finance-axis-label-x {
+    font-size: 0.78rem !important;
+  }
+
+  html body .native-ui .finance-chart-line-shadow {
+    stroke-width: 6 !important;
+    opacity: 0.22 !important;
+  }
+
+  html body .native-ui .finance-chart-line {
+    stroke-width: 4.2 !important;
+  }
+
+  html body .native-ui .finance-chart-dot {
+    stroke-width: 3 !important;
   }
 
   html body .native-ui .finance-desk {
@@ -677,7 +1092,7 @@ html body .native-ui .finance-desk-row:hover {
 
 html body .native-ui .finance-desk-row .finance-gateway-mark {
   border-radius: 0.72rem !important;
-  background: #f6f7f9 !important;
+  background: #ffffff !important;
 }
 
 html body .native-ui .communications-page .support-desk-shell .support-thread-row,
@@ -731,8 +1146,293 @@ html body .native-ui .schedule-page .schedule-calendar-scroll-zone {
 }
 
 html body .native-ui .schedule-page .schedule-calendar-grid {
-  border-radius: 0.72rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-toggle.is-active,
+html body .native-ui .schedule-page .schedule-hide-toggle.is-active {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, rgba(210, 255, 226, 0.98), rgba(220, 240, 255, 0.94), rgba(253, 221, 255, 0.9)) !important;
+  color: #050505 !important;
+  box-shadow: 0 14px 34px -30px rgba(15, 23, 42, 0.52) !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-panel {
+  margin-top: 1rem !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-head,
+html body .native-ui .schedule-page .schedule-settings-actions,
+html body .native-ui .schedule-page .schedule-settings-preview {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-head p,
+html body .native-ui .schedule-page .schedule-settings-preview p {
+  margin: 0 0 0.24rem !important;
+  color: #9aa3af !important;
+  font-size: 0.58rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.18em !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-head h4 {
+  margin: 0 !important;
+  color: #050505 !important;
+  font-size: clamp(1.2rem, 1.7vw, 1.55rem) !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-head button {
+  width: 2.45rem !important;
+  height: 2.45rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  border-radius: 0.72rem !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 0.7rem !important;
+  margin-top: 0.88rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-field {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.42rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-field span {
+  color: #9aa3af !important;
+  font-size: 0.56rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.16em !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-field input,
+html body .native-ui .schedule-page .schedule-settings-field select {
+  width: 100% !important;
+  min-height: 2.75rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 0.72rem !important;
+  background: #f8fafc !important;
+  color: #050505 !important;
+  padding: 0 0.78rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  outline: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-options {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.55rem !important;
+  margin-top: 0.85rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-options button {
+  min-height: 2.38rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+  padding: 0 0.78rem !important;
+  font-size: 0.58rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-options button.is-active {
+  background: #050505 !important;
+  border-color: #050505 !important;
+  color: #ffffff !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-options button span {
+  width: 1rem !important;
+  height: 1rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-preview {
+  margin-top: 0.9rem !important;
+  padding: 0.82rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  border-radius: 0.78rem !important;
+  background: #f8fafc !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-preview strong {
+  color: #050505 !important;
+  font-size: 1.2rem !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-slot-strip {
+  min-width: 0 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 0.42rem !important;
+  overflow-x: auto !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-slot-strip span {
+  flex: 0 0 auto !important;
+  min-height: 1.86rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #050505 !important;
+  padding: 0 0.68rem !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-actions {
+  justify-content: flex-end !important;
+  margin-top: 0.82rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-actions button {
+  min-height: 2.72rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 0.82rem !important;
+  background: #ffffff !important;
+  color: #050505 !important;
+  padding: 0 0.9rem !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+}
+
+html body .native-ui .schedule-page .schedule-settings-actions button:first-child {
+  background: #050505 !important;
+  border-color: #050505 !important;
+  color: #ffffff !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-readout {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  margin-top: 1rem !important;
+  max-width: 22rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-readout span {
+  min-height: 3.25rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  border: 1px solid rgba(15, 23, 42, 0.07) !important;
+  border-radius: 0.72rem !important;
+  background: #f8fafc !important;
+  color: #9aa3af !important;
+  padding: 0.5rem !important;
+  font-size: 0.54rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-readout strong {
+  color: #050505 !important;
+  font-size: 1.25rem !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-row {
+  border-radius: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-row + .schedule-slot-plan-row {
+  border-top-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-main {
+  position: relative !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-main::before {
+  content: "" !important;
+  width: 0.42rem !important;
+  height: 0.42rem !important;
+  border-radius: 999px !important;
+  background: #050505 !important;
+  box-shadow: 0 0 0 0.28rem rgba(20, 167, 255, 0.1) !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-time {
+  min-width: 5.6rem !important;
+  color: #050505 !important;
+  font-size: 1.05rem !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-edit-button {
+  min-height: 2rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  border-radius: 0.58rem !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  padding: 0 0.6rem !important;
+  font-size: 0.56rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+}
+
+html body .native-ui .schedule-page .schedule-empty-plan button {
+  box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.5) !important;
 }
 
 html body .native-ui .profile-page .profile-command-grid {
@@ -801,7 +1501,7 @@ html body .native-ui .profile-page .profile-command-meta {
 @media (max-width: 767px) {
   html body .native-ui .dashboard-main > div:not(.mobile-editor-shell) {
     padding: 0.78rem 0.82rem calc(5.35rem + env(safe-area-inset-bottom)) !important;
-    background: #f6f7f9 !important;
+    background: #ffffff !important;
   }
 
   html body .native-ui .dashboard-main > div.communications-page:not(.mobile-editor-shell) {
@@ -962,6 +1662,24 @@ html body .native-ui .profile-page .profile-command-meta {
     border-radius: 0.82rem 0.82rem 0 0 !important;
   }
 
+  html body .native-ui .schedule-slot-modal,
+  html body .native-ui .manual-booking-sheet,
+  html body .native-ui .service-modal-panel,
+  html body .native-ui .finance-modal-panel,
+  html body .native-ui .support-quick-booking-sheet,
+  html body .native-ui .support-client-file-sheet {
+    max-height: calc(100dvh - 4.55rem - env(safe-area-inset-bottom)) !important;
+    margin-bottom: calc(4.55rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  html body .native-ui .schedule-slot-modal > div:last-child,
+  html body .native-ui .manual-booking-sheet,
+  html body .native-ui .service-modal-body,
+  html body .native-ui .finance-modal-body,
+  html body .native-ui .support-quick-booking-sheet {
+    padding-bottom: calc(1.15rem + env(safe-area-inset-bottom)) !important;
+  }
+
   html body .native-ui .communications-page .support-page-shell,
   html body .native-ui .communications-page .support-desk-shell,
   html body .native-ui .communications-page .support-workspace-grid,
@@ -1007,13 +1725,33 @@ html body .native-ui .profile-page .profile-command-meta {
     order: 2 !important;
   }
 
+  html body .native-ui .finance-desk-list,
+  html body .native-ui .service-desk-command,
+  html body .native-ui .service-desk-list,
+  html body .native-ui .clients-page .client-directory-command,
+  html body .native-ui .clients-page .client-directory-card > div:last-child {
+    width: calc(100% + 1.64rem) !important;
+    margin-left: -0.82rem !important;
+    margin-right: -0.82rem !important;
+  }
+
+  html body .native-ui .finance-desk-list,
+  html body .native-ui .service-desk-command,
+  html body .native-ui .service-desk-list,
+  html body .native-ui .clients-page .client-directory-command,
+  html body .native-ui .clients-page .client-directory-card > div:last-child {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-shadow: none !important;
+  }
+
   html body .native-ui .service-desk-shell {
     display: block !important;
     min-height: calc(100dvh - 6.1rem);
   }
 
   html body .native-ui .service-desk-command {
-    padding: 0.88rem 0.82rem 0.8rem;
+    padding: 0.88rem 0.82rem 0.8rem !important;
     background: #ffffff;
   }
 
@@ -1025,6 +1763,9 @@ html body .native-ui .profile-page .profile-command-meta {
   html body .native-ui .service-scope-panel {
     padding: 0.68rem;
     border-radius: 0.62rem;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-shadow: none !important;
   }
 
   html body .native-ui .service-desk-list {
@@ -1075,6 +1816,11 @@ html body .native-ui .profile-page .profile-command-meta {
     padding-right: 0.88rem !important;
   }
 
+  html body .native-ui .clients-page .client-directory-row {
+    padding-left: 0.88rem !important;
+    padding-right: 0.88rem !important;
+  }
+
   html body .native-ui .team-page .team-roster-shell {
     padding-bottom: 0.78rem !important;
   }
@@ -1101,8 +1847,74 @@ html body .native-ui .profile-page .profile-command-meta {
     padding-top: 0.78rem !important;
   }
 
+  html body .native-ui .schedule-page .schedule-calendar-toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-settings-panel {
+    margin-left: -0.12rem !important;
+    margin-right: -0.12rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.62rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-settings-preview {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-settings-slot-strip {
+    justify-content: flex-start !important;
+    padding-bottom: 0.1rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-settings-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.55rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-readout {
+    max-width: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-plan-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 2rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-plan-actions button:first-child {
+    min-width: 0 !important;
+    padding-left: 0.6rem !important;
+    padding-right: 0.6rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-row {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-main {
+    gap: 0.58rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-time {
+    min-width: 4.55rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-edit-button span {
+    display: none !important;
+  }
+
   html body .native-ui .profile-page .profile-command-card {
     min-height: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
   }
 
   html body .native-ui .profile-page .profile-command-copy > span {
@@ -1112,5 +1924,1240 @@ html body .native-ui .profile-page .profile-command-meta {
   html body .native-ui .profile-page .profile-command-quick button,
   html body .native-ui .profile-page .profile-command-quick span {
     font-size: 0.68rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager > span,
+  html body .native-ui .dashboard-overview-page .dashboard-feed-size {
+    height: 2rem !important;
+    min-height: 2rem !important;
+    max-height: 2rem !important;
+    padding: 0 0.52rem 0 0.66rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager > span {
+    height: 2rem !important;
+    min-height: 2rem !important;
+    max-height: 2rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-pager > span,
+  html body .native-ui .dashboard-overview-page .dashboard-feed-size,
+  html body .native-ui .dashboard-overview-page .dashboard-feed-size > span,
+  html body .native-ui .dashboard-overview-page .dashboard-feed-size select {
+    font-family: inherit !important;
+    font-size: 0.62rem !important;
+    font-weight: 820 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: none !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-feed-size select {
+    height: 1.42rem !important;
+    min-height: 1.42rem !important;
+    max-height: 1.42rem !important;
+    min-width: 2.18rem !important;
+    padding: 0 0.32rem !important;
+  }
+}
+
+/* Final dashboard surface normalization. Keep this after legacy dashboard overrides. */
+html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
+  width: min(100%, 76rem) !important;
+  margin: 0 auto !important;
+  gap: clamp(0.72rem, 1vw, 1rem) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting {
+  width: min(100%, 46rem) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+  max-width: 15ch !important;
+  font-size: clamp(2.35rem, 3.55vw, 3.7rem) !important;
+  line-height: 0.9 !important;
+  letter-spacing: -0.058em !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+  max-width: 39rem !important;
+  margin-top: 0.58rem !important;
+  font-size: clamp(0.88rem, 0.95vw, 0.98rem) !important;
+  line-height: 1.36 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-divider {
+  width: min(100%, 68rem) !important;
+  margin-top: 0.05rem !important;
+  opacity: 0.62 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-period-tabs,
+html body .native-ui .dashboard-overview-page > .dashboard-lumia-board > .dashboard-period-tabs,
+html body .native-ui .dashboard-overview-page .dashboard-lumia-board > .dashboard-period-tabs {
+  width: min(100%, 38rem) !important;
+  min-height: 2.76rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-period-tab {
+  min-height: 2.18rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher {
+  width: min(100%, 68rem) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  grid-template-columns: 2.7rem minmax(0, 1fr) 2.7rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher .dashboard-pager-arrow {
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-center {
+  min-height: 2.6rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-title {
+  font-size: clamp(1.06rem, 1.36vw, 1.28rem) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-pager-badge {
+  width: 1.62rem !important;
+  height: 1.62rem !important;
+  flex-basis: 1.62rem !important;
+  font-size: 0.72rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile {
+  gap: 0 !important;
+  min-height: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile.is-mobile-active {
+  gap: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile .dashboard-command-summary {
+  display: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar,
+html body .native-ui .dashboard-overview-page .dashboard-activity-feed {
+  width: min(100%, 68rem) !important;
+  max-width: 68rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip {
+  width: 100% !important;
+  max-width: none !important;
+  border: 1px solid rgba(15, 23, 42, 0.065) !important;
+  border-radius: 0.9rem 0.9rem 0 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-feed {
+  gap: 0 !important;
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(15, 23, 42, 0.065) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 0.9rem 0.9rem !important;
+  background: #ffffff !important;
+  box-shadow: 0 22px 54px -48px rgba(15, 23, 42, 0.46) !important;
+  overflow: hidden !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-tile.is-mobile-active .dashboard-activity-feed {
+  gap: 0 !important;
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(15, 23, 42, 0.065) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 0.9rem 0.9rem !important;
+  background: #ffffff !important;
+  box-shadow: 0 22px 54px -48px rgba(15, 23, 42, 0.46) !important;
+  overflow: hidden !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-row,
+html body .native-ui .dashboard-overview-page .dashboard-empty-row {
+  min-height: 3.4rem !important;
+  border-width: 0 0 1px !important;
+  border-style: solid !important;
+  border-color: rgba(15, 23, 42, 0.045) !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0.62rem !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.055) !important;
+  background: #ffffff !important;
+  gap: 0.42rem !important;
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board {
+    width: 100% !important;
+    gap: 0.74rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting {
+    width: 100% !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+    max-width: 11ch !important;
+    font-size: clamp(1.98rem, 8vw, 2.32rem) !important;
+    line-height: 0.9 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+    max-width: 22rem !important;
+    margin-top: 0.48rem !important;
+    font-size: 0.78rem !important;
+    line-height: 1.34 !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-divider {
+    width: 100% !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page > .dashboard-lumia-board > .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board > .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher {
+    width: 100% !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page > .dashboard-lumia-board > .dashboard-period-tabs,
+  html body .native-ui .dashboard-overview-page .dashboard-lumia-board > .dashboard-period-tabs {
+    min-height: 2.92rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-period-tab {
+    min-height: 2.28rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar,
+  html body .native-ui .dashboard-overview-page .dashboard-activity-feed {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* White workspace canvas: page shells stay seamless instead of sitting on off-white panels. */
+html,
+body,
+#root,
+html body .native-ui.dashboard-light,
+html body .native-ui.dashboard-light .dashboard-main,
+html body .native-ui.dashboard-light .dashboard-main > div:not(.mobile-editor-shell),
+html body .native-ui .client-portal-shell,
+html body .native-ui .owner-manual-shell,
+html body .native-ui .support-chat-canvas,
+html body .native-ui .client-chat-canvas {
+  background: #ffffff !important;
+}
+
+/* Dashboard list should sit in the canvas, not inside a framed card. */
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip {
+  border: 0 !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.055) !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-feed,
+html body .native-ui .dashboard-overview-page .dashboard-command-tile.is-mobile-active .dashboard-activity-feed {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* Dashboard IA: Availability, Income, and Notifications are separate work bands. */
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting h2 {
+  font-size: clamp(2.45rem, 3.8vw, 4.1rem) !important;
+  letter-spacing: -0.055em !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-lumia-greeting p {
+  font-size: clamp(0.94rem, 1vw, 1.06rem) !important;
+  font-weight: 760 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-mobile-tile-switcher {
+  display: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-grid {
+  width: min(100%, 68rem) !important;
+  max-width: 68rem !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: clamp(1.45rem, 2.2vw, 2.15rem) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-workspace-section {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 0.58rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-availability {
+  order: 1 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-income {
+  order: 2 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-notifications {
+  order: 3 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-heading {
+  min-height: 2.45rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.85rem !important;
+  padding: 0 0.08rem 0.18rem !important;
+  color: #050505 !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.055) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-heading span {
+  font-size: clamp(1.28rem, 1.9vw, 1.75rem) !important;
+  font-weight: 930 !important;
+  letter-spacing: -0.045em !important;
+  line-height: 1 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-heading strong {
+  width: 1.62rem !important;
+  height: 1.62rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  background: #050505 !important;
+  color: #ffffff !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-heading small {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 1.82rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #667085 !important;
+  padding: 0 0.82rem !important;
+  font-size: 0.62rem !important;
+  font-weight: 880 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-grid {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: clamp(1rem, 1.35vw, 1.25rem) !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-grid-notifications {
+  grid-template-columns: 1fr !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-workspace-section .dashboard-command-tile,
+html body .native-ui .dashboard-overview-page .dashboard-workspace-section .dashboard-command-tile.is-mobile-active {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  display: grid !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-notifications .dashboard-command-tile .dashboard-command-filterbar,
+html body .native-ui .dashboard-overview-page .dashboard-section-notifications .dashboard-command-tile .dashboard-activity-feed,
+html body .native-ui .dashboard-overview-page .dashboard-section-income .dashboard-command-tile .dashboard-activity-feed,
+html body .native-ui .dashboard-overview-page .dashboard-section-availability .dashboard-command-tile .dashboard-activity-feed {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-section-income .dashboard-mini-stat-row,
+html body .native-ui .dashboard-overview-page .dashboard-section-availability .dashboard-staff-toggle,
+html body .native-ui .dashboard-overview-page .dashboard-section-availability .dashboard-schedule-tabs {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip,
+html body .native-ui .dashboard-overview-page .dashboard-schedule-tabs {
+  min-height: 2.85rem !important;
+  padding: 0.34rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-chip,
+html body .native-ui .dashboard-overview-page .dashboard-schedule-tabs button {
+  min-height: 2.14rem !important;
+  padding: 0 0.82rem !important;
+  font-size: 0.58rem !important;
+  letter-spacing: 0.075em !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-staff-toggle {
+  min-height: 3.1rem !important;
+  padding: 0.28rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-staff-toggle button {
+  min-height: 2.48rem !important;
+  padding: 0 0.72rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-row,
+html body .native-ui .dashboard-overview-page .dashboard-empty-row {
+  min-height: 3.75rem !important;
+  padding-top: 0.76rem !important;
+  padding-bottom: 0.76rem !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-copy strong {
+  font-size: 0.92rem !important;
+  letter-spacing: -0.022em !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-activity-copy small {
+  font-size: 0.76rem !important;
+  line-height: 1.28 !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager {
+  width: 100% !important;
+  grid-template-columns: 2.18rem minmax(0, 1fr) 2.18rem !important;
+  padding: 0.7rem 0 0 !important;
+  border-top: 0 !important;
+  background: transparent !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager > span {
+  min-height: 2.18rem !important;
+  height: 2.18rem !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #667085 !important;
+  font-size: 0.68rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+}
+
+html body .native-ui .dashboard-overview-page .dashboard-feed-pager button {
+  width: 2.18rem !important;
+  height: 2.18rem !important;
+}
+
+@media (max-width: 980px) {
+  html body .native-ui .dashboard-overview-page .dashboard-section-grid-notifications {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .dashboard-overview-page .dashboard-command-grid {
+    width: 100% !important;
+    gap: 1.5rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-workspace-section {
+    gap: 0.48rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-section-heading {
+    min-height: 2.34rem !important;
+    padding: 0 0.1rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-section-heading span {
+    font-size: 1.28rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-strip,
+  html body .native-ui .dashboard-overview-page .dashboard-schedule-tabs {
+    min-height: 2.7rem !important;
+    padding: 0.28rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-command-filterbar .dashboard-filter-chip,
+  html body .native-ui .dashboard-overview-page .dashboard-schedule-tabs button {
+    min-height: 2rem !important;
+    padding: 0 0.62rem !important;
+    font-size: 0.5rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-copy strong {
+    font-size: 0.88rem !important;
+  }
+
+  html body .native-ui .dashboard-overview-page .dashboard-activity-copy small {
+    font-size: 0.72rem !important;
+  }
+}
+
+/* Schedule planner: timeline-first, calendar as a compact navigation layer. */
+html body .native-ui .schedule-page > .max-w-7xl {
+  max-width: 86rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-google-panel {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 0.72rem !important;
+  margin-bottom: 0.8rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-google-status {
+  min-height: 3.1rem !important;
+  border-radius: 0.9rem !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-google-actions {
+  display: flex !important;
+  gap: 0.48rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-google-button {
+  min-height: 3.1rem !important;
+  border-radius: 0.9rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-team-card {
+  margin-bottom: 1rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-team-layout {
+  gap: 0.72rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-team-eyebrow,
+html body .native-ui .schedule-page .schedule-team-subcopy {
+  display: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-team-title {
+  font-size: clamp(1.15rem, 1.7vw, 1.55rem) !important;
+  line-height: 1 !important;
+}
+
+html body .native-ui .schedule-page .schedule-team-chip {
+  min-width: 8.8rem !important;
+  height: 2.8rem !important;
+  border-radius: 0.86rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-team-avatar {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-planner-stack {
+  margin-top: 0 !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-command {
+  padding: 0 0 0.78rem !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-title-block p {
+  margin-bottom: 0.45rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-title-block h3 {
+  font-size: clamp(1.55rem, 2.45vw, 2.55rem) !important;
+  line-height: 0.96 !important;
+  letter-spacing: -0.055em !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-controls {
+  gap: 0.72rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-period-tabs,
+html body .native-ui .schedule-page .schedule-month-switcher {
+  border: 0 !important;
+  border-radius: 0.78rem !important;
+  background: #f5f5f5 !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-period-tab {
+  min-height: 2.42rem !important;
+  border-radius: 0.48rem !important;
+  font-size: 0.62rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-period-tab.is-active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08)),
+    var(--native-accent-button-gradient) !important;
+  color: #050505 !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-date-strip {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 0.55rem !important;
+  margin-top: 0.82rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-date-strip button {
+  min-width: 0 !important;
+  min-height: 4.55rem !important;
+  display: grid !important;
+  align-content: center !important;
+  justify-items: start !important;
+  gap: 0.24rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.07) !important;
+  border-radius: 0.9rem !important;
+  background: #ffffff !important;
+  color: #050505 !important;
+  padding: 0.68rem !important;
+  text-align: left !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-date-strip button.is-active {
+  border-color: #050505 !important;
+  background: #050505 !important;
+  color: #ffffff !important;
+}
+
+html body .native-ui .schedule-page .schedule-date-strip button span,
+html body .native-ui .schedule-page .schedule-date-strip button small {
+  font-size: 0.58rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  color: currentColor !important;
+  opacity: 0.62 !important;
+}
+
+html body .native-ui .schedule-page .schedule-date-strip button strong {
+  font-size: 1.34rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.04em !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-scroll-zone {
+  padding-top: 0.78rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-mode-day .schedule-calendar-scroll-zone {
+  padding-top: 0.9rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-mode-day .schedule-calendar-grid {
+  gap: 0 !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-card {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-availability {
+  top: 0.2rem !important;
+  right: 0.2rem !important;
+  z-index: 2 !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.86rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child {
+  min-height: 0 !important;
+  padding: 0 3rem 0 0 !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > p {
+  margin-bottom: 0.62rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > div {
+  margin-bottom: 0.74rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout .metric-value {
+  font-size: clamp(2.1rem, 4vw, 3rem) !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-readout {
+  max-width: none !important;
+  grid-template-columns: repeat(3, minmax(0, 8rem)) !important;
+  margin-top: 0.62rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-readout span {
+  min-height: 2.72rem !important;
+  background: #ffffff !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-operations-panels {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr) !important;
+  gap: clamp(0.9rem, 1.4vw, 1.35rem) !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-timeline-panel,
+html body .native-ui .schedule-page .schedule-day-bookings-panel {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-timeline-panel > div:first-child,
+html body .native-ui .schedule-page .schedule-day-bookings-panel > div:first-child {
+  min-height: 2.9rem !important;
+  margin-bottom: 0 !important;
+  padding: 0 0 0.66rem !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-timeline-panel > div:first-child p:last-child,
+html body .native-ui .schedule-page .schedule-day-bookings-panel > div:first-child p:last-child {
+  font-size: 1rem !important;
+  letter-spacing: -0.025em !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-timeline-list,
+html body .native-ui .schedule-page .schedule-day-bookings-list {
+  max-height: none !important;
+  padding-right: 0 !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-row {
+  min-height: 4.28rem !important;
+  padding: 0.78rem 0 !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-row > div {
+  align-items: center !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-time {
+  min-width: 4.6rem !important;
+  font-size: 1.22rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-edit-button {
+  border-radius: 999px !important;
+}
+
+@media (max-width: 980px) {
+  html body .native-ui .schedule-page .schedule-day-operations-panels {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .schedule-page .schedule-google-panel {
+    grid-template-columns: 1fr !important;
+    gap: 0.46rem !important;
+    margin-bottom: 0.62rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-google-status {
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-google-status p:first-child {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-google-status p:last-child {
+    font-size: 0.72rem !important;
+    color: #667085 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-google-actions {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.42rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-google-button {
+    min-height: 2.65rem !important;
+    padding: 0 0.58rem !important;
+    border-radius: 0.78rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-card {
+    margin-bottom: 0.72rem !important;
+    padding-bottom: 0.72rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-title {
+    font-size: 1.18rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-chip {
+    min-width: 7.65rem !important;
+    height: 2.58rem !important;
+    padding-inline: 0.6rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-name {
+    font-size: 0.72rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-calendar-command-inner {
+    gap: 0.92rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-calendar-toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-month-switcher {
+    grid-column: 1 / -1 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-hide-toggle,
+  html body .native-ui .schedule-page .schedule-settings-toggle {
+    min-height: 2.9rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-calendar-title-block h3 {
+    font-size: 1.54rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-date-strip {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 0.5rem !important;
+    padding-bottom: 0.15rem !important;
+    scrollbar-width: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-date-strip::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-date-strip button {
+    flex: 0 0 4.9rem !important;
+    min-height: 4.2rem !important;
+    padding: 0.6rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child {
+    padding-right: 2.6rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > p {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout .metric-value {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > div {
+    margin-bottom: 0.62rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > div > div:first-child > div:first-of-type {
+    margin-top: 0 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > div > div:first-child > div:first-of-type span {
+    min-height: 1.46rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-operations-panels {
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-readout {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    margin-top: 0.48rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-readout span {
+    min-height: 2.45rem !important;
+    padding: 0.42rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-readout strong {
+    font-size: 1.05rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"]:has(button[title]) {
+    margin-top: 0.62rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"] > p {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"] button {
+    height: 2.08rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-row {
+    min-height: 4.05rem !important;
+    padding-block: 0.68rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-time {
+    min-width: 4.2rem !important;
+    font-size: 1.1rem !important;
+  }
+}
+
+/* Schedule final simplification: one date language, timeline first. */
+html body .native-ui .schedule-page .schedule-period-tabs {
+  display: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-command-inner {
+  align-items: end !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-controls {
+  justify-content: end !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-title-block p {
+  margin-bottom: 0.32rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-title-block h3 {
+  font-size: clamp(1.8rem, 2.7vw, 3rem) !important;
+}
+
+html body .native-ui .schedule-page .schedule-calendar-toolbar {
+  align-items: center !important;
+}
+
+html body .native-ui .schedule-page .schedule-month-switcher {
+  min-height: 2.55rem !important;
+  padding: 0.22rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-month-switcher span {
+  min-width: 8.8rem !important;
+  font-size: 0.66rem !important;
+  letter-spacing: 0.12em !important;
+}
+
+html body .native-ui .schedule-page .schedule-month-switcher button {
+  width: 2.15rem !important;
+  height: 2.15rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-hide-toggle,
+html body .native-ui .schedule-page .schedule-settings-toggle {
+  min-height: 2.55rem !important;
+  border-radius: 999px !important;
+}
+
+html body .native-ui .schedule-page .schedule-date-strip {
+  margin-top: 0.78rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-date-strip button {
+  min-height: 4rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > p,
+html body .native-ui .schedule-page .schedule-day-agenda-layout .metric-value {
+  display: none !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child {
+  padding-top: 0 !important;
+  padding-bottom: 0.68rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child > div {
+  margin-bottom: 0 !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-readout {
+  margin-top: 0.55rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-staff-panel {
+  margin-top: 0.66rem !important;
+  display: grid !important;
+  gap: 0.55rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-staff-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.8rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-staff-head p {
+  margin: 0 !important;
+  color: #9aa3af !important;
+  font-size: 0.58rem !important;
+  font-weight: 850 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.18em !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-staff-head span {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 1.45rem !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #667085 !important;
+  padding: 0 0.62rem !important;
+  font-size: 0.54rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-staff-rail {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 0.48rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-staff-rail button {
+  min-height: 2.34rem !important;
+  border-radius: 999px !important;
+  padding: 0 0.78rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-staff-rail button[class*="bg-black"] {
+  box-shadow: 0 14px 30px -24px rgba(0, 0, 0, 0.68) !important;
+}
+
+html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"]:has(button[title]) {
+  margin-top: 0.55rem !important;
+}
+
+html body .native-ui .schedule-page .schedule-slot-plan-row {
+  min-height: 4.1rem !important;
+}
+
+@media (max-width: 767px) {
+  html body .native-ui .schedule-page .schedule-google-panel {
+    margin-bottom: 0.48rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-google-status {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-google-button {
+    min-height: 2.5rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-card {
+    margin-bottom: 0.52rem !important;
+    padding-bottom: 0.52rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-copy {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-layout {
+    gap: 0 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-team-rail {
+    width: 100% !important;
+    padding-bottom: 0 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-calendar-command-inner {
+    gap: 0.66rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-calendar-title-block h3 {
+    font-size: 1.55rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-month-switcher span {
+    min-width: 0 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-hide-toggle,
+  html body .native-ui .schedule-page .schedule-settings-toggle {
+    min-height: 2.5rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-date-strip {
+    margin-top: 0.64rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-date-strip button {
+    min-height: 3.65rem !important;
+    padding: 0.52rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-date-strip button strong {
+    font-size: 1.12rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout > div:first-child {
+    padding-right: 2.55rem !important;
+    padding-bottom: 0.54rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-readout span {
+    min-height: 2.18rem !important;
+    padding: 0.34rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-staff-panel {
+    margin-top: 0.44rem !important;
+    gap: 0.42rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-staff-head {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-staff-rail {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 0.42rem !important;
+    padding-bottom: 0.05rem !important;
+    scrollbar-width: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-staff-rail::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-staff-rail button {
+    flex: 0 0 auto !important;
+    min-height: 2.08rem !important;
+    padding: 0 0.66rem !important;
+    white-space: nowrap !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-readout strong {
+    font-size: 0.98rem !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"]:has(button[title]) {
+    margin-top: 0.42rem !important;
+    overflow: hidden !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"] > div {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"] > div::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-agenda-layout [class*="mt-4"] button {
+    flex: 0 0 auto !important;
+    height: 1.95rem !important;
+    white-space: nowrap !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-day-operations-panels,
+  html body .native-ui .schedule-page .schedule-day-timeline-panel,
+  html body .native-ui .schedule-page .schedule-day-bookings-panel,
+  html body .native-ui .schedule-page .schedule-day-timeline-list,
+  html body .native-ui .schedule-page .schedule-day-bookings-list,
+  html body .native-ui .schedule-page .schedule-slot-plan-row {
+    width: calc(100vw - 1.64rem) !important;
+    max-width: calc(100vw - 1.64rem) !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    justify-self: stretch !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-row > div,
+  html body .native-ui .schedule-page .schedule-slot-plan-main,
+  html body .native-ui .schedule-page .schedule-slot-plan-main > div {
+    min-width: 0 !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-row > div {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  html body .native-ui .schedule-page .schedule-slot-plan-row .shrink-0 {
+    min-width: 0 !important;
   }
 }

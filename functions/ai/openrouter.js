@@ -4,7 +4,7 @@ const { defineSecret } = require('firebase-functions/params');
 
 const OPENROUTER_API_KEY = defineSecret('OPENROUTER_API_KEY');
 const OPENROUTER_CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const DEFAULT_BUTLER_MODEL = 'google/gemini-2.0-flash-001';
+const DEFAULT_BUTLER_MODEL = 'google/gemini-2.5-flash-lite';
 const MAX_PROMPT_LENGTH = 4000;
 const MAX_HISTORY_MESSAGES = 8;
 

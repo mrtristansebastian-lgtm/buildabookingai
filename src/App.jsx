@@ -3885,7 +3885,7 @@ const signInWithNativeGoogle = async (authInstance, options = {}) => {
                 }
 
                 const paymentAttemptsQuery = FirebaseSDK.query(
-                    FirebaseSDK.collection(db, 'artifacts', appId, 'users', workspaceOwnerId, 'finance', 'paymentAttempts'),
+                    FirebaseSDK.collection(db, 'artifacts', appId, 'users', workspaceOwnerId, 'payment_attempts'),
                     FirebaseSDK.orderBy('updatedAtMs', 'desc'),
                     FirebaseSDK.limit(240)
                 );

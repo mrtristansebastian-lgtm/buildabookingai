@@ -2,6 +2,8 @@
 
 Build A Booking Butler uses OpenRouter from Firebase Functions. Do not put the OpenRouter key in React, `.env.local`, or any `VITE_` variable.
 
+Default model: `google/gemini-2.5-flash-lite`.
+
 ## Get Or Replace The Key
 
 1. Open https://openrouter.ai/settings/keys.
